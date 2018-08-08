@@ -9,6 +9,7 @@
 #include <Vortex2D/Engine/LinearSolver/IncompletePoisson.h>
 #include <Vortex2D/Engine/LinearSolver/Multigrid.h>
 #include <Vortex2D/Engine/LinearSolver/Reduce.h>
+#include <Vortex2D/Engine/LinearSolver/Scale.h>
 #include <Vortex2D/Engine/LinearSolver/Transfer.h>
 #include <Vortex2D/Engine/Pressure.h>
 #include "VariationalHelpers.h"
@@ -203,6 +204,91 @@ TEST(LinearSolverTests, Error)
   float n = 18.0f + 18.0f * 20.0f + 1.0f;
   float e = n * n - n;
   EXPECT_EQ(e, error.Submit().Wait().GetError());
+}
+
+TEST(LinearSolverTests, Scale)
+{
+  glm::ivec2 coarseSize(2);
+  glm::ivec2 fineSize(4);
+
+  Scale s(*device, 0);
+
+  Texture input(*device, fineSize.x, fineSize.y, vk::Format::eR32Sfloat);
+  Texture output(*device, coarseSize.x, coarseSize.y, vk::Format::eR32Sfloat);
+
+  Texture copyIn(
+      *device, fineSize.x, fineSize.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture copyOut(
+      *device, coarseSize.x, coarseSize.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+
+  std::vector<float> data(fineSize.x * fineSize.y, 1.0f);
+  std::iota(data.begin(), data.end(), 1.0f);
+  copyIn.CopyFrom(data);
+
+  s.DownSampleBind(0, fineSize, input, output);
+  device->Execute([&](vk::CommandBuffer commandBuffer) {
+    input.CopyFrom(commandBuffer, copyIn);
+    s.DownSample(commandBuffer, 0);
+    copyOut.CopyFrom(commandBuffer, output);
+  });
+
+  std::vector<float> outputData(coarseSize.x * coarseSize.y, 1.0f);
+  copyOut.CopyTo(outputData);
+
+  EXPECT_FLOAT_EQ(0.5 * (1.0f + 2.0f + 5.0f + 6.0f) / 4.0f, outputData[0 + coarseSize.x * 0]);
+  EXPECT_FLOAT_EQ(0.5 * (3.0f + 4.0f + 7.0f + 8.0f) / 4.0f, outputData[1 + coarseSize.x * 0]);
+  EXPECT_FLOAT_EQ(0.5 * (9.0f + 10.0f + 13.0f + 14.0f) / 4.0f, outputData[0 + coarseSize.x * 1]);
+  EXPECT_FLOAT_EQ(0.5 * (11.0f + 12.0f + 15.0f + 16.0f) / 4.0f, outputData[1 + coarseSize.x * 1]);
+}
+
+TEST(LinearSolverTests, ScalePositive)
+{
+  glm::ivec2 coarseSize(2);
+  glm::ivec2 fineSize(4);
+
+  Scale s(*device, 1);
+
+  Texture input(*device, fineSize.x, fineSize.y, vk::Format::eR32Sfloat);
+  Texture output(*device, coarseSize.x, coarseSize.y, vk::Format::eR32Sfloat);
+
+  Texture copyIn(
+      *device, fineSize.x, fineSize.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture copyOut(
+      *device, coarseSize.x, coarseSize.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+
+  std::vector<float> data(fineSize.x * fineSize.y, 1.0f);
+  data[0] = 1.0f;
+  data[1] = 2.0f;
+  data[2] = 3.0f;
+  data[3] = 4.0;
+  data[4] = 5.0f;
+  data[5] = 6.0f;
+  data[6] = -7.0f;
+  data[7] = 8.0;
+  data[8] = -9.0f;
+  data[9] = -10.0f;
+  data[10] = -11.0f;
+  data[11] = 12.0;
+  data[12] = -13.0f;
+  data[13] = -14.0f;
+  data[14] = 15.0f;
+  data[15] = -16.0;
+  copyIn.CopyFrom(data);
+
+  s.DownSampleBind(0, fineSize, input, output);
+  device->Execute([&](vk::CommandBuffer commandBuffer) {
+    input.CopyFrom(commandBuffer, copyIn);
+    s.DownSample(commandBuffer, 0);
+    copyOut.CopyFrom(commandBuffer, output);
+  });
+
+  std::vector<float> outputData(coarseSize.x * coarseSize.y, 1.0f);
+  copyOut.CopyTo(outputData);
+
+  EXPECT_FLOAT_EQ(0.5 * (1.0f + 2.0f + 5.0f + 6.0f) / 4.0f, outputData[0 + coarseSize.x * 0]);
+  EXPECT_FLOAT_EQ(0.5 * (3.0f + 4.0f + 8.0f) / 3.0f, outputData[1 + coarseSize.x * 0]);
+  EXPECT_FLOAT_EQ(0.5 * (-9.0f - 10.0f - 13.0f - 14.0f) / 4.0f, outputData[0 + coarseSize.x * 1]);
+  EXPECT_FLOAT_EQ(0.5 * (12.0f + 15.0f) / 2.0f, outputData[1 + coarseSize.x * 1]);
 }
 
 TEST(LinearSolverTests, Simple_SOR)

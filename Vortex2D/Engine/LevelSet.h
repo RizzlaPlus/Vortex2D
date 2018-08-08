@@ -51,6 +51,12 @@ public:
    */
   VORTEX2D_API void Extrapolate();
 
+  /**
+   * @brief Extrapolate this level set into the solid level set it was attached
+   * to. This only performs a single cell extrapolation.
+   */
+  VORTEX2D_API void ExtrapolateRecord(vk::CommandBuffer commandBuffer);
+
 private:
   const Renderer::Device& mDevice;
   Renderer::Texture mLevelSet0;

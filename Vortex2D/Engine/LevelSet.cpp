@@ -99,17 +99,8 @@ LevelSet::LevelSet(LevelSet&& other)
 void LevelSet::ExtrapolateBind(Renderer::Texture& solidPhi)
 {
   mExtrapolateBound = mExtrapolate.Bind({solidPhi, *this});
-  mExtrapolateCmd.Record([&](vk::CommandBuffer commandBuffer) {
-    commandBuffer.debugMarkerBeginEXT({"Extrapolate phi", {{0.53f, 0.09f, 0.16f, 1.0f}}},
-                                      mDevice.Loader());
-    mExtrapolateBound.Record(commandBuffer);
-    Barrier(commandBuffer,
-            vk::ImageLayout::eGeneral,
-            vk::AccessFlagBits::eShaderWrite,
-            vk::ImageLayout::eGeneral,
-            vk::AccessFlagBits::eShaderRead);
-    commandBuffer.debugMarkerEndEXT(mDevice.Loader());
-  });
+  mExtrapolateCmd.Record(
+      [&](vk::CommandBuffer commandBuffer) { ExtrapolateRecord(commandBuffer); });
 }
 
 void LevelSet::Reinitialise()
@@ -125,6 +116,19 @@ void LevelSet::ShrinkWrap()
 void LevelSet::Extrapolate()
 {
   mExtrapolateCmd.Submit();
+}
+
+void LevelSet::ExtrapolateRecord(vk::CommandBuffer commandBuffer)
+{
+  commandBuffer.debugMarkerBeginEXT({"Extrapolate phi", {{0.53f, 0.09f, 0.16f, 1.0f}}},
+                                    mDevice.Loader());
+  mExtrapolateBound.Record(commandBuffer);
+  Barrier(commandBuffer,
+          vk::ImageLayout::eGeneral,
+          vk::AccessFlagBits::eShaderWrite,
+          vk::ImageLayout::eGeneral,
+          vk::AccessFlagBits::eShaderRead);
+  commandBuffer.debugMarkerEndEXT(mDevice.Loader());
 }
 
 }  // namespace Fluid

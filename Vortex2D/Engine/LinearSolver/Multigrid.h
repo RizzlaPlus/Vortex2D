@@ -11,6 +11,7 @@
 #include <Vortex2D/Engine/LinearSolver/Jacobi.h>
 #include <Vortex2D/Engine/LinearSolver/LinearSolver.h>
 #include <Vortex2D/Engine/LinearSolver/Preconditioner.h>
+#include <Vortex2D/Engine/LinearSolver/Scale.h>
 #include <Vortex2D/Engine/LinearSolver/Transfer.h>
 #include <Vortex2D/Renderer/CommandBuffer.h>
 #include <Vortex2D/Renderer/Texture.h>
@@ -145,13 +146,11 @@ private:
   // mResiduals[0] is level 0
   std::vector<Renderer::Buffer<float>> mResiduals;
 
-  Renderer::Work mPhiScaleWork;
-  std::vector<Renderer::Work::Bound> mSolidPhiScaleWorkBound;
-  std::vector<Renderer::Work::Bound> mLiquidPhiScaleWorkBound;
-
   // mSolidPhis[0] and mLiquidPhis[0] is level 1
   std::vector<LevelSet> mSolidPhis;
   std::vector<LevelSet> mLiquidPhis;
+  Scale mSolidPhiScale;
+  Scale mLiquidPhiScale;
 
   std::vector<Renderer::Work::Bound> mMatrixBuildBound;
 

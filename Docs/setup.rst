@@ -54,7 +54,7 @@ Again, regular cmake commands should be use to configure cmake:
 
 .. code-block:: bash
 
-  cmake .. 
+  cmake ..
 
 macOS
 =====

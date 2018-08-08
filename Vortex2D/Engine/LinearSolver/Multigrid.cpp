@@ -76,7 +76,8 @@ Multigrid::Multigrid(const Renderer::Device& device,
     , mNumSmoothingIterations(numSmoothingIterations)
     , mResidualWork(device, size, SPIRV::Residual_comp)
     , mTransfer(device)
-    , mPhiScaleWork(device, size, SPIRV::PhiScale_comp)
+    , mSolidPhiScale(device, 0)
+    , mLiquidPhiScale(device, 0)
     , mSmoother(device, mDepth.GetDepthSize(mDepth.GetMaxDepth()))
     , mBuildHierarchies(device, false)
     , mFullCycleSolver(device, false)
@@ -136,8 +137,11 @@ void Multigrid::BuildHierarchiesBind(Pressure& pressure,
                                      Renderer::Texture& liquidPhi)
 {
   auto s = mDepth.GetDepthSize(1);
-  mLiquidPhiScaleWorkBound.push_back(mPhiScaleWork.Bind(s, {liquidPhi, mLiquidPhis[0]}));
-  mSolidPhiScaleWorkBound.push_back(mPhiScaleWork.Bind(s, {solidPhi, mSolidPhis[0]}));
+
+  mLiquidPhiScale.DownSampleBind(0, s, liquidPhi, mLiquidPhis[0]);
+  mSolidPhiScale.DownSampleBind(0, s, solidPhi, mSolidPhis[0]);
+
+  mLiquidPhis[0].ExtrapolateBind(mSolidPhis[0]);
 
   RecursiveBind(pressure, 1);
 
@@ -146,19 +150,10 @@ void Multigrid::BuildHierarchiesBind(Pressure& pressure,
                                       mDevice.Loader());
     for (int i = 0; i < mDepth.GetMaxDepth(); i++)
     {
-      mLiquidPhiScaleWorkBound[i].Record(commandBuffer);
-      mLiquidPhis[i].Barrier(commandBuffer,
-                             vk::ImageLayout::eGeneral,
-                             vk::AccessFlagBits::eShaderWrite,
-                             vk::ImageLayout::eGeneral,
-                             vk::AccessFlagBits::eShaderRead);
+      mLiquidPhiScale.DownSample(commandBuffer, i);
+      mSolidPhiScale.DownSample(commandBuffer, i);
 
-      mSolidPhiScaleWorkBound[i].Record(commandBuffer);
-      mSolidPhis[i].Barrier(commandBuffer,
-                            vk::ImageLayout::eGeneral,
-                            vk::AccessFlagBits::eShaderWrite,
-                            vk::ImageLayout::eGeneral,
-                            vk::AccessFlagBits::eShaderRead);
+      mLiquidPhis[i].ExtrapolateRecord(commandBuffer);
 
       mMatrixBuildBound[i].PushConstant(commandBuffer, mDelta);
       mMatrixBuildBound[i].Record(commandBuffer);
@@ -187,10 +182,11 @@ void Multigrid::RecursiveBind(Pressure& pressure, std::size_t depth)
   if (static_cast<int32_t>(depth) < mDepth.GetMaxDepth())
   {
     auto s1 = mDepth.GetDepthSize(depth + 1);
-    mLiquidPhiScaleWorkBound.push_back(
-        mPhiScaleWork.Bind(s1, {mLiquidPhis[depth - 1], mLiquidPhis[depth]}));
-    mSolidPhiScaleWorkBound.push_back(
-        mPhiScaleWork.Bind(s1, {mSolidPhis[depth - 1], mSolidPhis[depth]}));
+
+    mLiquidPhiScale.DownSampleBind(depth, s1, mLiquidPhis[depth - 1], mLiquidPhis[depth]);
+    mSolidPhiScale.DownSampleBind(depth, s1, mSolidPhis[depth - 1], mSolidPhis[depth]);
+
+    mLiquidPhis[depth].ExtrapolateBind(mSolidPhis[depth]);
 
     mResidualWorkBound[depth] = mResidualWork.Bind(s0,
                                                    {mDatas[depth - 1].X,
