@@ -48,9 +48,12 @@ struct DynamicDispatcher
   void vkCmdDebugMarkerBeginEXT(VkCommandBuffer commandBuffer,
                                 const VkDebugMarkerMarkerInfoEXT* pMarkerInfo) const;
   void vkCmdDebugMarkerEndEXT(VkCommandBuffer commandBuffer) const;
+  VkResult vkDebugMarkerSetObjectNameEXT(VkDevice device,
+                                         const VkDebugMarkerObjectNameInfoEXT* pNameInfo) const;
 
   PFN_vkCmdDebugMarkerBeginEXT mVkCmdDebugMarkerBeginEXT = nullptr;
   PFN_vkCmdDebugMarkerEndEXT mVkCmdDebugMarkerEndEXT = nullptr;
+  PFN_vkDebugMarkerSetObjectNameEXT mVkDebugMarkerSetObjectNameEXT = nullptr;
 };
 
 /**

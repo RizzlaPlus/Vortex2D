@@ -65,7 +65,8 @@ public:
                        uint32_t width,
                        uint32_t height,
                        vk::Format format,
-                       VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY);
+                       VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY,
+                       const char* name = nullptr);
   VORTEX2D_API Texture(Texture&& other);
 
   VORTEX2D_API virtual ~Texture();

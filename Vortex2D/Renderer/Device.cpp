@@ -62,6 +62,16 @@ void DynamicDispatcher::vkCmdDebugMarkerEndEXT(VkCommandBuffer commandBuffer) co
   }
 }
 
+VkResult DynamicDispatcher::vkDebugMarkerSetObjectNameEXT(
+    VkDevice device,
+    const VkDebugMarkerObjectNameInfoEXT* pNameInfo) const
+{
+  if (mVkDebugMarkerSetObjectNameEXT != nullptr)
+  {
+    return mVkDebugMarkerSetObjectNameEXT(device, pNameInfo);
+  }
+}
+
 Device::Device(const Instance& instance, bool validation)
     : Device(instance, ComputeFamilyIndex(instance.GetPhysicalDevice()), false, validation)
 {
@@ -130,6 +140,8 @@ Device::Device(const Instance& instance, int familyIndex, bool surface, bool val
         (PFN_vkCmdDebugMarkerBeginEXT)vkGetDeviceProcAddr(*mDevice, "vkCmdDebugMarkerBeginEXT");
     mLoader.mVkCmdDebugMarkerEndEXT =
         (PFN_vkCmdDebugMarkerEndEXT)vkGetDeviceProcAddr(*mDevice, "vkCmdDebugMarkerEndEXT");
+    mLoader.mVkDebugMarkerSetObjectNameEXT = (PFN_vkDebugMarkerSetObjectNameEXT)vkGetDeviceProcAddr(
+        *mDevice, "vkDebugMarkerSetObjectNameEXT");
   }
 
   // create command pool

@@ -26,4 +26,10 @@
 #define VORTEX2D_API
 #endif
 
+template <typename Handle>
+uint64_t HandleToUint64(Handle* h)
+{
+  return reinterpret_cast<uint64_t>(h);
+}
+
 #endif

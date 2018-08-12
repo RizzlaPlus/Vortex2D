@@ -37,7 +37,8 @@ void BufferBarrier(vk::Buffer buffer,
 GenericBuffer::GenericBuffer(const Device& device,
                              vk::BufferUsageFlags usageFlags,
                              VmaMemoryUsage memoryUsage,
-                             vk::DeviceSize deviceSize)
+                             vk::DeviceSize deviceSize,
+                             const char* name)
     : mDevice(device)
     , mSize(deviceSize)
     , mUsageFlags(usageFlags | vk::BufferUsageFlagBits::eTransferDst |
@@ -45,6 +46,16 @@ GenericBuffer::GenericBuffer(const Device& device,
     , mMemoryUsage(memoryUsage)
 {
   Create();
+
+  if (name != nullptr)
+  {
+    vk::DebugMarkerObjectNameInfoEXT nameInfo;
+    nameInfo.setObject(HandleToUint64(mBuffer));
+    nameInfo.setObjectType(vk::DebugReportObjectTypeEXT::eBuffer);
+    nameInfo.setPObjectName(name);
+
+    mDevice.Handle().debugMarkerSetObjectNameEXT(nameInfo, mDevice.Loader());
+  }
 }
 
 GenericBuffer::~GenericBuffer()
@@ -107,6 +118,7 @@ void GenericBuffer::Resize(vk::DeviceSize size)
 
   mSize = size;
   Create();
+  // TODO need to set the name again here
 }
 
 void GenericBuffer::CopyFrom(vk::CommandBuffer commandBuffer, GenericBuffer& srcBuffer)

@@ -60,7 +60,8 @@ Texture::Texture(const Device& device,
                  uint32_t width,
                  uint32_t height,
                  vk::Format format,
-                 VmaMemoryUsage memoryUsage)
+                 VmaMemoryUsage memoryUsage,
+                 const char* name)
     : mDevice(device), mWidth(width), mHeight(height), mFormat(format)
 {
   vk::ImageUsageFlags usageFlags =
@@ -98,6 +99,16 @@ Texture::Texture(const Device& device,
       VK_SUCCESS)
   {
     throw std::runtime_error("Error creating texture");
+  }
+
+  if (name != nullptr)
+  {
+    vk::DebugMarkerObjectNameInfoEXT nameInfo;
+    nameInfo.setObject(HandleToUint64(mImage));
+    nameInfo.setObjectType(vk::DebugReportObjectTypeEXT::eImage);
+    nameInfo.setPObjectName(name);
+
+    mDevice.Handle().debugMarkerSetObjectNameEXT(nameInfo, mDevice.Loader());
   }
 
   if (memoryUsage != VMA_MEMORY_USAGE_CPU_ONLY)

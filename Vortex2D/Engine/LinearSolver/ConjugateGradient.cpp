@@ -18,17 +18,17 @@ ConjugateGradient::ConjugateGradient(const Renderer::Device& device,
                                      Preconditioner& preconditioner)
     : mDevice(device)
     , mPreconditioner(preconditioner)
-    , r(device, size.x * size.y)
-    , s(device, size.x * size.y)
-    , z(device, size.x * size.y)
+    , r(device, size.x * size.y, VMA_MEMORY_USAGE_GPU_ONLY, "r")
+    , s(device, size.x * size.y, VMA_MEMORY_USAGE_GPU_ONLY, "s")
+    , z(device, size.x * size.y, VMA_MEMORY_USAGE_GPU_ONLY, "z")
     , inner(device, size.x * size.y)
-    , alpha(device, 1)
-    , beta(device, 1)
-    , rho(device, 1)
-    , rho_new(device, 1)
-    , sigma(device, 1)
-    , error(device)
-    , localError(device, 1, VMA_MEMORY_USAGE_GPU_TO_CPU)
+    , alpha(device, 1, VMA_MEMORY_USAGE_GPU_ONLY, "alpha")
+    , beta(device, 1, VMA_MEMORY_USAGE_GPU_ONLY, "beta")
+    , rho(device, 1, VMA_MEMORY_USAGE_GPU_ONLY, "rho")
+    , rho_new(device, 1, VMA_MEMORY_USAGE_GPU_ONLY, "rho new")
+    , sigma(device, 1, VMA_MEMORY_USAGE_GPU_ONLY, "sigma")
+    , error(device, 1, VMA_MEMORY_USAGE_GPU_ONLY, "error")
+    , localError(device, 1, VMA_MEMORY_USAGE_GPU_ONLY, "local error")
     , matrixMultiply(device, size, SPIRV::MultiplyMatrix_comp)
     , scalarDivision(device, glm::ivec2(1), SPIRV::Divide_comp)
     , scalarMultiply(device, size, SPIRV::Multiply_comp)
@@ -196,11 +196,11 @@ void ConjugateGradient::Solve(Parameters& params, const std::vector<RigidBody*>&
 
 float ConjugateGradient::GetError()
 {
-    mErrorRead.Submit().Wait();
+  mErrorRead.Submit().Wait();
 
-    float error;
-    Renderer::CopyTo(localError, error);
-    return error;
+  float error;
+  Renderer::CopyTo(localError, error);
+  return error;
 }
 
 }  // namespace Fluid
