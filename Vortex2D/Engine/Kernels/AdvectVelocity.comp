@@ -22,20 +22,22 @@ void main(void)
 {
   uvec2 localSize = gl_WorkGroupSize.xy;  // Hack for Mali-GPU
 
-  ivec2 pos = ivec2(gl_GlobalInvocationID);
+  vec2 pos = vec2(gl_GlobalInvocationID);
   if (pos.x < consts.width && pos.y < consts.height)
   {
     vec2 value;
+    vec2 uvel = (pos + vec2(0.0, 0.5));
+    vec2 vvel = (pos + vec2(0.5, 0.0));
 
     // u
-    vec2 upos = trace_rk3(vec2(pos) + vec2(0.0, 0.5), consts.delta);
+    vec2 upos = uvel + velocity_trace_rk3(uvel / consts.width, consts.delta) * consts.width;
     value.x = get_velocity(upos).x;
 
     // v
-    vec2 vpos = trace_rk3(vec2(pos) + vec2(0.5, 0.0), consts.delta);
+    vec2 vpos = vvel + velocity_trace_rk3(vvel / consts.width, consts.delta) * consts.width;
     value.y = get_velocity(vpos).y;
 
     // store result
-    imageStore(OutVelocity, pos, vec4(value, 0.0, 0.0));
+    imageStore(OutVelocity, ivec2(pos), vec4(value, 0.0, 0.0));
   }
 }

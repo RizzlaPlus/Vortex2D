@@ -12,7 +12,9 @@ extern glm::vec4 green;
 class RenderExample : public Runner
 {
 public:
-  RenderExample(const Vortex2D::Renderer::Device& device, const glm::vec2& /*size*/)
+  RenderExample(const Vortex2D::Renderer::Device& device,
+                const glm::vec2& /*size*/,
+                const glm::vec2& /*scale*/)
       : rectangle(device, {25, 25}), circle(device, glm::vec2(10))
   {
     rectangle.Position = {50, 50};

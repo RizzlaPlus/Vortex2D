@@ -20,7 +20,10 @@ class WaterFallExample : public Runner
   const float gravityForce = 100.0f;
 
 public:
-  WaterFallExample(const Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
+  WaterFallExample(const Vortex2D::Renderer::Device& device,
+                   const glm::ivec2& size,
+                   const glm::vec2& /*scale*/,
+                   float dt)
       : waterSource(device, {10.0f, 10.0f})
       , waterForce(device, {10.0f, 10.0f})
       , gravity(device, glm::vec2(256.0f, 256.0f))

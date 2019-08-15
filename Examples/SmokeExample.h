@@ -17,22 +17,28 @@ extern glm::vec4 gray;
 class SmokeExample : public Runner
 {
 public:
-  SmokeExample(const Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
-      : source1(device, glm::vec2(20.0f))
-      , source2(device, glm::vec2(20.0f))
+  SmokeExample(const Vortex2D::Renderer::Device& device,
+               const glm::ivec2& size,
+               const glm::vec2& scale,
+               float dt)
+      : source1(device, glm::vec2(20.0f) * scale)
+      , source2(device, glm::vec2(20.0f) * scale)
       , force1(device, glm::vec2(20.0f))
       , force2(device, glm::vec2(20.0f))
-      , density(device, size, vk::Format::eR8G8B8A8Unorm)
+      , density(device, size * glm::ivec2(scale), vk::Format::eR8G8B8A8Unorm)
       , world(device, size, dt, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
   {
     world.FieldBind(density);
 
-    source1.Position = force1.Position = {75.0f, 25.0f};
-    source2.Position = force2.Position = {175.0f, 225.0f};
+    force1.Position = {75.0f, 25.0f};
+    force2.Position = {175.0f, 225.0f};
 
-    source1.Anchor = source2.Anchor = glm::vec2(10.0);
+    source1.Position = force1.Position * scale;
+    source2.Position = force2.Position * scale;
+
     force1.Anchor = force2.Anchor = glm::vec2(10.0);
+    source1.Anchor = source2.Anchor = force1.Anchor * scale;
 
     source1.Colour = source2.Colour = gray;
 
@@ -40,6 +46,7 @@ public:
     force2.Colour = {0.0f, -30.0f, 0.0f, 0.0f};
 
     solidPhi.Colour = green;
+    solidPhi.Scale = scale;
   }
 
   void Init(const Vortex2D::Renderer::Device& device,

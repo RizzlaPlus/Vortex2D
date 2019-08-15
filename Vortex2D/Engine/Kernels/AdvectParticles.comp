@@ -10,14 +10,16 @@ layout(push_constant) uniform Consts
   int width;
   int height;
   float delta;
-}consts;
+}
+consts;
 
 #include "CommonParticles.comp"
 
 layout(std430, binding = 0) buffer Particles
 {
   Particle value[];
-}particles;
+}
+particles;
 
 struct DispatchParams
 {
@@ -68,7 +70,9 @@ void main()
   uint index = gl_GlobalInvocationID.x;
   if (index < params.count)
   {
-    particles.value[index].Position = trace_rk3(particles.value[index].Position, -consts.delta);
+    vec2 pos = particles.value[index].Position;
+    particles.value[index].Position =
+        pos + velocity_trace_rk3(pos / consts.width, -consts.delta) * consts.width;
 
     float phi = interpolate_phi(particles.value[index].Position);
     if (phi < 0.0)

@@ -20,7 +20,10 @@ extern glm::vec4 gray;
 class SmokeVelocityExample : public Runner
 {
 public:
-  SmokeVelocityExample(const Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
+  SmokeVelocityExample(const Vortex2D::Renderer::Device& device,
+                       const glm::ivec2& size,
+                       const glm::vec2& /*scale*/,
+                       float dt)
       : source1(device, glm::vec2(5.0f))
       , source2(device, glm::vec2(5.0f))
       , force1(device, glm::vec2(5.0f))

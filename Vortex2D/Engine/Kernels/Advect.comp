@@ -45,10 +45,11 @@ void main(void)
 {
   uvec2 localSize = gl_WorkGroupSize.xy;  // Hack for Mali-GPU
 
-  ivec2 pos = ivec2(gl_GlobalInvocationID);
+  vec2 pos = ivec2(gl_GlobalInvocationID);
   if (pos.x < consts.width && pos.y < consts.height)
   {
-    vec4 value = interpolate(trace_rk3(pos, consts.delta));
-    imageStore(OutField, pos, value);
+    vec2 newPos = pos + velocity_trace_rk3(pos / consts.width, consts.delta) * consts.height;
+    vec4 value = interpolate(newPos);
+    imageStore(OutField, ivec2(pos), value);
   }
 }

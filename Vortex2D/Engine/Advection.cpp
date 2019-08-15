@@ -54,7 +54,9 @@ void Advection::AdvectVelocity()
 
 void Advection::AdvectBind(Density& density)
 {
-  mAdvectBound = mAdvect.Bind({mVelocity, density, density.mFieldBack});
+  glm::ivec2 size(density.GetWidth(), density.GetHeight());
+
+  mAdvectBound = mAdvect.Bind(size, {mVelocity, density, density.mFieldBack});
   mAdvectCmd.Record([&](vk::CommandBuffer commandBuffer) {
     commandBuffer.debugMarkerBeginEXT({"Density advect", {{0.86f, 0.14f, 0.52f, 1.0f}}},
                                       mDevice.Loader());

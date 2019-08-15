@@ -22,6 +22,7 @@ class HydrostaticWaterExample : public Runner
 public:
   HydrostaticWaterExample(const Vortex2D::Renderer::Device& device,
                           const glm::ivec2& size,
+                          const glm::vec2& /*scale*/,
                           float dt)
       : gravity(device, glm::vec2(256.0f, 256.0f))
       , world(device, size, dt, 2, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)

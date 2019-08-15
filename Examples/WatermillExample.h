@@ -106,7 +106,10 @@ class WatermillExample : public Runner
   const float gravityForce = 100.0f;
 
 public:
-  WatermillExample(const Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
+  WatermillExample(const Vortex2D::Renderer::Device& device,
+                   const glm::ivec2& size,
+                   const glm::vec2& /*scale*/,
+                   float dt)
       : waterSource(device, {25.0, 25.0f})
       , waterForce(device, {25.0f, 25.0f})
       , gravity(device, glm::vec2(256.0f, 256.0f))

@@ -22,7 +22,10 @@ extern glm::vec4 gray;
 class ObstacleSmokeExample : public Runner
 {
 public:
-  ObstacleSmokeExample(const Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
+  ObstacleSmokeExample(const Vortex2D::Renderer::Device& device,
+                       const glm::ivec2& size,
+                       const glm::vec2& /*scale*/,
+                       float dt)
       : density(device, size, vk::Format::eR8G8B8A8Unorm)
       , world(device, size, dt, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
