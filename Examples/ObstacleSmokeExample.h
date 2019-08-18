@@ -24,9 +24,10 @@ class ObstacleSmokeExample : public Runner
 public:
   ObstacleSmokeExample(const Vortex2D::Renderer::Device& device,
                        const glm::ivec2& size,
-                       const glm::vec2& /*scale*/,
+                       const glm::vec2& scale,
                        float dt)
-      : density(device, size, vk::Format::eR8G8B8A8Unorm)
+      : scale(scale)
+      , density(device, size * glm::ivec2(scale), vk::Format::eR8G8B8A8Unorm)
       , world(device, size, dt, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
       , velocityClear({0.0f, 0.0f, 0.0f, 0.0f})
@@ -58,14 +59,15 @@ public:
     world.AddRigidbody(bottom.mRigidbody);
 
     solidPhi.Colour = green;
+    solidPhi.Scale = scale;
   }
 
   void Init(const Vortex2D::Renderer::Device& device,
             Vortex2D::Renderer::RenderTarget& renderTarget) override
   {
     // Draw density
-    Vortex2D::Renderer::Rectangle source(device, {200, 100.0f});
-    source.Position = {25.0f, 125.0f};
+    Vortex2D::Renderer::Rectangle source(device, glm::vec2(200, 100.0f) * scale);
+    source.Position = glm::vec2(25.0f, 125.0f) * scale;
     source.Colour = gray;
 
     density.Record({source}).Submit().Wait();
@@ -114,6 +116,7 @@ public:
   }
 
 private:
+  glm::vec2 scale;
   Vortex2D::Fluid::Density density;
   Vortex2D::Fluid::SmokeWorld world;
   Vortex2D::Fluid::DistanceField solidPhi;

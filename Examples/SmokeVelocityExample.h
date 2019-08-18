@@ -22,13 +22,13 @@ class SmokeVelocityExample : public Runner
 public:
   SmokeVelocityExample(const Vortex2D::Renderer::Device& device,
                        const glm::ivec2& size,
-                       const glm::vec2& /*scale*/,
+                       const glm::vec2& scale,
                        float dt)
-      : source1(device, glm::vec2(5.0f))
-      , source2(device, glm::vec2(5.0f))
+      : source1(device, glm::vec2(5.0f) * scale)
+      , source2(device, glm::vec2(5.0f) * scale)
       , force1(device, glm::vec2(5.0f))
       , force2(device, glm::vec2(5.0f))
-      , density(device, size, vk::Format::eR8G8B8A8Unorm)
+      , density(device, size * glm::ivec2(scale), vk::Format::eR8G8B8A8Unorm)
       , world(device, size, dt, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , clearObstacles({250.0f, 0.0f, 0.0f, 0.0f})
       , rWorld({0.0f, 0.0f})
@@ -46,8 +46,11 @@ public:
     world.AttachRigidBodySolver(solver);
     world.AddRigidbody(body.mRigidbody);
 
-    source1.Position = force1.Position = {25.0f, 25.0f};
-    source2.Position = force2.Position = {125.0f, 225.0f};
+    force1.Position = {25.0f, 25.0f};
+    force2.Position = {125.0f, 225.0f};
+
+    source1.Position = force1.Position * scale;
+    source2.Position = force2.Position * scale;
 
     source1.Colour = source2.Colour = gray;
 
@@ -55,6 +58,7 @@ public:
     force2.Colour = {-50.0f, -50.0f, 0.0f, 0.0f};
 
     solidPhi.Colour = green;
+    solidPhi.Scale = scale;
   }
 
   void Init(const Vortex2D::Renderer::Device& device,
