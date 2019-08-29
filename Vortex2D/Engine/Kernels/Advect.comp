@@ -48,7 +48,7 @@ void main(void)
   vec2 pos = ivec2(gl_GlobalInvocationID);
   if (pos.x < consts.width && pos.y < consts.height)
   {
-    vec2 newPos = pos + velocity_trace_rk3(pos / consts.width, consts.delta) * consts.height;
+    vec2 newPos = pos + velocity_trace_rk3(pos / consts.width, consts.delta) * consts.width;
     vec4 value = interpolate(newPos);
     imageStore(OutField, ivec2(pos), value);
   }

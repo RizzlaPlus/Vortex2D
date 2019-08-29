@@ -19,7 +19,7 @@ class WaterExample : public Runner
 public:
   WaterExample(const Vortex2D::Renderer::Device& device,
                const glm::ivec2& size,
-               const glm::vec2& /*scale*/,
+               const glm::vec2& scale,
                float dt)
       : gravity(device, {256.0f, 256.0f})
       , world(device, size, dt, 2, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
@@ -30,6 +30,9 @@ public:
 
     solidPhi.Colour = green;
     liquidPhi.Colour = blue;
+
+    solidPhi.Scale = scale;
+    liquidPhi.Scale = scale;
   }
 
   void Init(const Vortex2D::Renderer::Device& device,

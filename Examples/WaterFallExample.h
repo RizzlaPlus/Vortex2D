@@ -22,7 +22,7 @@ class WaterFallExample : public Runner
 public:
   WaterFallExample(const Vortex2D::Renderer::Device& device,
                    const glm::ivec2& size,
-                   const glm::vec2& /*scale*/,
+                   const glm::vec2& scale,
                    float dt)
       : waterSource(device, {10.0f, 10.0f})
       , waterForce(device, {10.0f, 10.0f})
@@ -74,6 +74,9 @@ public:
 
     solidPhi.Colour = green;
     liquidPhi.Colour = blue;
+
+    solidPhi.Scale = scale;
+    liquidPhi.Scale = scale;
   }
 
   void Init(const Vortex2D::Renderer::Device& device,
