@@ -27,6 +27,7 @@ layout(std430, binding = 5) buffer Valid
 }valid;
 
 #include "CommonProject.comp"
+#include "CommonLevelSet.comp"
 
 void main()
 {
@@ -43,9 +44,9 @@ void main()
 
     vec2 pGrad = vec2(p-pxn, p-pyn);
 
-    float phi = imageLoad(FluidLevelSet, pos).x;
-    float phixn = imageLoad(FluidLevelSet, pos + ivec2(-1,0)).x;
-    float phiyn = imageLoad(FluidLevelSet, pos + ivec2(0,-1)).x;
+    float phi = get_fluid_phi(pos);
+    float phixn = get_fluid_phi(pos + ivec2(-1,0));
+    float phiyn = get_fluid_phi(pos + ivec2(0,-1));
 
     vec2 theta = vec2(1.0);
     if (phi >= 0 || phixn >= 0)

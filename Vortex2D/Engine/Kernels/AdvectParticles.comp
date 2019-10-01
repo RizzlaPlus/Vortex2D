@@ -10,16 +10,14 @@ layout(push_constant) uniform Consts
   int width;
   int height;
   float delta;
-}
-consts;
+}consts;
 
 #include "CommonParticles.comp"
 
 layout(std430, binding = 0) buffer Particles
 {
   Particle value[];
-}
-particles;
+}particles;
 
 struct DispatchParams
 {
@@ -44,10 +42,12 @@ float interpolate_phi(vec2 xy)
   ivec2 ij = ivec2(floor(xy));
   vec2 f = xy - vec2(ij);
 
-  return mix(
-      mix(imageLoad(SolidPhi, ij + ivec2(0, 0)).x, imageLoad(SolidPhi, ij + ivec2(1, 0)).x, f.x),
-      mix(imageLoad(SolidPhi, ij + ivec2(0, 1)).x, imageLoad(SolidPhi, ij + ivec2(1, 1)).x, f.x),
-      f.y);
+  float a = imageLoad(SolidPhi, ij + ivec2(0, 0)).x;
+  float b = imageLoad(SolidPhi, ij + ivec2(1, 0)).x;
+  float c = imageLoad(SolidPhi, ij + ivec2(0, 1)).x;
+  float d = imageLoad(SolidPhi, ij + ivec2(1, 1)).x;
+
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
 vec2 interpolate_gradient(vec2 xy)
@@ -66,6 +66,7 @@ vec2 interpolate_gradient(vec2 xy)
 void main()
 {
   uvec2 localSize = gl_WorkGroupSize.xy;  // Hack for Mali-GPU
+  float solidScale = float(imageSize(SolidPhi).x) / float(consts.width);
 
   uint index = gl_GlobalInvocationID.x;
   if (index < params.count)
@@ -74,13 +75,12 @@ void main()
     particles.value[index].Position =
         pos + velocity_trace_rk3(pos / consts.width, -consts.delta) * consts.width;
 
-    float phi = interpolate_phi(particles.value[index].Position);
+    float phi = interpolate_phi(particles.value[index].Position * solidScale);
     if (phi < 0.0)
     {
-      vec2 normal = interpolate_gradient(particles.value[index].Position);
+      vec2 normal = interpolate_gradient(particles.value[index].Position * solidScale);
       normal /= sqrt(dot(normal, normal));
-      // NOTE this assumes that dx of phi is 1
-      particles.value[index].Position -= phi * normal;
+      particles.value[index].Position -= phi * normal * solidScale;
     }
   }
 }

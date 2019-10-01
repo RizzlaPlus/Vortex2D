@@ -25,7 +25,12 @@ public:
                           const glm::vec2& scale,
                           float dt)
       : gravity(device, glm::vec2(256.0f, 256.0f))
-      , world(device, size, dt, 2, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
+      , world(device,
+              size,
+              size * glm::ivec2(scale),
+              dt,
+              2,
+              Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
       , liquidPhi(world.LiquidDistanceField())
       , rWorld(b2Vec2(0.0f, gravityForce))

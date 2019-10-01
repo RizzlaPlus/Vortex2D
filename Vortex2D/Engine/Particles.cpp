@@ -177,11 +177,16 @@ void ParticleCount::Phi()
 
 void ParticleCount::VelocitiesBind(Velocity& velocity, Renderer::GenericBuffer& valid)
 {
-  mParticleToGridBound = mParticleToGridWork.Bind({mCount, mParticles, mIndex, velocity, valid});
+  glm::ivec2 size = {velocity.GetWidth(), velocity.GetHeight()};
+  float scale = float(mSize.x) / velocity.GetWidth();
+
+  mParticleToGridBound =
+      mParticleToGridWork.Bind(size, {mCount, mParticles, mIndex, velocity, valid});
   mParticleToGrid.Record([&](vk::CommandBuffer commandBuffer) {
     commandBuffer.debugMarkerBeginEXT({"Particle to grid", {{0.71f, 0.15f, 0.48f, 1.0f}}},
                                       mDevice.Loader());
     valid.Clear(commandBuffer);
+    mParticleToGridBound.PushConstant(commandBuffer, scale);
     mParticleToGridBound.Record(commandBuffer);
     valid.Barrier(commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
     commandBuffer.debugMarkerEndEXT(mDevice.Loader());

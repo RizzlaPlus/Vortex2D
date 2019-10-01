@@ -58,6 +58,7 @@ public:
    * Reduces loss of fluid.
    */
   World(const Renderer::Device& device,
+        const glm::ivec2& velocitySize,
         const glm::ivec2& size,
         float dt,
         int numSubSteps = 1,
@@ -212,6 +213,7 @@ class WaterWorld : public World
 {
 public:
   VORTEX2D_API WaterWorld(const Renderer::Device& device,
+                          const glm::ivec2& velocitySize,
                           const glm::ivec2& size,
                           float dt,
                           int numSubSteps,

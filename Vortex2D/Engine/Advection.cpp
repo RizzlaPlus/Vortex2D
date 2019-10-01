@@ -21,7 +21,6 @@ Advection::Advection(const Renderer::Device& device,
                      Velocity::InterpolationMode interpolationMode)
     : mDevice(device)
     , mDt(dt)
-    , mSize(size)
     , mVelocity(velocity)
     , mVelocityAdvect(device,
                       size,
@@ -81,12 +80,13 @@ void Advection::Advect()
 }
 
 void Advection::AdvectParticleBind(
+    const glm::ivec2& size,
     Renderer::GenericBuffer& particles,
     Renderer::Texture& levelSet,
     Renderer::IndirectBuffer<Renderer::DispatchParams>& dispatchParams)
 {
   mAdvectParticlesBound =
-      mAdvectParticles.Bind(mSize, {particles, dispatchParams, mVelocity, levelSet});
+      mAdvectParticles.Bind(size, {particles, dispatchParams, mVelocity, levelSet});
   mAdvectParticlesCmd.Record([&](vk::CommandBuffer commandBuffer) {
     commandBuffer.debugMarkerBeginEXT({"Particle advect", {{0.09f, 0.17f, 0.36f, 1.0f}}},
                                       mDevice.Loader());

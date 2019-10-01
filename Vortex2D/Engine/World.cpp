@@ -22,28 +22,36 @@ void ForAll(std::vector<Class*>& elements, void (Class::*f)())
 }
 
 World::World(const Renderer::Device& device,
+             const glm::ivec2& velocitySize,
              const glm::ivec2& size,
              float dt,
              int numSubSteps,
              Velocity::InterpolationMode interpolationMode)
     : mDevice(device)
-    , mSize(size)
+    , mSize(velocitySize)
     , mDelta(dt / numSubSteps)
     , mNumSubSteps(numSubSteps)
-    , mPreconditioner(device, size, mDelta)
-    , mLinearSolver(device, size, mPreconditioner)
-    , mData(device, size)
-    , mVelocity(device, size)
+    , mPreconditioner(device, velocitySize, mDelta)
+    , mLinearSolver(device, velocitySize, mPreconditioner)
+    , mData(device, velocitySize)
+    , mVelocity(device, velocitySize)
     , mLiquidPhi(device, size)
-    , mStaticSolidPhi(device, size)
-    , mDynamicSolidPhi(device, size)
-    , mValid(device, size.x * size.y)
-    , mAdvection(device, size, mDelta, mVelocity, interpolationMode)
-    , mProjection(device, mDelta, size, mData, mVelocity, mDynamicSolidPhi, mLiquidPhi, mValid)
-    , mExtrapolation(device, size, mValid, mVelocity)
+    , mStaticSolidPhi(device, velocitySize)
+    , mDynamicSolidPhi(device, velocitySize)
+    , mValid(device, velocitySize.x * velocitySize.y)
+    , mAdvection(device, velocitySize, mDelta, mVelocity, interpolationMode)
+    , mProjection(device,
+                  mDelta,
+                  velocitySize,
+                  mData,
+                  mVelocity,
+                  mDynamicSolidPhi,
+                  mLiquidPhi,
+                  mValid)
+    , mExtrapolation(device, velocitySize, mValid, mVelocity)
     , mCopySolidPhi(device, false)
     , mRigidBodySolver(nullptr)
-    , mCfl(device, size, mVelocity)
+    , mCfl(device, velocitySize, mVelocity)
 {
   mExtrapolation.ConstrainBind(mDynamicSolidPhi);
   mLiquidPhi.ExtrapolateBind(mDynamicSolidPhi);
@@ -160,7 +168,7 @@ SmokeWorld::SmokeWorld(const Renderer::Device& device,
                        const glm::ivec2& size,
                        float dt,
                        Velocity::InterpolationMode interpolationMode)
-    : World(device, size, dt, 1, interpolationMode)
+    : World(device, size, size, dt, 1, interpolationMode)
 {
 }
 
@@ -207,11 +215,12 @@ void SmokeWorld::FieldBind(Density& density)
 }
 
 WaterWorld::WaterWorld(const Renderer::Device& device,
+                       const glm::ivec2& velocitySize,
                        const glm::ivec2& size,
                        float dt,
                        int numSubSteps,
                        Velocity::InterpolationMode interpolationMode)
-    : World(device, size, dt, numSubSteps, interpolationMode)
+    : World(device, velocitySize, size, dt, numSubSteps, interpolationMode)
     , mParticles(device,
                  vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eVertexBuffer,
                  VMA_MEMORY_USAGE_GPU_ONLY,
@@ -220,7 +229,8 @@ WaterWorld::WaterWorld(const Renderer::Device& device,
 {
   mParticleCount.LevelSetBind(mLiquidPhi);
   mParticleCount.VelocitiesBind(mVelocity, mValid);
-  mAdvection.AdvectParticleBind(mParticles, mDynamicSolidPhi, mParticleCount.GetDispatchParams());
+  mAdvection.AdvectParticleBind(
+      size, mParticles, mDynamicSolidPhi, mParticleCount.GetDispatchParams());
 }
 
 WaterWorld::~WaterWorld() {}

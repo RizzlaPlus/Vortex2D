@@ -149,7 +149,7 @@ TEST(AdvectionTests, ParticleAdvect)
 
   // advection
   Advection advection(*device, size, 0.01f, velocity, Velocity::InterpolationMode::Cubic);
-  advection.AdvectParticleBind(particles, solidPhi, dispatchParams);
+  advection.AdvectParticleBind(size, particles, solidPhi, dispatchParams);
   advection.AdvectParticles();
   device->Handle().waitIdle();
 
@@ -212,7 +212,7 @@ TEST(AdvectionTests, ParticleProject)
 
   // advection
   Advection advection(*device, size, 0.01f, velocity, Velocity::InterpolationMode::Cubic);
-  advection.AdvectParticleBind(particles, solidPhi, dispatchParams);
+  advection.AdvectParticleBind(size, particles, solidPhi, dispatchParams);
   advection.AdvectParticles();
   device->Handle().waitIdle();
 

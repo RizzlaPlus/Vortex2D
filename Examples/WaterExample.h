@@ -21,8 +21,14 @@ public:
                const glm::ivec2& size,
                const glm::vec2& scale,
                float dt)
-      : gravity(device, {256.0f, 256.0f})
-      , world(device, size, dt, 2, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
+      : scale(scale)
+      , gravity(device, {256.0f, 256.0f})
+      , world(device,
+              size,
+              size * glm::ivec2(scale),
+              dt,
+              2,
+              Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
       , liquidPhi(world.LiquidDistanceField())
   {
@@ -32,15 +38,14 @@ public:
     liquidPhi.Colour = blue;
 
     solidPhi.Scale = scale;
-    liquidPhi.Scale = scale;
   }
 
   void Init(const Vortex2D::Renderer::Device& device,
             Vortex2D::Renderer::RenderTarget& renderTarget) override
   {
     // Add particles
-    Vortex2D::Renderer::IntRectangle fluid(device, {150.0f, 50.0f});
-    fluid.Position = {50.0f, 25.0f};
+    Vortex2D::Renderer::IntRectangle fluid(device, glm::vec2(150.0f, 50.0f) * scale);
+    fluid.Position = glm::vec2(50.0f, 25.0f) * scale;
     fluid.Colour = glm::vec4(4);
 
     world.RecordParticleCount({fluid}).Submit().Wait();
@@ -85,6 +90,7 @@ public:
   }
 
 private:
+  glm::vec2 scale;
   Vortex2D::Renderer::Rectangle gravity;
   Vortex2D::Fluid::WaterWorld world;
   Vortex2D::Fluid::DistanceField solidPhi, liquidPhi;

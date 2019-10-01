@@ -8,6 +8,7 @@ layout(push_constant) uniform Consts
 {
   int width;
   int height;
+  float scale;
 }consts;
 
 #include "CommonParticles.comp"
@@ -39,14 +40,15 @@ float hat(float t)
   return max(1.0 - abs(t), 0.0);
 }
 
-float get_weight(vec2 pos, ivec2 ipos)
+float get_weight(vec2 pos, ivec2 ipos, float scale)
 {
-  return hat(pos.x - ipos.x) * hat(pos.y - ipos.y);
+  return hat((pos.x - ipos.x) * scale) * hat((pos.y - ipos.y) * scale);
 }
 
 void main()
 {
   uvec2 localSize = gl_WorkGroupSize.xy;  // Hack for Mali-GPU
+  int scale = int(ceil(consts.scale));
 
   ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
   if (pos.x < consts.width && pos.y < consts.height)
@@ -56,14 +58,15 @@ void main()
     vec2 weight;
     vec2 f;
 
-    for (int i = -1; i <= 1; i++)
+    for (int i = -scale; i <= scale; i++)
     {
-      for (int j = -1; j <= 1; j++)
+      for (int j = -scale; j <= scale; j++)
       {
-        ivec2 newPos = ivec2(pos) + ivec2(i, j);
-        if (newPos.x >= 0 && newPos.x < consts.width && newPos.y >= 0 && newPos.y < consts.height)
+        ivec2 scalePos = scale * ivec2(pos);
+        ivec2 newPos = scalePos + ivec2(i, j);
+        if (newPos.x >= 0 && newPos.x < scale * consts.width && newPos.y >= 0 && newPos.y < scale * consts.height)
         {
-          int index = newPos.x + newPos.y * consts.width;
+          int index = newPos.x + newPos.y * scale * consts.width;
           int total = count.value[index];
 
           for (int k = 0; k < total; k++)
@@ -73,8 +76,8 @@ void main()
             vec2 up = p.Position - vec2(0.0, 0.5);
             vec2 vp = p.Position - vec2(0.5, 0.0);
 
-            weight.x = get_weight(up, pos);
-            weight.y = get_weight(vp, pos);
+            weight.x = get_weight(up, scalePos, 1.0 / scale);
+            weight.y = get_weight(vp, scalePos, 1.0 / scale);
 
             accum += weight * p.Velocity;
             sum += weight;

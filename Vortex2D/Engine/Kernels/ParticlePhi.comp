@@ -49,14 +49,17 @@ void main()
           int index = newPos.x + newPos.y * consts.width;
           int total = count.value[index];
 
+          float phi = imageLoad(LevelSet, pos).x;
+
           for (int k = 0; k < total; k++)
           {
             Particle p = particles.value[scanIndex.value[index] + k];
             float phi_temp = distance(pos + 0.5, p.Position) - particle_radius;
 
-            float phi = imageLoad(LevelSet, pos).x;
-            imageStore(LevelSet, pos, vec4(min(phi, phi_temp), 0.0, 0.0, 0.0));
+            phi = min(phi, phi_temp);
           }
+
+          imageStore(LevelSet, pos, vec4(phi, 0.0, 0.0, 0.0));
         }
       }
     }

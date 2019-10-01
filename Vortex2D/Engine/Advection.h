@@ -62,6 +62,7 @@ public:
    * @param dispatchParams contains number of particles
    */
   VORTEX2D_API void AdvectParticleBind(
+      const glm::ivec2& size,
       Renderer::GenericBuffer& particles,
       Renderer::Texture& levelSet,
       Renderer::IndirectBuffer<Renderer::DispatchParams>& dispatchParams);
@@ -73,7 +74,6 @@ public:
 private:
   const Renderer::Device& mDevice;
   float mDt;
-  glm::ivec2 mSize;
   Velocity& mVelocity;
 
   Renderer::Work mVelocityAdvect;

@@ -11,16 +11,14 @@ layout(push_constant) uniform Consts
   int width;
   int height;
   float alpha;
-}
-consts;
+}consts;
 
 #include "CommonParticles.comp"
 
 layout(std430, binding = 0) buffer Particles
 {
   Particle value[];
-}
-particles;
+}particles;
 
 struct DispatchParams
 {
@@ -75,13 +73,14 @@ vec2 get_dvelocity(vec2 xy)
 void main()
 {
   uvec2 localSize = gl_WorkGroupSize.xy;  // Hack for Mali-GPU
+  float scale = float(imageSize(Velocity).x) / float(consts.width);
 
   uint index = gl_GlobalInvocationID.x;
   if (index < params.count)
   {
     vec2 pos = particles.value[index].Position;
-    vec2 pic = get_velocity(pos);
-    vec2 flip = particles.value[index].Velocity + get_dvelocity(pos);
+    vec2 pic = get_velocity(pos * scale);
+    vec2 flip = particles.value[index].Velocity + get_dvelocity(pos * scale);
     particles.value[index].Velocity = mix(flip, pic, consts.alpha);
   }
 }
