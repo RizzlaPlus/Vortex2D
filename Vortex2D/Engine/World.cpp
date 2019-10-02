@@ -36,8 +36,8 @@ World::World(const Renderer::Device& device,
     , mData(device, velocitySize)
     , mVelocity(device, velocitySize)
     , mLiquidPhi(device, size)
-    , mStaticSolidPhi(device, velocitySize)
-    , mDynamicSolidPhi(device, velocitySize)
+    , mStaticSolidPhi(device, size)
+    , mDynamicSolidPhi(device, size)
     , mValid(device, velocitySize.x * velocitySize.y)
     , mAdvection(device, velocitySize, mDelta, mVelocity, interpolationMode)
     , mProjection(device,

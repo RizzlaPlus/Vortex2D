@@ -1,6 +1,7 @@
 #version 450
 
 #extension GL_ARB_separate_shader_objects : enable
+#extension GL_GOOGLE_include_directive : enable
 
 layout (local_size_x_id = 1, local_size_y_id = 2) in;
 
@@ -8,12 +9,14 @@ layout(push_constant) uniform PushConsts
 {
   int width;
   int height;
-} consts;
+}consts;
 
-layout (binding = 0, r32f) uniform readonly image2D SolidPhi;
-layout (binding = 1, r32f) uniform image2D LiquidPhi;
+layout (binding = 0, r32f) uniform readonly image2D SolidLevelSet;
+layout (binding = 1, r32f) uniform image2D FluidLevelSet;
 
 const float dx = 1.0;
+
+#include "CommonProject.comp"
 
 void main(void)
 {
@@ -21,19 +24,19 @@ void main(void)
 
     ivec2 pos = ivec2(gl_GlobalInvocationID);
 
-    float f = imageLoad(LiquidPhi, pos).x;
+    float f = imageLoad(FluidLevelSet, pos).x;
     if (f < 0.5 * dx)
     {
-        float wxp = imageLoad(SolidPhi, pos + ivec2(0,0)).x;
-        float wxn = imageLoad(SolidPhi, pos + ivec2(1,0)).x;
-        float wyp = imageLoad(SolidPhi, pos + ivec2(0,1)).x;
-        float wyn = imageLoad(SolidPhi, pos + ivec2(1,1)).x;
+        float wxp = get_solid_phi(pos + ivec2(0,0)).x;
+        float wxn = get_solid_phi(pos + ivec2(1,0)).x;
+        float wyp = get_solid_phi(pos + ivec2(0,1)).x;
+        float wyn = get_solid_phi(pos + ivec2(1,1)).x;
 
         float w = 0.25 * (wxp + wxn + wyp + wyn);
 
         if (w < 0.0)
         {
-            imageStore(LiquidPhi, pos, vec4(-0.5 * dx, 0.0, 0.0, 0.0));
+            imageStore(FluidLevelSet, pos, vec4(-0.5 * dx, 0.0, 0.0, 0.0));
         }
     }
 }

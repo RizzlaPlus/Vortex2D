@@ -1,3 +1,17 @@
+float get_solid_phi(ivec2 pos)
+{
+  vec2 xy = vec2(pos) * imageSize(SolidLevelSet).x / consts.width;
+  ivec2 ij = ivec2(floor(xy));
+  vec2 f = xy - vec2(ij);
+
+  float a = imageLoad(SolidLevelSet, ij + ivec2(0, 0)).x;
+  float b = imageLoad(SolidLevelSet, ij + ivec2(1, 0)).x;
+  float c = imageLoad(SolidLevelSet, ij + ivec2(0, 1)).x;
+  float d = imageLoad(SolidLevelSet, ij + ivec2(1, 1)).x;
+
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
 float fraction_inside(float a, float b)
 {
     if(a < 0.0 && b < 0.0)
@@ -12,10 +26,10 @@ float fraction_inside(float a, float b)
 vec2 get_weight(ivec2 pos)
 {
   vec2 weight;
-  weight.x = 1.0 - fraction_inside(imageLoad(SolidLevelSet, pos + ivec2(0,1)).x,
-                                   imageLoad(SolidLevelSet, pos + ivec2(0,0)).x);
-  weight.y = 1.0 - fraction_inside(imageLoad(SolidLevelSet, pos + ivec2(1,0)).x,
-                                   imageLoad(SolidLevelSet, pos + ivec2(0,0)).x);
+  weight.x = 1.0 - fraction_inside(get_solid_phi(pos + ivec2(0,1)).x,
+                                   get_solid_phi(pos + ivec2(0,0)).x);
+  weight.y = 1.0 - fraction_inside(get_solid_phi(pos + ivec2(1,0)).x,
+                                   get_solid_phi(pos + ivec2(0,0)).x);
 
   return clamp(weight, vec2(0.0), vec2(1.0));
 }
@@ -23,8 +37,8 @@ vec2 get_weight(ivec2 pos)
 float get_weightxp(ivec2 pos)
 {
   float weight;
-  weight = 1.0 - fraction_inside(imageLoad(SolidLevelSet, pos + ivec2(1,1)).x,
-                                 imageLoad(SolidLevelSet, pos + ivec2(1,0)).x);
+  weight = 1.0 - fraction_inside(get_solid_phi(pos + ivec2(1,1)).x,
+                                 get_solid_phi(pos + ivec2(1,0)).x);
 
   return clamp(weight, 0.0, 1.0);
 }
@@ -32,8 +46,8 @@ float get_weightxp(ivec2 pos)
 float get_weightyp(ivec2 pos)
 {
   float weight;
-  weight = 1.0 - fraction_inside(imageLoad(SolidLevelSet, pos + ivec2(1,1)).x,
-                                 imageLoad(SolidLevelSet, pos + ivec2(0,1)).x);
+  weight = 1.0 - fraction_inside(get_solid_phi(pos + ivec2(1,1)).x,
+                                 get_solid_phi(pos + ivec2(0,1)).x);
 
   return clamp(weight, 0.0, 1.0);
 }

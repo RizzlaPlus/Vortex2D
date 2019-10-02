@@ -33,19 +33,20 @@ layout(std430, binding = 1) buffer Params
 };
 
 layout(binding = 2, rgba32f) uniform image2D Velocity;
-layout(binding = 3, r32f) uniform image2D SolidPhi;
+layout(binding = 3, r32f) uniform image2D SolidLevelSet;
 
 #include "CommonAdvect.comp"
+#include "CommonProject.comp"
 
 float interpolate_phi(vec2 xy)
 {
   ivec2 ij = ivec2(floor(xy));
   vec2 f = xy - vec2(ij);
 
-  float a = imageLoad(SolidPhi, ij + ivec2(0, 0)).x;
-  float b = imageLoad(SolidPhi, ij + ivec2(1, 0)).x;
-  float c = imageLoad(SolidPhi, ij + ivec2(0, 1)).x;
-  float d = imageLoad(SolidPhi, ij + ivec2(1, 1)).x;
+  float a = get_solid_phi(ij + ivec2(0, 0)).x;
+  float b = get_solid_phi(ivec2(1, 0)).x;
+  float c = get_solid_phi(ivec2(0, 1)).x;
+  float d = get_solid_phi(ij + ivec2(1, 1)).x;
 
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
@@ -55,10 +56,10 @@ vec2 interpolate_gradient(vec2 xy)
   ivec2 ij = ivec2(floor(xy));
   vec2 f = xy - vec2(ij);
 
-  float v00 = imageLoad(SolidPhi, ij).x;
-  float v10 = imageLoad(SolidPhi, ij + ivec2(1, 0)).x;
-  float v01 = imageLoad(SolidPhi, ij + ivec2(0, 1)).x;
-  float v11 = imageLoad(SolidPhi, ij + ivec2(1, 1)).x;
+  float v00 = get_solid_phi(ij).x;
+  float v10 = get_solid_phi(ij + ivec2(1, 0)).x;
+  float v01 = get_solid_phi(ij + ivec2(0, 1)).x;
+  float v11 = get_solid_phi(ij + ivec2(1, 1)).x;
 
   return vec2(mix(v10 - v00, v11 - v01, f.y), mix(v01 - v00, v11 - v10, f.x));
 }
@@ -66,7 +67,7 @@ vec2 interpolate_gradient(vec2 xy)
 void main()
 {
   uvec2 localSize = gl_WorkGroupSize.xy;  // Hack for Mali-GPU
-  float solidScale = float(imageSize(SolidPhi).x) / float(consts.width);
+  float solidScale = float(imageSize(SolidLevelSet).x) / float(consts.width);
 
   uint index = gl_GlobalInvocationID.x;
   if (index < params.count)

@@ -36,8 +36,6 @@ public:
 
     solidPhi.Colour = green;
     liquidPhi.Colour = blue;
-
-    solidPhi.Scale = scale;
   }
 
   void Init(const Vortex2D::Renderer::Device& device,
@@ -51,16 +49,16 @@ public:
     world.RecordParticleCount({fluid}).Submit().Wait();
 
     // Draw solid boundaries
-    Vortex2D::Fluid::Rectangle obstacle1(device, {50.0f, 25.0f});
-    Vortex2D::Fluid::Rectangle obstacle2(device, {50.0f, 25.0f});
-    Vortex2D::Fluid::Rectangle area(device, {250.0f, 250.0f}, true, 5.0f);
+    Vortex2D::Fluid::Rectangle obstacle1(device, glm::vec2(50.0f, 25.0f) * scale);
+    Vortex2D::Fluid::Rectangle obstacle2(device, glm::vec2(50.0f, 25.0f) * scale);
+    Vortex2D::Fluid::Rectangle area(device, glm::vec2(250.0f, 250.0f) * scale, true, 5.0f);
 
-    area.Position = glm::vec2(3.0f);
+    area.Position = glm::vec2(3.0f) * scale;
 
-    obstacle1.Position = {75.0f, 150.0f};
+    obstacle1.Position = glm::vec2(75.0f, 150.0f) * scale;
     obstacle1.Rotation = 45.0f;
 
-    obstacle2.Position = {150.0f, 150.0f};
+    obstacle2.Position = glm::vec2(150.0f, 150.0f) * scale;
     obstacle2.Rotation = 30.0f;
 
     world.RecordStaticSolidPhi({area, obstacle1, obstacle2}).Submit().Wait();

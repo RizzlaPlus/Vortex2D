@@ -46,10 +46,10 @@ void main()
     ivec2 pos = ivec2(gl_GlobalInvocationID);
     vec2 uv = imageLoad(InVelocity, pos).xy;
 
-    float v00 = imageLoad(SolidLevelSet, pos).x;
-    float v10 = imageLoad(SolidLevelSet, pos + ivec2(1,0)).x;
-    float v01 = imageLoad(SolidLevelSet, pos + ivec2(0,1)).x;
-    float v11 = imageLoad(SolidLevelSet, pos + ivec2(1,1)).x;
+    float v00 = get_solid_phi(pos).x;
+    float v10 = get_solid_phi(pos + ivec2(1,0)).x;
+    float v01 = get_solid_phi(pos + ivec2(0,1)).x;
+    float v11 = get_solid_phi(pos + ivec2(1,1)).x;
 
     vec2 constrained = vec2(0.0);
     vec2 wuv = get_weight(pos);
