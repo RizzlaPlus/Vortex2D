@@ -3,15 +3,16 @@
 //  Vortex2D
 //
 
-#include "Device.h"
+#include <Vortex2D/Renderer/Device.h>
 
 #include <fstream>
 #include <iostream>
 
-#include <Vortex2D/Renderer/Instance.h>
+#include "Instance.h"
+#include "Vulkan.h"
 
 #define VMA_IMPLEMENTATION
-#include <Vortex2D/Utils/vk_mem_alloc.h>
+#include "vk_mem_alloc.h"
 
 namespace Vortex2D
 {

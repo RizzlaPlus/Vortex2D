@@ -1,3 +1,14 @@
+set(LIB_VULKAN_HEADERS
+    "Renderer/Vulkan/Vulkan.h"
+    "Renderer/Vulkan/Instance.h"
+    "Renderer/Vulkan/Device.h"
+    )
+
+set(LIB_VULKAN_SOURCES
+    "Renderer/Vulkan/Device.cpp"
+    "Renderer/Vulkan/Instance.cpp"
+    "Renderer/Vulkan/vk_mem_alloc.h")
+
 set(LIB_SOURCES
     "Engine/Density.cpp"
     "Engine/LevelSet.cpp"
@@ -23,8 +34,6 @@ set(LIB_SOURCES
     "Renderer/Buffer.cpp"
     "Renderer/CommandBuffer.cpp"
     "Renderer/DescriptorSet.cpp"
-    "Renderer/Device.cpp"
-    "Renderer/Instance.cpp"
     "Renderer/Pipeline.cpp"
     "Renderer/RenderState.cpp"
     "Renderer/RenderTexture.cpp"
@@ -63,12 +72,12 @@ set(LIB_HEADERS
     "Engine/LinearSolver/Transfer.h"
     "Engine/LinearSolver/Multigrid.h"
     "Renderer/Common.h"
+    "Renderer/Gpu.h"
     "Renderer/Drawable.h"
     "Renderer/Buffer.h"
     "Renderer/CommandBuffer.h"
     "Renderer/DescriptorSet.h"
     "Renderer/Device.h"
-    "Renderer/Instance.h"
     "Renderer/Pipeline.h"
     "Renderer/RenderState.h"
     "Renderer/RenderTexture.h"
@@ -83,8 +92,7 @@ set(LIB_HEADERS
     "SPIRV/Reflection.h"
     "Utils/mapbox/variant.hpp"
     "Utils/mapbox/variant_visitor.hpp"
-    "Utils/mapbox/recursive_wrapper.hpp"
-    "Utils/vk_mem_alloc.h")
+    "Utils/mapbox/recursive_wrapper.hpp")
 
 file(GLOB SHADER_SOURCES
     "Renderer/Kernels/*.vert"
@@ -150,6 +158,8 @@ compile_shader(SOURCES ${SHADER_SOURCES} OUTPUT "vortex2d_generated_spirv" VERSI
 
 add_library(vortex2d
   SHARED
+    ${LIB_VULKAN_HEADERS}
+    ${LIB_VULKAN_SOURCES}
     ${LIB_SOURCES}
     ${LIB_HEADERS}
     ${SHADER_SOURCES}

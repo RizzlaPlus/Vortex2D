@@ -7,7 +7,6 @@
 #define Vortex2d_Texture_h
 
 #include <Vortex2D/Renderer/Common.h>
-#include <Vortex2D/Utils/vk_mem_alloc.h>
 
 namespace Vortex2D
 {

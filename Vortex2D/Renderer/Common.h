@@ -6,10 +6,7 @@
 #ifndef Vortex2D_Common_h
 #define Vortex2D_Common_h
 
-#define VULKAN_HPP_TYPESAFE_CONVERSION 1
-#include <vulkan/vulkan.hpp>
-
-#define VMA_RECORDING_ENABLED 0
+#include <Vortex2D/Renderer/Gpu.h>
 
 #include <glm/mat2x2.hpp>
 #include <glm/mat4x4.hpp>

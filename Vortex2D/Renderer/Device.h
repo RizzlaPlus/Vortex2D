@@ -9,9 +9,8 @@
 #include <Vortex2D/Renderer/CommandBuffer.h>
 #include <Vortex2D/Renderer/Common.h>
 #include <Vortex2D/Renderer/DescriptorSet.h>
-#include <Vortex2D/Renderer/Instance.h>
 #include <Vortex2D/Renderer/Pipeline.h>
-#include <Vortex2D/Utils/vk_mem_alloc.h>
+#include <Vortex2D/Renderer/Vulkan/Instance.h>
 #include <map>
 
 namespace Vortex2D
