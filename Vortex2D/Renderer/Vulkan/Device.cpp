@@ -241,7 +241,7 @@ Device::Device(const Instance& instance, int familyIndex, bool surface, bool val
 
   // create objects depending on device
   CreateDescriptorPool();
-  mCache = mDevice->createPipelineCacheUnique({});
+  mPipelineCache = mDevice->createPipelineCacheUnique({});
   mCommandBuffer = std::make_unique<CommandBuffer>(*this, true);
 }
 
@@ -317,7 +317,7 @@ VmaAllocator Device::Allocator() const
   return mAllocator;
 }
 
-vk::ShaderModule Device::GetShaderModule(const SpirvBinary& spirv) const
+vk::ShaderModule Device::CreateShaderModule(const SpirvBinary& spirv)
 {
   auto it = mShaders.find(spirv.data());
   if (it != mShaders.end())
@@ -485,7 +485,7 @@ vk::Pipeline Device::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& gr
                           .setPDynamicState(&dynamicState);
 
   GraphicsPipelineCache pipeline = {
-      renderState, graphics, mDevice->createGraphicsPipelineUnique(*mCache, pipelineInfo)};
+      renderState, graphics, mDevice->createGraphicsPipelineUnique(*mPipelineCache, pipelineInfo)};
   mGraphicsPipelines.push_back(std::move(pipeline));
   return *mGraphicsPipelines.back().Pipeline;
 }
@@ -515,7 +515,10 @@ vk::Pipeline Device::CreateComputePipeline(vk::ShaderModule shader,
   auto pipelineInfo = vk::ComputePipelineCreateInfo().setStage(stageInfo).setLayout(layout);
 
   mComputePipelines.push_back(
-      {shader, layout, specConstInfo, mDevice->createComputePipelineUnique(*mCache, pipelineInfo)});
+      {shader,
+       layout,
+       specConstInfo,
+       mDevice->createComputePipelineUnique(*mPipelineCache, pipelineInfo)});
   return *mComputePipelines.back().Pipeline;
 }
 

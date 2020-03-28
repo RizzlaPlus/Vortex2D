@@ -59,9 +59,10 @@ public:
 
   // Memory allocator
   VORTEX2D_API VmaAllocator Allocator() const;
-  VORTEX2D_API vk::ShaderModule GetShaderModule(const SpirvBinary& spirv) const;
 
   // Device Interface
+
+  VORTEX2D_API vk::ShaderModule CreateShaderModule(const SpirvBinary& spirv);
 
   /**
    * @brief Create, cache and return a descriptor layout given the pipeline
@@ -118,8 +119,8 @@ private:
   vk::UniqueDescriptorPool mDescriptorPool;
   VmaAllocator mAllocator;
   mutable std::unique_ptr<CommandBuffer> mCommandBuffer;
-  mutable std::map<const uint32_t*, vk::UniqueShaderModule> mShaders;
 
+  std::map<const uint32_t*, vk::UniqueShaderModule> mShaders;
   std::vector<std::tuple<SPIRV::ShaderLayouts, vk::UniqueDescriptorSetLayout>>
       mDescriptorSetLayouts;
   std::vector<std::tuple<SPIRV::ShaderLayouts, vk::UniquePipelineLayout>> mPipelineLayouts;
@@ -141,7 +142,7 @@ private:
 
   std::vector<GraphicsPipelineCache> mGraphicsPipelines;
   std::vector<ComputePipelineCache> mComputePipelines;
-  vk::UniquePipelineCache mCache;
+  vk::UniquePipelineCache mPipelineCache;
 };
 
 }  // namespace Renderer

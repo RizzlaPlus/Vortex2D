@@ -43,8 +43,8 @@ AbstractShape::AbstractShape(const Device& device,
   mBindGroup =
       mDevice.CreateBindGroup(bindGroupLayout, layout, {{mMVPBuffer, 0}, {mColourBuffer, 1}});
 
-  vk::ShaderModule vertexShader = device.GetShaderModule(SPIRV::Position_vert);
-  vk::ShaderModule fragShader = device.GetShaderModule(fragName);
+  vk::ShaderModule vertexShader = mDevice.CreateShaderModule(SPIRV::Position_vert);
+  vk::ShaderModule fragShader = mDevice.CreateShaderModule(fragName);
 
   mPipeline = GraphicsPipelineDescriptor()
                   .Shader(vertexShader, vk::ShaderStageFlagBits::eVertex)
@@ -151,8 +151,8 @@ Ellipse::Ellipse(const Device& device, const glm::vec2& radius)
   mBindGroup = mDevice.CreateBindGroup(
       bindGroupLayout, layout, {{mMVPBuffer}, {mSizeBuffer}, {mColourBuffer}});
 
-  vk::ShaderModule vertexShader = device.GetShaderModule(SPIRV::Ellipse_vert);
-  vk::ShaderModule fragShader = device.GetShaderModule(SPIRV::Ellipse_frag);
+  vk::ShaderModule vertexShader = mDevice.CreateShaderModule(SPIRV::Ellipse_vert);
+  vk::ShaderModule fragShader = mDevice.CreateShaderModule(SPIRV::Ellipse_frag);
 
   mPipeline = GraphicsPipelineDescriptor()
                   .Shader(vertexShader, vk::ShaderStageFlagBits::eVertex)

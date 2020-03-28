@@ -47,8 +47,8 @@ AbstractSprite::AbstractSprite(const Device& device,
   mBindGroup = mDevice.CreateBindGroup(
       bindGroupLayout, layout, {{mMVPBuffer, 0}, {*mSampler, texture, 1}, {mColourBuffer, 2}});
 
-  vk::ShaderModule vertexShader = device.GetShaderModule(SPIRV::TexturePosition_vert);
-  vk::ShaderModule fragShader = device.GetShaderModule(fragShaderName);
+  vk::ShaderModule vertexShader = mDevice.CreateShaderModule(SPIRV::TexturePosition_vert);
+  vk::ShaderModule fragShader = mDevice.CreateShaderModule(fragShaderName);
 
   mPipeline = GraphicsPipelineDescriptor()
                   .Shader(vertexShader, vk::ShaderStageFlagBits::eVertex)

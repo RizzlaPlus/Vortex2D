@@ -91,7 +91,7 @@ TEST(ComputeTests, BufferCompute)
   CopyFrom(buffer, particles);
   CopyFrom(uboBuffer, ubo);
 
-  auto shader = device->GetShaderModule(Buffer_comp);
+  auto shader = device->CreateShaderModule(Buffer_comp);
   Reflection reflection(Buffer_comp);
 
   ShaderLayouts layout = {reflection};
@@ -132,7 +132,7 @@ TEST(ComputeTests, ImageCompute)
   std::vector<float> data(50 * 50, 1.0f);
   stagingTexture.CopyFrom(data);
 
-  auto shader = device->GetShaderModule(Image_comp);
+  auto shader = device->CreateShaderModule(Image_comp);
   Reflection reflection(Image_comp);
 
   ShaderLayouts layout = {reflection};
@@ -422,7 +422,7 @@ TEST(ComputeTests, Reflection)
 
 TEST(ComputeTests, Cache)
 {
-  auto shader1 = device->GetShaderModule(Buffer_comp);
+  auto shader1 = device->CreateShaderModule(Buffer_comp);
   Reflection reflection1(Buffer_comp);
 
   ShaderLayouts layout1 = {reflection1};
@@ -430,7 +430,7 @@ TEST(ComputeTests, Cache)
   vk::PipelineLayout pipelineLayout1 = device->CreatePipelineLayout(layout1);
   vk::Pipeline pipeline1 = device->CreateComputePipeline(shader1, pipelineLayout1);
 
-  auto shader2 = device->GetShaderModule(Image_comp);
+  auto shader2 = device->CreateShaderModule(Image_comp);
   Reflection reflection2(Image_comp);
 
   ShaderLayouts layout2 = {reflection2};
@@ -442,11 +442,11 @@ TEST(ComputeTests, Cache)
   EXPECT_NE(pipelineLayout1, pipelineLayout2);
   EXPECT_NE(pipeline1, pipeline2);
 
-  EXPECT_EQ(shader1, device->GetShaderModule(Buffer_comp));
+  EXPECT_EQ(shader1, device->CreateShaderModule(Buffer_comp));
   EXPECT_EQ(pipelineLayout1, device->CreatePipelineLayout(layout1));
   EXPECT_EQ(pipeline1, device->CreateComputePipeline(shader1, pipelineLayout1));
 
-  EXPECT_EQ(shader2, device->GetShaderModule(Image_comp));
+  EXPECT_EQ(shader2, device->CreateShaderModule(Image_comp));
   EXPECT_EQ(pipelineLayout2, device->CreatePipelineLayout(layout2));
   EXPECT_EQ(pipeline2, device->CreateComputePipeline(shader2, pipelineLayout2));
 }

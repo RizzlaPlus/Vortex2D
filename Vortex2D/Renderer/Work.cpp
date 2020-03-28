@@ -93,7 +93,7 @@ Work::Work(const Device& device,
            const SpecConstInfo& additionalSpecConstInfo)
     : mComputeSize(computeSize), mDevice(const_cast<Device&>(device))  // FIXME remove const_cast
 {
-  vk::ShaderModule shaderModule = device.GetShaderModule(spirv);
+  vk::ShaderModule shaderModule = mDevice.CreateShaderModule(spirv);
   SPIRV::Reflection reflection(spirv);
   if (reflection.GetShaderStage() != vk::ShaderStageFlagBits::eCompute)
     throw std::runtime_error("only compute supported");
