@@ -5,6 +5,8 @@
 
 #include "RenderWindow.h"
 
+#include <Vortex2D/Renderer/Vulkan/RenderPass.h>
+
 #include <Vortex2D/Renderer/CommandBuffer.h>
 #include <Vortex2D/Renderer/Drawable.h>
 

@@ -2,12 +2,14 @@ set(LIB_VULKAN_HEADERS
     "Renderer/Vulkan/Vulkan.h"
     "Renderer/Vulkan/Instance.h"
     "Renderer/Vulkan/Device.h"
+    "Renderer/Vulkan/RenderPass.h"
     )
 
 set(LIB_VULKAN_SOURCES
     "Renderer/Vulkan/Device.cpp"
     "Renderer/Vulkan/Instance.cpp"
     "Renderer/Vulkan/BindGroup.cpp"
+    "Renderer/Vulkan/RenderPass.cpp"
     "Renderer/Vulkan/vk_mem_alloc.h")
 
 set(LIB_SOURCES
