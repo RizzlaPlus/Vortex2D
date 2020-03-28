@@ -5,7 +5,6 @@
 
 #include "Reduce.h"
 
-#include <Vortex2D/Renderer/DescriptorSet.h>
 #include <Vortex2D/Renderer/Work.h>
 
 #include "vortex2d_generated_spirv.h"

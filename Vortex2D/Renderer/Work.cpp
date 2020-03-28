@@ -5,7 +5,6 @@
 
 #include "Work.h"
 
-#include <Vortex2D/Renderer/DescriptorSet.h>
 #include <Vortex2D/SPIRV/Reflection.h>
 
 namespace Vortex2D
@@ -92,15 +91,16 @@ Work::Work(const Device& device,
            const ComputeSize& computeSize,
            const SpirvBinary& spirv,
            const SpecConstInfo& additionalSpecConstInfo)
-    : mComputeSize(computeSize), mDevice(device)
+    : mComputeSize(computeSize), mDevice(const_cast<Device&>(device))  // FIXME remove const_cast
 {
   vk::ShaderModule shaderModule = device.GetShaderModule(spirv);
   SPIRV::Reflection reflection(spirv);
   if (reflection.GetShaderStage() != vk::ShaderStageFlagBits::eCompute)
     throw std::runtime_error("only compute supported");
 
-  mPipelineLayout = {{reflection}};
-  auto layout = device.GetLayoutManager().GetPipelineLayout(mPipelineLayout);
+  mLayout = {reflection};
+
+  auto layout = mDevice.CreatePipelineLayout(mLayout);
 
   SpecConstInfo specConstInfo = additionalSpecConstInfo;
 
@@ -125,17 +125,18 @@ Work::Work(const Device& device,
 
 Work::Bound Work::Bind(ComputeSize computeSize, const std::vector<Renderer::BindingInput>& inputs)
 {
-  if (inputs.size() != mPipelineLayout.layouts.front().bindings.size())
+  if (inputs.size() != mLayout.front().bindings.size())
   {
     throw std::runtime_error("Unmatched inputs and bindings");
   }
 
-  auto descriptorSet = mDevice.GetLayoutManager().MakeDescriptorSet(mPipelineLayout);
-  Renderer::Bind(mDevice, descriptorSet, mPipelineLayout, inputs);
+  auto pipelineLayout = mDevice.CreatePipelineLayout(mLayout);
+  auto bindGroupLayout = mDevice.CreateBindGroupLayout(mLayout);
+  auto descriptorSet = mDevice.CreateBindGroup(bindGroupLayout, mLayout, inputs);
 
   return Bound(computeSize,
-               mPipelineLayout.layouts.front().pushConstantSize,
-               descriptorSet.pipelineLayout,
+               mLayout.front().pushConstantSize,
+               pipelineLayout,
                mPipeline,
                std::move(descriptorSet.descriptorSet));
 }

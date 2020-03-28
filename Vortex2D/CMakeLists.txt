@@ -7,6 +7,7 @@ set(LIB_VULKAN_HEADERS
 set(LIB_VULKAN_SOURCES
     "Renderer/Vulkan/Device.cpp"
     "Renderer/Vulkan/Instance.cpp"
+    "Renderer/Vulkan/BindGroup.cpp"
     "Renderer/Vulkan/vk_mem_alloc.h")
 
 set(LIB_SOURCES
@@ -33,7 +34,6 @@ set(LIB_SOURCES
     "Engine/LinearSolver/Multigrid.cpp"
     "Renderer/Buffer.cpp"
     "Renderer/CommandBuffer.cpp"
-    "Renderer/DescriptorSet.cpp"
     "Renderer/Pipeline.cpp"
     "Renderer/RenderState.cpp"
     "Renderer/RenderTexture.cpp"
@@ -45,7 +45,8 @@ set(LIB_SOURCES
     "Renderer/Timer.cpp"
     "Renderer/Transformable.cpp"
     "Renderer/Work.cpp"
-    "SPIRV/Reflection.cpp")
+    "SPIRV/Reflection.cpp"
+    "SPIRV/ShaderLayout.cpp")
 
 set(LIB_HEADERS
     "Vortex2D.h"
@@ -76,7 +77,7 @@ set(LIB_HEADERS
     "Renderer/Drawable.h"
     "Renderer/Buffer.h"
     "Renderer/CommandBuffer.h"
-    "Renderer/DescriptorSet.h"
+    "Renderer/BindGroup.h"
     "Renderer/Device.h"
     "Renderer/Pipeline.h"
     "Renderer/RenderState.h"
@@ -90,6 +91,7 @@ set(LIB_HEADERS
     "Renderer/Transformable.h"
     "Renderer/Work.h"
     "SPIRV/Reflection.h"
+    "SPIRV/ShaderLayout.h"
     "Utils/mapbox/variant.hpp"
     "Utils/mapbox/variant_visitor.hpp"
     "Utils/mapbox/recursive_wrapper.hpp")

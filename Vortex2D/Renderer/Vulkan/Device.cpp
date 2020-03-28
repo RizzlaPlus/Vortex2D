@@ -43,6 +43,99 @@ int ComputeFamilyIndex(vk::PhysicalDevice physicalDevice, vk::SurfaceKHR surface
 
   return index;
 }
+
+vk::DescriptorType GetDescriptorType(uint32_t bind, const SPIRV::ShaderLayouts& layout)
+{
+  for (auto& shaderLayout : layout)
+  {
+    auto it = shaderLayout.bindings.find(bind);
+    if (it != shaderLayout.bindings.end())
+    {
+      return it->second;
+    }
+  }
+
+  throw std::runtime_error("no bindings defined");
+}
+
+void Bind(vk::Device device,
+          BindGroup& dstSet,
+          const SPIRV::ShaderLayouts& layout,
+          const std::vector<BindingInput>& bindingInputs)
+{
+  std::vector<vk::DescriptorBufferInfo> bufferInfo(20);
+  std::vector<vk::DescriptorImageInfo> imageInfo(20);
+  std::vector<vk::WriteDescriptorSet> descriptorWrites;
+  std::size_t numBuffers = 0;
+  std::size_t numImages = 0;
+
+  for (std::size_t i = 0; i < bindingInputs.size(); i++)
+  {
+    bindingInputs[i].Input.match(
+        [&](Renderer::GenericBuffer* buffer) {
+          uint32_t bind = bindingInputs[i].Bind == BindingInput::DefaultBind
+                              ? static_cast<uint32_t>(i)
+                              : bindingInputs[i].Bind;
+
+          auto descriptorType = GetDescriptorType(bind, layout);
+          if (descriptorType != vk::DescriptorType::eStorageBuffer &&
+              descriptorType != vk::DescriptorType::eUniformBuffer)
+            throw std::runtime_error("Binding not a storage buffer");
+
+          auto writeDescription = vk::WriteDescriptorSet()
+                                      .setDstSet(*dstSet.descriptorSet)
+                                      .setDstBinding(bind)
+                                      .setDstArrayElement(0)
+                                      .setDescriptorType(descriptorType)
+                                      .setPBufferInfo(bufferInfo.data() + numBuffers);
+          descriptorWrites.push_back(writeDescription);
+
+          if (!descriptorWrites.empty() && numBuffers != bufferInfo.size() &&
+              descriptorWrites.back().pBufferInfo)
+          {
+            descriptorWrites.back().descriptorCount++;
+            bufferInfo[numBuffers++] =
+                vk::DescriptorBufferInfo(buffer->Handle(), 0, buffer->Size());
+          }
+          else
+          {
+            assert(false);
+          }
+        },
+        [&](Image image) {
+          uint32_t bind = bindingInputs[i].Bind == BindingInput::DefaultBind
+                              ? static_cast<uint32_t>(i)
+                              : bindingInputs[i].Bind;
+
+          auto descriptorType = GetDescriptorType(bind, layout);
+          if (descriptorType != vk::DescriptorType::eStorageImage &&
+              descriptorType != vk::DescriptorType::eCombinedImageSampler)
+            throw std::runtime_error("Binding not an image");
+
+          auto writeDescription = vk::WriteDescriptorSet()
+                                      .setDstSet(*dstSet.descriptorSet)
+                                      .setDstBinding(bind)
+                                      .setDstArrayElement(0)
+                                      .setDescriptorType(descriptorType)
+                                      .setPImageInfo(imageInfo.data() + numImages);
+          descriptorWrites.push_back(writeDescription);
+
+          if (!descriptorWrites.empty() && numImages != imageInfo.size() &&
+              descriptorWrites.back().pImageInfo)
+          {
+            descriptorWrites.back().descriptorCount++;
+            imageInfo[numImages++] = vk::DescriptorImageInfo(
+                image.Sampler, image.Texture->GetView(), vk::ImageLayout::eGeneral);
+          }
+          else
+          {
+            assert(false);
+          }
+        });
+  }
+
+  device.updateDescriptorSets(descriptorWrites, {});
+}
 }  // namespace
 
 void DynamicDispatcher::vkCmdDebugMarkerBeginEXT(
@@ -76,7 +169,6 @@ Device::Device(const Instance& instance, vk::SurfaceKHR surface, bool validation
 Device::Device(const Instance& instance, int familyIndex, bool surface, bool validation)
     : mPhysicalDevice(instance.GetPhysicalDevice())
     , mFamilyIndex(familyIndex)
-    , mLayoutManager(*this)
     , mPipelineCache(*this)
 {
   float queuePriority = 1.0f;
@@ -150,7 +242,7 @@ Device::Device(const Instance& instance, int familyIndex, bool surface, bool val
   }
 
   // create objects depending on device
-  mLayoutManager.CreateDescriptorPool();
+  CreateDescriptorPool();
   mPipelineCache.CreateCache();
   mCommandBuffer = std::make_unique<CommandBuffer>(*this, true);
 }
@@ -158,6 +250,23 @@ Device::Device(const Instance& instance, int familyIndex, bool surface, bool val
 Device::~Device()
 {
   vmaDestroyAllocator(mAllocator);
+}
+
+void Device::CreateDescriptorPool(int size)
+{
+  // create descriptor pool
+  std::vector<vk::DescriptorPoolSize> poolSizes;
+  poolSizes.emplace_back(vk::DescriptorType::eUniformBuffer, size);
+  poolSizes.emplace_back(vk::DescriptorType::eCombinedImageSampler, size);
+  poolSizes.emplace_back(vk::DescriptorType::eStorageImage, size);
+  poolSizes.emplace_back(vk::DescriptorType::eStorageBuffer, size);
+
+  vk::DescriptorPoolCreateInfo descriptorPoolInfo{};
+  descriptorPoolInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
+  descriptorPoolInfo.maxSets = 512;
+  descriptorPoolInfo.poolSizeCount = (uint32_t)poolSizes.size();
+  descriptorPoolInfo.pPoolSizes = poolSizes.data();
+  mDescriptorPool = mDevice->createDescriptorPoolUnique(descriptorPoolInfo);
 }
 
 vk::Device Device::Handle() const
@@ -173,11 +282,6 @@ vk::Queue Device::Queue() const
 const DynamicDispatcher& Device::Loader() const
 {
   return mLoader;
-}
-
-LayoutManager& Device::GetLayoutManager() const
-{
-  return mLayoutManager;
 }
 
 PipelineCache& Device::GetPipelineCache() const
@@ -237,6 +341,97 @@ vk::ShaderModule Device::GetShaderModule(const SpirvBinary& spirv) const
   auto shader = *shaderModule;
   mShaders[spirv.data()] = std::move(shaderModule);
   return shader;
+}
+
+BindGroupLayout Device::CreateBindGroupLayout(const SPIRV::ShaderLayouts& layout)
+{
+  auto it = std::find_if(
+      mDescriptorSetLayouts.begin(),
+      mDescriptorSetLayouts.end(),
+      [&](const auto& descriptorSetLayout) { return std::get<0>(descriptorSetLayout) == layout; });
+
+  if (it == mDescriptorSetLayouts.end())
+  {
+    std::vector<vk::DescriptorSetLayoutBinding> descriptorSetLayoutBindings;
+    for (auto& shaderLayout : layout)
+    {
+      for (auto& desciptorType : shaderLayout.bindings)
+      {
+        descriptorSetLayoutBindings.push_back(
+            {desciptorType.first, desciptorType.second, 1, shaderLayout.shaderStage, nullptr});
+      }
+    }
+
+    auto descriptorSetLayoutInfo =
+        vk::DescriptorSetLayoutCreateInfo()
+            .setBindingCount((uint32_t)descriptorSetLayoutBindings.size())
+            .setPBindings(descriptorSetLayoutBindings.data());
+
+    auto descriptorSetLayout = mDevice->createDescriptorSetLayoutUnique(descriptorSetLayoutInfo);
+    mDescriptorSetLayouts.emplace_back(layout, std::move(descriptorSetLayout));
+    return {*std::get<1>(mDescriptorSetLayouts.back())};
+  }
+
+  return {*std::get<1>(*it)};
+}
+
+vk::PipelineLayout Device::CreatePipelineLayout(const SPIRV::ShaderLayouts& layout)
+{
+  auto it = std::find_if(
+      mPipelineLayouts.begin(), mPipelineLayouts.end(), [&](const auto& pipelineLayout) {
+        return std::get<0>(pipelineLayout) == layout;
+      });
+
+  if (it == mPipelineLayouts.end())
+  {
+    auto bindGroupLayout = CreateBindGroupLayout(layout);
+    vk::DescriptorSetLayout descriptorSetlayouts[] = {bindGroupLayout.descriptorSetLayout};
+    std::vector<vk::PushConstantRange> pushConstantRanges;
+    uint32_t totalPushConstantSize = 0;
+    for (auto& shaderLayout : layout)
+    {
+      if (shaderLayout.pushConstantSize > 0)
+      {
+        pushConstantRanges.push_back(
+            {shaderLayout.shaderStage, totalPushConstantSize, shaderLayout.pushConstantSize});
+        totalPushConstantSize += shaderLayout.pushConstantSize;
+      }
+    }
+
+    auto pipelineLayoutInfo =
+        vk::PipelineLayoutCreateInfo().setSetLayoutCount(1).setPSetLayouts(descriptorSetlayouts);
+
+    if (totalPushConstantSize > 0)
+    {
+      pipelineLayoutInfo.setPPushConstantRanges(pushConstantRanges.data())
+          .setPushConstantRangeCount((uint32_t)pushConstantRanges.size());
+    }
+
+    mPipelineLayouts.emplace_back(layout, mDevice->createPipelineLayoutUnique(pipelineLayoutInfo));
+    return *std::get<1>(mPipelineLayouts.back());
+  }
+
+  return *std::get<1>(*it);
+}
+
+BindGroup Device::CreateBindGroup(const BindGroupLayout& bindGroupLayout,
+                                  const SPIRV::ShaderLayouts& layout,
+                                  const std::vector<BindingInput>& bindingInputs)
+{
+  vk::DescriptorSetLayout descriptorSetlayouts[] = {bindGroupLayout.descriptorSetLayout};
+
+  auto descriptorSetInfo = vk::DescriptorSetAllocateInfo()
+                               .setDescriptorPool(*mDescriptorPool)
+                               .setDescriptorSetCount(1)
+                               .setPSetLayouts(descriptorSetlayouts);
+
+  BindGroup bindGroup;
+  bindGroup.descriptorSet =
+      std::move(mDevice->allocateDescriptorSetsUnique(descriptorSetInfo).at(0));
+
+  Bind(*mDevice, bindGroup, layout, bindingInputs);
+
+  return bindGroup;
 }
 
 }  // namespace Renderer

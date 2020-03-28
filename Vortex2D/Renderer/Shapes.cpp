@@ -21,7 +21,7 @@ namespace Renderer
 AbstractShape::AbstractShape(const Device& device,
                              const SpirvBinary& fragName,
                              const std::vector<glm::vec2>& vertices)
-    : mDevice(device)
+    : mDevice(const_cast<Device&>(device))  // FIXME remove const_cast
     , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
     , mColourBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
     , mVertexBuffer(device, vertices.size())
@@ -36,9 +36,12 @@ AbstractShape::AbstractShape(const Device& device,
   SPIRV::Reflection reflectionVert(SPIRV::Position_vert);
   SPIRV::Reflection reflectionFrag(fragName);
 
-  PipelineLayout layout = {{reflectionVert, reflectionFrag}};
-  mDescriptorSet = device.GetLayoutManager().MakeDescriptorSet(layout);
-  Bind(device, mDescriptorSet, layout, {{mMVPBuffer, 0}, {mColourBuffer, 1}});
+  SPIRV::ShaderLayouts layout = {reflectionVert, reflectionFrag};
+
+  mPipelineLayout = mDevice.CreatePipelineLayout(layout);
+  auto bindGroupLayout = mDevice.CreateBindGroupLayout(layout);
+  mBindGroup =
+      mDevice.CreateBindGroup(bindGroupLayout, layout, {{mMVPBuffer, 0}, {mColourBuffer, 1}});
 
   vk::ShaderModule vertexShader = device.GetShaderModule(SPIRV::Position_vert);
   vk::ShaderModule fragShader = device.GetShaderModule(fragName);
@@ -48,7 +51,7 @@ AbstractShape::AbstractShape(const Device& device,
                   .Shader(fragShader, vk::ShaderStageFlagBits::eFragment)
                   .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, 0)
                   .VertexBinding(0, sizeof(glm::vec2))
-                  .Layout(mDescriptorSet.pipelineLayout);
+                  .Layout(mPipelineLayout);
 }
 
 AbstractShape::AbstractShape(AbstractShape&& other)
@@ -56,7 +59,8 @@ AbstractShape::AbstractShape(AbstractShape&& other)
     , mMVPBuffer(std::move(other.mDevice))
     , mColourBuffer(std::move(other.mColourBuffer))
     , mVertexBuffer(std::move(other.mVertexBuffer))
-    , mDescriptorSet(std::move(other.mDescriptorSet))
+    , mPipelineLayout(std::move(other.mPipelineLayout))
+    , mBindGroup(std::move(other.mBindGroup))
     , mPipeline(std::move(other.mPipeline))
     , mNumVertices(other.mNumVertices)
 {
@@ -82,11 +86,8 @@ void AbstractShape::Draw(vk::CommandBuffer commandBuffer, const RenderState& ren
   auto pipeline = mDevice.GetPipelineCache().CreateGraphicsPipeline(mPipeline, renderState);
   commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
   commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
-  commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                   mDescriptorSet.pipelineLayout,
-                                   0,
-                                   {*mDescriptorSet.descriptorSet},
-                                   {});
+  commandBuffer.bindDescriptorSets(
+      vk::PipelineBindPoint::eGraphics, mPipelineLayout, 0, {*mBindGroup.descriptorSet}, {});
   commandBuffer.draw(mNumVertices, 1, 0, 0);
 }
 
@@ -121,7 +122,7 @@ IntRectangle::IntRectangle(const Device& device, const glm::vec2& size)
 }
 
 Ellipse::Ellipse(const Device& device, const glm::vec2& radius)
-    : mDevice(device)
+    : mDevice(const_cast<Device&>(device))  // FIXME remove const_cast
     , mRadius(radius)
     , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
     , mColourBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
@@ -143,9 +144,12 @@ Ellipse::Ellipse(const Device& device, const glm::vec2& radius)
   SPIRV::Reflection reflectionVert(SPIRV::Ellipse_vert);
   SPIRV::Reflection reflectionFrag(SPIRV::Ellipse_frag);
 
-  Renderer::PipelineLayout layout = {{reflectionVert, reflectionFrag}};
-  mDescriptorSet = device.GetLayoutManager().MakeDescriptorSet(layout);
-  Bind(device, mDescriptorSet, layout, {{mMVPBuffer}, {mSizeBuffer}, {mColourBuffer}});
+  SPIRV::ShaderLayouts layout = {reflectionVert, reflectionFrag};
+
+  auto bindGroupLayout = mDevice.CreateBindGroupLayout(layout);
+  mPipelineLayout = mDevice.CreatePipelineLayout(layout);
+  mBindGroup = mDevice.CreateBindGroup(
+      bindGroupLayout, layout, {{mMVPBuffer}, {mSizeBuffer}, {mColourBuffer}});
 
   vk::ShaderModule vertexShader = device.GetShaderModule(SPIRV::Ellipse_vert);
   vk::ShaderModule fragShader = device.GetShaderModule(SPIRV::Ellipse_frag);
@@ -155,7 +159,7 @@ Ellipse::Ellipse(const Device& device, const glm::vec2& radius)
                   .Shader(fragShader, vk::ShaderStageFlagBits::eFragment)
                   .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, 0)
                   .VertexBinding(0, sizeof(glm::vec2))
-                  .Layout(mDescriptorSet.pipelineLayout);
+                  .Layout(mPipelineLayout);
 }
 
 Ellipse::~Ellipse() {}
@@ -190,11 +194,8 @@ void Ellipse::Draw(vk::CommandBuffer commandBuffer, const RenderState& renderSta
   auto pipeline = mDevice.GetPipelineCache().CreateGraphicsPipeline(mPipeline, renderState);
   commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
   commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
-  commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                   mDescriptorSet.pipelineLayout,
-                                   0,
-                                   {*mDescriptorSet.descriptorSet},
-                                   {});
+  commandBuffer.bindDescriptorSets(
+      vk::PipelineBindPoint::eGraphics, mPipelineLayout, 0, {*mBindGroup.descriptorSet}, {});
   commandBuffer.draw(6, 1, 0, 0);
 }
 

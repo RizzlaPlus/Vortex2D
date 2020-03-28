@@ -62,7 +62,7 @@ Polygon::Polygon(const Renderer::Device& device,
                  std::vector<glm::vec2> points,
                  bool inverse,
                  float extent)
-    : mDevice(device)
+    : mDevice(const_cast<Renderer::Device&>(device))  // FIXME remove const_cast
     , mSize(static_cast<uint32_t>(points.size()))
     , mInv(inverse)
     , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
@@ -93,9 +93,12 @@ Polygon::Polygon(const Renderer::Device& device,
   SPIRV::Reflection reflectionVert(SPIRV::Position_vert);
   SPIRV::Reflection reflectionFrag(SPIRV::PolygonDist_frag);
 
-  Renderer::PipelineLayout layout = {{reflectionVert, reflectionFrag}};
-  mDescriptorSet = device.GetLayoutManager().MakeDescriptorSet(layout);
-  Bind(device, mDescriptorSet, layout, {{mMVPBuffer}, {mMVBuffer}, {mPolygonVertexBuffer}});
+  SPIRV::ShaderLayouts layout = {reflectionVert, reflectionFrag};
+
+  mPipelineLayout = mDevice.CreatePipelineLayout(layout);
+  auto bindGroupLayout = mDevice.CreateBindGroupLayout(layout);
+  mBindGroup = mDevice.CreateBindGroup(
+      bindGroupLayout, layout, {{mMVPBuffer}, {mMVBuffer}, {mPolygonVertexBuffer}});
 
   mPipeline =
       Renderer::GraphicsPipeline()
@@ -105,7 +108,7 @@ Polygon::Polygon(const Renderer::Device& device,
                   vk::ShaderStageFlagBits::eFragment)
           .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, 0)
           .VertexBinding(0, sizeof(glm::vec2))
-          .Layout(mDescriptorSet.pipelineLayout);
+          .Layout(mPipelineLayout);
 }
 
 Polygon::~Polygon() {}
@@ -126,16 +129,11 @@ void Polygon::Draw(vk::CommandBuffer commandBuffer, const Renderer::RenderState&
 {
   auto pipeline = mDevice.GetPipelineCache().CreateGraphicsPipeline(mPipeline, renderState);
   commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-  commandBuffer.pushConstants(
-      mDescriptorSet.pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, 4, &mSize);
-  commandBuffer.pushConstants(
-      mDescriptorSet.pipelineLayout, vk::ShaderStageFlagBits::eFragment, 4, 4, &mInv);
+  commandBuffer.pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, 4, &mSize);
+  commandBuffer.pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 4, 4, &mInv);
   commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
-  commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                   mDescriptorSet.pipelineLayout,
-                                   0,
-                                   {*mDescriptorSet.descriptorSet},
-                                   {});
+  commandBuffer.bindDescriptorSets(
+      vk::PipelineBindPoint::eGraphics, mPipelineLayout, 0, {*mBindGroup.descriptorSet}, {});
   commandBuffer.draw(6, 1, 0, 0);
 }
 
@@ -168,7 +166,7 @@ void Rectangle::Draw(vk::CommandBuffer commandBuffer, const Renderer::RenderStat
 }
 
 Circle::Circle(const Renderer::Device& device, float radius, float extent)
-    : mDevice(device)
+    : mDevice(const_cast<Renderer::Device&>(device))  // FIXME remove const_cast
     , mSize(radius)
     , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
     , mMVBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
@@ -189,9 +187,11 @@ Circle::Circle(const Renderer::Device& device, float radius, float extent)
   SPIRV::Reflection reflectionVert(SPIRV::Position_vert);
   SPIRV::Reflection reflectionFrag(SPIRV::CircleDist_frag);
 
-  Renderer::PipelineLayout layout = {{reflectionVert, reflectionFrag}};
-  mDescriptorSet = device.GetLayoutManager().MakeDescriptorSet(layout);
-  Bind(device, mDescriptorSet, layout, {{mMVPBuffer}, {mMVBuffer}});
+  SPIRV::ShaderLayouts layout = {reflectionVert, reflectionFrag};
+
+  mPipelineLayout = mDevice.CreatePipelineLayout(layout);
+  auto bindGroupLayout = mDevice.CreateBindGroupLayout(layout);
+  mBindGroup = mDevice.CreateBindGroup(bindGroupLayout, layout, {{mMVPBuffer}, {mMVBuffer}});
 
   mPipeline =
       Renderer::GraphicsPipeline()
@@ -201,7 +201,7 @@ Circle::Circle(const Renderer::Device& device, float radius, float extent)
                   vk::ShaderStageFlagBits::eFragment)
           .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, 0)
           .VertexBinding(0, sizeof(glm::vec2))
-          .Layout(mDescriptorSet.pipelineLayout);
+          .Layout(mPipelineLayout);
 }
 
 Circle::~Circle() {}
@@ -222,14 +222,10 @@ void Circle::Draw(vk::CommandBuffer commandBuffer, const Renderer::RenderState& 
 {
   auto pipeline = mDevice.GetPipelineCache().CreateGraphicsPipeline(mPipeline, renderState);
   commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-  commandBuffer.pushConstants(
-      mDescriptorSet.pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, 4, &mSize);
+  commandBuffer.pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, 4, &mSize);
   commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
-  commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                   mDescriptorSet.pipelineLayout,
-                                   0,
-                                   {*mDescriptorSet.descriptorSet},
-                                   {});
+  commandBuffer.bindDescriptorSets(
+      vk::PipelineBindPoint::eGraphics, mPipelineLayout, 0, {*mBindGroup.descriptorSet}, {});
   commandBuffer.draw(6, 1, 0, 0);
 }
 

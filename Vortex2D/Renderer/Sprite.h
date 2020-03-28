@@ -7,7 +7,6 @@
 #define Sprite_h
 
 #include <Vortex2D/Renderer/Buffer.h>
-#include <Vortex2D/Renderer/DescriptorSet.h>
 #include <Vortex2D/Renderer/Device.h>
 #include <Vortex2D/Renderer/Drawable.h>
 #include <Vortex2D/Renderer/Pipeline.h>
@@ -40,11 +39,8 @@ public:
   template <typename T>
   void PushConstant(vk::CommandBuffer commandBuffer, uint32_t offset, const T& data)
   {
-    commandBuffer.pushConstants(mDescriptorSet.pipelineLayout,
-                                vk::ShaderStageFlagBits::eFragment,
-                                offset,
-                                sizeof(T),
-                                &data);
+    commandBuffer.pushConstants(
+        mPipelineLayout, vk::ShaderStageFlagBits::eFragment, offset, sizeof(T), &data);
   }
 
   glm::vec4 Colour = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -56,12 +52,13 @@ protected:
     glm::vec2 pos;
   };
 
-  const Device& mDevice;
+  Device& mDevice;
   UniformBuffer<glm::mat4> mMVPBuffer;
   VertexBuffer<Vertex> mVertexBuffer;
   Renderer::UniformBuffer<glm::vec4> mColourBuffer;
   vk::UniqueSampler mSampler;
-  DescriptorSet mDescriptorSet;
+  vk::PipelineLayout mPipelineLayout;
+  BindGroup mBindGroup;
   GraphicsPipeline mPipeline;
 };
 

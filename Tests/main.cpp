@@ -1,5 +1,5 @@
 #include <Vortex2D/Renderer/Device.h>
-#include <Vortex2D/Renderer/Instance.h>
+#include <Vortex2D/Renderer/Vulkan/Instance.h>
 #include <gtest/gtest.h>
 
 Vortex2D::Renderer::Device* device;

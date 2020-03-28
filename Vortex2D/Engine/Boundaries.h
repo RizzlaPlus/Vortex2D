@@ -48,13 +48,14 @@ public:
                          const Renderer::RenderState& renderState) override;
 
 private:
-  const Renderer::Device& mDevice;
+  Renderer::Device& mDevice;
   uint32_t mSize;
   uint32_t mInv;
   Renderer::UniformBuffer<glm::mat4> mMVPBuffer;
   Renderer::UniformBuffer<glm::mat4> mMVBuffer;
   Renderer::VertexBuffer<glm::vec2> mVertexBuffer;
-  Renderer::DescriptorSet mDescriptorSet;
+  vk::PipelineLayout mPipelineLayout;
+  Renderer::BindGroup mBindGroup;
   Renderer::GraphicsPipeline mPipeline;
   Renderer::Buffer<glm::vec2> mPolygonVertexBuffer;
 };
@@ -109,12 +110,13 @@ public:
                          const Renderer::RenderState& renderState) override;
 
 private:
-  const Renderer::Device& mDevice;
+  Renderer::Device& mDevice;
   float mSize;
   Renderer::UniformBuffer<glm::mat4> mMVPBuffer;
   Renderer::UniformBuffer<glm::mat4> mMVBuffer;
   Renderer::VertexBuffer<glm::vec2> mVertexBuffer;
-  Renderer::DescriptorSet mDescriptorSet;
+  vk::PipelineLayout mPipelineLayout;
+  Renderer::BindGroup mBindGroup;
   Renderer::GraphicsPipeline mPipeline;
 };
 

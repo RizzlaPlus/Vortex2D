@@ -7,9 +7,6 @@
 #define Vortex2D_Reflection_h
 
 #include <Vortex2D/Renderer/Common.h>
-#include <Vortex2D/Renderer/DescriptorSet.h>
-#include <Vortex2D/Renderer/Device.h>
-
 #include <map>
 
 namespace Vortex2D

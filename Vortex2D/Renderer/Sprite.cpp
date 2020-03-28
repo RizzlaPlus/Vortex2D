@@ -18,7 +18,7 @@ namespace Renderer
 AbstractSprite::AbstractSprite(const Device& device,
                                const SpirvBinary& fragShaderName,
                                Texture& texture)
-    : mDevice(device)
+    : mDevice(const_cast<Device&>(device))  // FIXME remove const_cast
     , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
     , mVertexBuffer(device, 6)
     , mColourBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
@@ -38,16 +38,14 @@ AbstractSprite::AbstractSprite(const Device& device,
   SPIRV::Reflection reflectionVert(SPIRV::TexturePosition_vert);
   SPIRV::Reflection reflectionFrag(fragShaderName);
 
-  PipelineLayout layout = {{reflectionVert, reflectionFrag}};
-  mDescriptorSet = device.GetLayoutManager().MakeDescriptorSet(layout);
+  SPIRV::ShaderLayouts layout = {reflectionVert, reflectionFrag};
 
-  // TODO add sampler as parameter
   mSampler = SamplerBuilder().Filter(vk::Filter::eLinear).Create(device.Handle());
 
-  Bind(device,
-       mDescriptorSet,
-       layout,
-       {{mMVPBuffer, 0}, {*mSampler, texture, 1}, {mColourBuffer, 2}});
+  mPipelineLayout = mDevice.CreatePipelineLayout(layout);
+  auto bindGroupLayout = mDevice.CreateBindGroupLayout(layout);
+  mBindGroup = mDevice.CreateBindGroup(
+      bindGroupLayout, layout, {{mMVPBuffer, 0}, {*mSampler, texture, 1}, {mColourBuffer, 2}});
 
   vk::ShaderModule vertexShader = device.GetShaderModule(SPIRV::TexturePosition_vert);
   vk::ShaderModule fragShader = device.GetShaderModule(fragShaderName);
@@ -58,7 +56,7 @@ AbstractSprite::AbstractSprite(const Device& device,
                   .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, pos))
                   .VertexAttribute(1, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, uv))
                   .VertexBinding(0, sizeof(Vertex))
-                  .Layout(mDescriptorSet.pipelineLayout);
+                  .Layout(mPipelineLayout);
 }
 
 AbstractSprite::AbstractSprite(AbstractSprite&& other)
@@ -67,7 +65,8 @@ AbstractSprite::AbstractSprite(AbstractSprite&& other)
     , mVertexBuffer(std::move(other.mVertexBuffer))
     , mColourBuffer(std::move(other.mColourBuffer))
     , mSampler(std::move(other.mSampler))
-    , mDescriptorSet(std::move(other.mDescriptorSet))
+    , mPipelineLayout(std::move(other.mPipelineLayout))
+    , mBindGroup(std::move(other.mBindGroup))
     , mPipeline(std::move(other.mPipeline))
 {
 }
@@ -91,11 +90,8 @@ void AbstractSprite::Draw(vk::CommandBuffer commandBuffer, const RenderState& re
   auto pipeline = mDevice.GetPipelineCache().CreateGraphicsPipeline(mPipeline, renderState);
   commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
   commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
-  commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                   mDescriptorSet.pipelineLayout,
-                                   0,
-                                   {*mDescriptorSet.descriptorSet},
-                                   {});
+  commandBuffer.bindDescriptorSets(
+      vk::PipelineBindPoint::eGraphics, mPipelineLayout, 0, {*mBindGroup.descriptorSet}, {});
   commandBuffer.draw(6, 1, 0, 0);
 }
 

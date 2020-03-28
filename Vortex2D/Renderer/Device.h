@@ -6,9 +6,9 @@
 #ifndef Vortex2d_Device_h
 #define Vortex2d_Device_h
 
+#include <Vortex2D/Renderer/BindGroup.h>
 #include <Vortex2D/Renderer/CommandBuffer.h>
 #include <Vortex2D/Renderer/Common.h>
-#include <Vortex2D/Renderer/DescriptorSet.h>
 #include <Vortex2D/Renderer/Pipeline.h>
 #include <Vortex2D/Renderer/Vulkan/Instance.h>
 #include <map>
@@ -17,28 +17,6 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-/**
- * @brief A binary SPIRV shader, to be feed to vulkan.
- */
-class SpirvBinary
-{
-public:
-  template <std::size_t N>
-  SpirvBinary(const uint32_t (&spirv)[N]) : mData(spirv), mSize(N * 4)
-  {
-  }
-
-  const uint32_t* data() const { return mData; }
-
-  std::size_t size() const { return mSize; }
-
-  std::size_t words() const { return mSize / 4; }
-
-private:
-  const uint32_t* mData;
-  std::size_t mSize;
-};
-
 /**
  * @brief A vulkan dynamic dispatcher that checks if the function is not null.
  */
@@ -81,11 +59,38 @@ public:
 
   // Memory allocator
   VORTEX2D_API VmaAllocator Allocator() const;
-  VORTEX2D_API LayoutManager& GetLayoutManager() const;
   VORTEX2D_API PipelineCache& GetPipelineCache() const;
   VORTEX2D_API vk::ShaderModule GetShaderModule(const SpirvBinary& spirv) const;
 
+  // Device Interface
+
+  /**
+   * @brief Create, cache and return a descriptor layout given the pipeline
+   * layout
+   * @param layout pipeline layout
+   * @return cached descriptor set layout
+   */
+  VORTEX2D_API BindGroupLayout CreateBindGroupLayout(const SPIRV::ShaderLayouts& layout);
+
+  VORTEX2D_API vk::PipelineLayout CreatePipelineLayout(const SPIRV::ShaderLayouts& layout);
+
+  /**
+   * @brief create, cache and return a vulkan pipeline layout given the layout
+   * @param layout pipeline layout
+   * @return vulkan pipeline layout
+   */
+  VORTEX2D_API BindGroup CreateBindGroup(const BindGroupLayout& bindGroupLayout,
+                                         const SPIRV::ShaderLayouts& layout,
+                                         const std::vector<BindingInput>& bindingInputs);
+
 private:
+  /**
+   * @brief Create or re-create the descriptor pool, will render invalid
+   * existing descriptor sets
+   * @param size size of the pool
+   */
+  void CreateDescriptorPool(int size = 512);
+
   vk::PhysicalDevice mPhysicalDevice;
   DynamicDispatcher mLoader;
   int mFamilyIndex;
@@ -94,11 +99,13 @@ private:
   vk::UniqueCommandPool mCommandPool;
   vk::UniqueDescriptorPool mDescriptorPool;
   VmaAllocator mAllocator;
-
   mutable std::unique_ptr<CommandBuffer> mCommandBuffer;
   mutable std::map<const uint32_t*, vk::UniqueShaderModule> mShaders;
-  mutable LayoutManager mLayoutManager;
   mutable PipelineCache mPipelineCache;
+
+  std::vector<std::tuple<SPIRV::ShaderLayouts, vk::UniqueDescriptorSetLayout>>
+      mDescriptorSetLayouts;
+  std::vector<std::tuple<SPIRV::ShaderLayouts, vk::UniquePipelineLayout>> mPipelineLayouts;
 };
 
 }  // namespace Renderer

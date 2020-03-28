@@ -8,7 +8,6 @@
 
 #include <Vortex2D/Renderer/Buffer.h>
 #include <Vortex2D/Renderer/Common.h>
-#include <Vortex2D/Renderer/DescriptorSet.h>
 #include <Vortex2D/Renderer/Device.h>
 #include <Vortex2D/Renderer/Pipeline.h>
 #include <Vortex2D/Renderer/Texture.h>
@@ -229,8 +228,8 @@ public:
 
 private:
   ComputeSize mComputeSize;
-  const Device& mDevice;
-  Renderer::PipelineLayout mPipelineLayout;
+  Device& mDevice;
+  SPIRV::ShaderLayouts mLayout;
   vk::Pipeline mPipeline;
 };
 

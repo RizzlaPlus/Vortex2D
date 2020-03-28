@@ -8,7 +8,6 @@
 
 #include <Vortex2D/Renderer/Buffer.h>
 #include <Vortex2D/Renderer/Common.h>
-#include <Vortex2D/Renderer/DescriptorSet.h>
 #include <Vortex2D/Renderer/Device.h>
 #include <Vortex2D/Renderer/Drawable.h>
 #include <Vortex2D/Renderer/Pipeline.h>
@@ -51,11 +50,12 @@ public:
   VORTEX2D_API void Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState) override;
 
 protected:
-  const Device& mDevice;
+  Device& mDevice;
   UniformBuffer<glm::mat4> mMVPBuffer;
   UniformBuffer<glm::vec4> mColourBuffer;
   VertexBuffer<glm::vec2> mVertexBuffer;
-  DescriptorSet mDescriptorSet;
+  vk::PipelineLayout mPipelineLayout;
+  BindGroup mBindGroup;
   GraphicsPipeline mPipeline;
   uint32_t mNumVertices;
 };
@@ -104,13 +104,14 @@ private:
     alignas(16) glm::mat2x4 rotation;
   };
 
-  const Device& mDevice;
+  Device& mDevice;
   glm::vec2 mRadius;
   UniformBuffer<glm::mat4> mMVPBuffer;
   UniformBuffer<glm::vec4> mColourBuffer;
   VertexBuffer<glm::vec2> mVertexBuffer;
   UniformBuffer<Size> mSizeBuffer;
-  DescriptorSet mDescriptorSet;
+  vk::PipelineLayout mPipelineLayout;
+  BindGroup mBindGroup;
   GraphicsPipeline mPipeline;
 };
 
