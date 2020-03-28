@@ -46,7 +46,7 @@ AbstractShape::AbstractShape(const Device& device,
   vk::ShaderModule vertexShader = device.GetShaderModule(SPIRV::Position_vert);
   vk::ShaderModule fragShader = device.GetShaderModule(fragName);
 
-  mPipeline = GraphicsPipeline()
+  mPipeline = GraphicsPipelineDescriptor()
                   .Shader(vertexShader, vk::ShaderStageFlagBits::eVertex)
                   .Shader(fragShader, vk::ShaderStageFlagBits::eFragment)
                   .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, 0)
@@ -71,7 +71,7 @@ AbstractShape::~AbstractShape() {}
 
 void AbstractShape::Initialize(const RenderState& renderState)
 {
-  auto pipeline = mDevice.GetPipelineCache().CreateGraphicsPipeline(mPipeline, renderState);
+  auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
 }
 
 void AbstractShape::Update(const glm::mat4& projection, const glm::mat4& view)
@@ -83,7 +83,7 @@ void AbstractShape::Update(const glm::mat4& projection, const glm::mat4& view)
 
 void AbstractShape::Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState)
 {
-  auto pipeline = mDevice.GetPipelineCache().CreateGraphicsPipeline(mPipeline, renderState);
+  auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
   commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
   commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
   commandBuffer.bindDescriptorSets(
@@ -154,7 +154,7 @@ Ellipse::Ellipse(const Device& device, const glm::vec2& radius)
   vk::ShaderModule vertexShader = device.GetShaderModule(SPIRV::Ellipse_vert);
   vk::ShaderModule fragShader = device.GetShaderModule(SPIRV::Ellipse_frag);
 
-  mPipeline = GraphicsPipeline()
+  mPipeline = GraphicsPipelineDescriptor()
                   .Shader(vertexShader, vk::ShaderStageFlagBits::eVertex)
                   .Shader(fragShader, vk::ShaderStageFlagBits::eFragment)
                   .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, 0)
@@ -166,7 +166,7 @@ Ellipse::~Ellipse() {}
 
 void Ellipse::Initialize(const RenderState& renderState)
 {
-  mDevice.GetPipelineCache().CreateGraphicsPipeline(mPipeline, renderState);
+  mDevice.CreateGraphicsPipeline(mPipeline, renderState);
 }
 
 void Ellipse::Update(const glm::mat4& projection, const glm::mat4& view)
@@ -191,7 +191,7 @@ void Ellipse::Update(const glm::mat4& projection, const glm::mat4& view)
 
 void Ellipse::Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState)
 {
-  auto pipeline = mDevice.GetPipelineCache().CreateGraphicsPipeline(mPipeline, renderState);
+  auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
   commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
   commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
   commandBuffer.bindDescriptorSets(

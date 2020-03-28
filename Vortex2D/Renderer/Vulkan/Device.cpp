@@ -167,9 +167,7 @@ Device::Device(const Instance& instance, vk::SurfaceKHR surface, bool validation
 }
 
 Device::Device(const Instance& instance, int familyIndex, bool surface, bool validation)
-    : mPhysicalDevice(instance.GetPhysicalDevice())
-    , mFamilyIndex(familyIndex)
-    , mPipelineCache(*this)
+    : mPhysicalDevice(instance.GetPhysicalDevice()), mFamilyIndex(familyIndex)
 {
   float queuePriority = 1.0f;
   auto deviceQueueInfo = vk::DeviceQueueCreateInfo()
@@ -243,7 +241,7 @@ Device::Device(const Instance& instance, int familyIndex, bool surface, bool val
 
   // create objects depending on device
   CreateDescriptorPool();
-  mPipelineCache.CreateCache();
+  mCache = mDevice->createPipelineCacheUnique({});
   mCommandBuffer = std::make_unique<CommandBuffer>(*this, true);
 }
 
@@ -282,11 +280,6 @@ vk::Queue Device::Queue() const
 const DynamicDispatcher& Device::Loader() const
 {
   return mLoader;
-}
-
-PipelineCache& Device::GetPipelineCache() const
-{
-  return mPipelineCache;
 }
 
 vk::PhysicalDevice Device::GetPhysicalDevice() const
@@ -432,6 +425,98 @@ BindGroup Device::CreateBindGroup(const BindGroupLayout& bindGroupLayout,
   Bind(*mDevice, bindGroup, layout, bindingInputs);
 
   return bindGroup;
+}
+
+vk::Pipeline Device::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& graphics,
+                                            const RenderState& renderState)
+{
+  auto it = std::find_if(mGraphicsPipelines.begin(),
+                         mGraphicsPipelines.end(),
+                         [&](const GraphicsPipelineCache& pipeline) {
+                           return pipeline.Graphics == graphics && pipeline.State == renderState;
+                         });
+
+  if (it != mGraphicsPipelines.end())
+  {
+    return *it->Pipeline;
+  }
+
+  auto vertexInputInfo =
+      vk::PipelineVertexInputStateCreateInfo()
+          .setVertexBindingDescriptionCount((uint32_t)graphics.VertexBindingDescriptions.size())
+          .setPVertexBindingDescriptions(graphics.VertexBindingDescriptions.data())
+          .setVertexAttributeDescriptionCount((uint32_t)graphics.VertexAttributeDescriptions.size())
+          .setPVertexAttributeDescriptions(graphics.VertexAttributeDescriptions.data());
+
+  auto viewPort = vk::Viewport(0,
+                               0,
+                               static_cast<float>(renderState.Width),
+                               static_cast<float>(renderState.Height),
+                               0.0f,
+                               1.0f);
+  auto scissor = vk::Rect2D({0, 0}, {renderState.Width, renderState.Height});
+
+  auto viewPortState = vk::PipelineViewportStateCreateInfo()
+                           .setScissorCount(1)
+                           .setPScissors(&scissor)
+                           .setViewportCount(1)
+                           .setPViewports(&viewPort);
+
+  auto blendInfo = vk::PipelineColorBlendStateCreateInfo()
+                       .setAttachmentCount(1)
+                       .setPAttachments(&renderState.BlendState.ColorBlend)
+                       .setBlendConstants(renderState.BlendState.BlendConstants);
+
+  auto dynamicState = vk::PipelineDynamicStateCreateInfo()
+                          .setPDynamicStates(graphics.DynamicStates.data())
+                          .setDynamicStateCount((uint32_t)graphics.DynamicStates.size());
+
+  auto pipelineInfo = vk::GraphicsPipelineCreateInfo()
+                          .setStageCount((uint32_t)graphics.ShaderStages.size())
+                          .setPStages(graphics.ShaderStages.data())
+                          .setPVertexInputState(&vertexInputInfo)
+                          .setPInputAssemblyState(&graphics.InputAssembly)
+                          .setPRasterizationState(&graphics.RasterizationInfo)
+                          .setPMultisampleState(&graphics.MultisampleInfo)
+                          .setPColorBlendState(&blendInfo)
+                          .setLayout(graphics.PipelineLayout)
+                          .setRenderPass(renderState.RenderPass)
+                          .setPViewportState(&viewPortState)
+                          .setPDynamicState(&dynamicState);
+
+  GraphicsPipelineCache pipeline = {
+      renderState, graphics, mDevice->createGraphicsPipelineUnique(*mCache, pipelineInfo)};
+  mGraphicsPipelines.push_back(std::move(pipeline));
+  return *mGraphicsPipelines.back().Pipeline;
+}
+
+vk::Pipeline Device::CreateComputePipeline(vk::ShaderModule shader,
+                                           vk::PipelineLayout layout,
+                                           SpecConstInfo specConstInfo)
+{
+  auto it = std::find_if(mComputePipelines.begin(),
+                         mComputePipelines.end(),
+                         [&](const ComputePipelineCache& pipeline) {
+                           return pipeline.Shader == shader && pipeline.Layout == layout &&
+                                  pipeline.SpecConst == specConstInfo;
+                         });
+
+  if (it != mComputePipelines.end())
+  {
+    return *it->Pipeline;
+  }
+
+  auto stageInfo = vk::PipelineShaderStageCreateInfo()
+                       .setModule(shader)
+                       .setPName("main")
+                       .setStage(vk::ShaderStageFlagBits::eCompute)
+                       .setPSpecializationInfo(&specConstInfo.info);
+
+  auto pipelineInfo = vk::ComputePipelineCreateInfo().setStage(stageInfo).setLayout(layout);
+
+  mComputePipelines.push_back(
+      {shader, layout, specConstInfo, mDevice->createComputePipelineUnique(*mCache, pipelineInfo)});
+  return *mComputePipelines.back().Pipeline;
 }
 
 }  // namespace Renderer

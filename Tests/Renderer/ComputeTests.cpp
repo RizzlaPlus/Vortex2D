@@ -99,7 +99,7 @@ TEST(ComputeTests, BufferCompute)
   auto pipelineLayout = device->CreatePipelineLayout(layout);
   auto bindGroup = device->CreateBindGroup(bindGroupLayout, layout, {{buffer}, {uboBuffer}});
 
-  auto pipeline = device->GetPipelineCache().CreateComputePipeline(shader, pipelineLayout);
+  auto pipeline = device->CreateComputePipeline(shader, pipelineLayout);
 
   device->Execute([&](vk::CommandBuffer commandBuffer) {
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline);
@@ -141,7 +141,7 @@ TEST(ComputeTests, ImageCompute)
   auto bindGroupLayout = device->CreateBindGroupLayout(layout);
   auto bindGroup = device->CreateBindGroup(bindGroupLayout, layout, {{inTexture}, {outTexture}});
 
-  auto pipeline = device->GetPipelineCache().CreateComputePipeline(shader, pipelineLayout);
+  auto pipeline = device->CreateComputePipeline(shader, pipelineLayout);
 
   device->Execute([&](vk::CommandBuffer commandBuffer) {
     inTexture.CopyFrom(commandBuffer, stagingTexture);
@@ -428,8 +428,7 @@ TEST(ComputeTests, Cache)
   ShaderLayouts layout1 = {reflection1};
 
   vk::PipelineLayout pipelineLayout1 = device->CreatePipelineLayout(layout1);
-  vk::Pipeline pipeline1 =
-      device->GetPipelineCache().CreateComputePipeline(shader1, pipelineLayout1);
+  vk::Pipeline pipeline1 = device->CreateComputePipeline(shader1, pipelineLayout1);
 
   auto shader2 = device->GetShaderModule(Image_comp);
   Reflection reflection2(Image_comp);
@@ -437,8 +436,7 @@ TEST(ComputeTests, Cache)
   ShaderLayouts layout2 = {reflection2};
   vk::PipelineLayout pipelineLayout2 = device->CreatePipelineLayout(layout2);
 
-  vk::Pipeline pipeline2 =
-      device->GetPipelineCache().CreateComputePipeline(shader2, pipelineLayout2);
+  vk::Pipeline pipeline2 = device->CreateComputePipeline(shader2, pipelineLayout2);
 
   EXPECT_NE(shader1, shader2);
   EXPECT_NE(pipelineLayout1, pipelineLayout2);
@@ -446,9 +444,9 @@ TEST(ComputeTests, Cache)
 
   EXPECT_EQ(shader1, device->GetShaderModule(Buffer_comp));
   EXPECT_EQ(pipelineLayout1, device->CreatePipelineLayout(layout1));
-  EXPECT_EQ(pipeline1, device->GetPipelineCache().CreateComputePipeline(shader1, pipelineLayout1));
+  EXPECT_EQ(pipeline1, device->CreateComputePipeline(shader1, pipelineLayout1));
 
   EXPECT_EQ(shader2, device->GetShaderModule(Image_comp));
   EXPECT_EQ(pipelineLayout2, device->CreatePipelineLayout(layout2));
-  EXPECT_EQ(pipeline2, device->GetPipelineCache().CreateComputePipeline(shader2, pipelineLayout2));
+  EXPECT_EQ(pipeline2, device->CreateComputePipeline(shader2, pipelineLayout2));
 }

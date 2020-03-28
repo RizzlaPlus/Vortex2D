@@ -59,7 +59,7 @@ protected:
   vk::UniqueSampler mSampler;
   vk::PipelineLayout mPipelineLayout;
   BindGroup mBindGroup;
-  GraphicsPipeline mPipeline;
+  GraphicsPipelineDescriptor mPipeline;
 };
 
 /**

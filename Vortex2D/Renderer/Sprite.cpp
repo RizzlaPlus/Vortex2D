@@ -50,7 +50,7 @@ AbstractSprite::AbstractSprite(const Device& device,
   vk::ShaderModule vertexShader = device.GetShaderModule(SPIRV::TexturePosition_vert);
   vk::ShaderModule fragShader = device.GetShaderModule(fragShaderName);
 
-  mPipeline = GraphicsPipeline()
+  mPipeline = GraphicsPipelineDescriptor()
                   .Shader(vertexShader, vk::ShaderStageFlagBits::eVertex)
                   .Shader(fragShader, vk::ShaderStageFlagBits::eFragment)
                   .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, pos))
@@ -82,12 +82,12 @@ void AbstractSprite::Update(const glm::mat4& projection, const glm::mat4& view)
 
 void AbstractSprite::Initialize(const RenderState& renderState)
 {
-  mDevice.GetPipelineCache().CreateGraphicsPipeline(mPipeline, renderState);
+  mDevice.CreateGraphicsPipeline(mPipeline, renderState);
 }
 
 void AbstractSprite::Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState)
 {
-  auto pipeline = mDevice.GetPipelineCache().CreateGraphicsPipeline(mPipeline, renderState);
+  auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
   commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
   commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
   commandBuffer.bindDescriptorSets(

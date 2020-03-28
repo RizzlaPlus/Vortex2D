@@ -111,15 +111,13 @@ Work::Work(const Device& device,
                             SpecConstValue(1, mComputeSize.LocalSize.x),
                             SpecConstValue(2, mComputeSize.LocalSize.y));
 
-    mPipeline =
-        device.GetPipelineCache().CreateComputePipeline(shaderModule, layout, specConstInfo);
+    mPipeline = mDevice.CreateComputePipeline(shaderModule, layout, specConstInfo);
   }
   else
   {
     Detail::InsertSpecConst(specConstInfo, SpecConstValue(1, mComputeSize.LocalSize.x));
 
-    mPipeline =
-        device.GetPipelineCache().CreateComputePipeline(shaderModule, layout, specConstInfo);
+    mPipeline = mDevice.CreateComputePipeline(shaderModule, layout, specConstInfo);
   }
 }
 

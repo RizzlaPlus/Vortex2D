@@ -56,7 +56,7 @@ protected:
   VertexBuffer<glm::vec2> mVertexBuffer;
   vk::PipelineLayout mPipelineLayout;
   BindGroup mBindGroup;
-  GraphicsPipeline mPipeline;
+  GraphicsPipelineDescriptor mPipeline;
   uint32_t mNumVertices;
 };
 
@@ -112,7 +112,7 @@ private:
   UniformBuffer<Size> mSizeBuffer;
   vk::PipelineLayout mPipelineLayout;
   BindGroup mBindGroup;
-  GraphicsPipeline mPipeline;
+  GraphicsPipelineDescriptor mPipeline;
 };
 
 /**

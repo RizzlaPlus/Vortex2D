@@ -56,7 +56,7 @@ private:
   Renderer::VertexBuffer<glm::vec2> mVertexBuffer;
   vk::PipelineLayout mPipelineLayout;
   Renderer::BindGroup mBindGroup;
-  Renderer::GraphicsPipeline mPipeline;
+  Renderer::GraphicsPipelineDescriptor mPipeline;
   Renderer::Buffer<glm::vec2> mPolygonVertexBuffer;
 };
 
@@ -117,7 +117,7 @@ private:
   Renderer::VertexBuffer<glm::vec2> mVertexBuffer;
   vk::PipelineLayout mPipelineLayout;
   Renderer::BindGroup mBindGroup;
-  Renderer::GraphicsPipeline mPipeline;
+  Renderer::GraphicsPipelineDescriptor mPipeline;
 };
 
 extern VORTEX2D_API Renderer::ColorBlendState IntersectionBlend;

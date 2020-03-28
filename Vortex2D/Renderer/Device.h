@@ -59,7 +59,6 @@ public:
 
   // Memory allocator
   VORTEX2D_API VmaAllocator Allocator() const;
-  VORTEX2D_API PipelineCache& GetPipelineCache() const;
   VORTEX2D_API vk::ShaderModule GetShaderModule(const SpirvBinary& spirv) const;
 
   // Device Interface
@@ -83,6 +82,25 @@ public:
                                          const SPIRV::ShaderLayouts& layout,
                                          const std::vector<BindingInput>& bindingInputs);
 
+  /**
+   * @brief Create a graphics pipeline
+   * @param builder
+   * @param renderState
+   * @return
+   */
+  VORTEX2D_API vk::Pipeline CreateGraphicsPipeline(const GraphicsPipelineDescriptor& builder,
+                                                   const RenderState& renderState);
+
+  /**
+   * @brief Create a compute pipeline
+   * @param shader
+   * @param layout
+   * @param specConstInfo
+   */
+  VORTEX2D_API vk::Pipeline CreateComputePipeline(vk::ShaderModule shader,
+                                                  vk::PipelineLayout layout,
+                                                  SpecConstInfo specConstInfo = {});
+
 private:
   /**
    * @brief Create or re-create the descriptor pool, will render invalid
@@ -101,11 +119,29 @@ private:
   VmaAllocator mAllocator;
   mutable std::unique_ptr<CommandBuffer> mCommandBuffer;
   mutable std::map<const uint32_t*, vk::UniqueShaderModule> mShaders;
-  mutable PipelineCache mPipelineCache;
 
   std::vector<std::tuple<SPIRV::ShaderLayouts, vk::UniqueDescriptorSetLayout>>
       mDescriptorSetLayouts;
   std::vector<std::tuple<SPIRV::ShaderLayouts, vk::UniquePipelineLayout>> mPipelineLayouts;
+
+  struct GraphicsPipelineCache
+  {
+    RenderState State;
+    GraphicsPipelineDescriptor Graphics;
+    vk::UniquePipeline Pipeline;
+  };
+
+  struct ComputePipelineCache
+  {
+    vk::ShaderModule Shader;
+    vk::PipelineLayout Layout;
+    SpecConstInfo SpecConst;
+    vk::UniquePipeline Pipeline;
+  };
+
+  std::vector<GraphicsPipelineCache> mGraphicsPipelines;
+  std::vector<ComputePipelineCache> mComputePipelines;
+  vk::UniquePipelineCache mCache;
 };
 
 }  // namespace Renderer
