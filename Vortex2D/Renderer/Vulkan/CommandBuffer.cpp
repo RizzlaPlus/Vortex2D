@@ -3,7 +3,7 @@
 //  Vortex2D
 //
 
-#include "CommandBuffer.h"
+#include <Vortex2D/Renderer/CommandBuffer.h>
 
 #include <Vortex2D/Renderer/Device.h>
 #include <Vortex2D/Renderer/Drawable.h>

@@ -10,6 +10,7 @@ set(LIB_VULKAN_SOURCES
     "Renderer/Vulkan/Instance.cpp"
     "Renderer/Vulkan/BindGroup.cpp"
     "Renderer/Vulkan/RenderPass.cpp"
+    "Renderer/Vulkan/CommandBuffer.cpp"
     "Renderer/Vulkan/vk_mem_alloc.h")
 
 set(LIB_SOURCES
@@ -35,7 +36,6 @@ set(LIB_SOURCES
     "Engine/LinearSolver/Transfer.cpp"
     "Engine/LinearSolver/Multigrid.cpp"
     "Renderer/Buffer.cpp"
-    "Renderer/CommandBuffer.cpp"
     "Renderer/Pipeline.cpp"
     "Renderer/RenderState.cpp"
     "Renderer/RenderTexture.cpp"
