@@ -8,7 +8,6 @@ set(LIB_VULKAN_HEADERS
 set(LIB_VULKAN_SOURCES
     "Renderer/Vulkan/Device.cpp"
     "Renderer/Vulkan/Instance.cpp"
-    "Renderer/Vulkan/BindGroup.cpp"
     "Renderer/Vulkan/RenderPass.cpp"
     "Renderer/Vulkan/CommandBuffer.cpp"
     "Renderer/Vulkan/Texture.cpp"
@@ -40,13 +39,12 @@ set(LIB_SOURCES
     "Engine/LinearSolver/IncompletePoisson.cpp"
     "Engine/LinearSolver/Transfer.cpp"
     "Engine/LinearSolver/Multigrid.cpp"
+    "Renderer/BindGroup.cpp"
     "Renderer/Pipeline.cpp"
     "Renderer/RenderState.cpp"
-
     "Renderer/RenderTarget.cpp"
     "Renderer/Shapes.cpp"
     "Renderer/Sprite.cpp"
-
     "Renderer/Transformable.cpp"
     "Renderer/Work.cpp"
     "SPIRV/Reflection.cpp"
