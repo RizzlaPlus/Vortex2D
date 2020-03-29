@@ -33,7 +33,7 @@ public:
     Cubic = 1,
   };
 
-  VORTEX2D_API Velocity(const Renderer::Device& device, const glm::ivec2& size);
+  VORTEX2D_API Velocity(Renderer::Device& device, const glm::ivec2& size);
 
   /**
    * @brief An output texture used for algorithms that used the velocity as
@@ -53,13 +53,13 @@ public:
    * @brief Copy the output field to the main field
    * @param commandBuffer
    */
-  VORTEX2D_API void CopyBack(vk::CommandBuffer commandBuffer);
+  VORTEX2D_API void CopyBack(Renderer::CommandEncoder& command);
 
   /**
    * @brief Clear the velocity field
    * @param commandBuffer
    */
-  VORTEX2D_API void Clear(vk::CommandBuffer commandBuffer);
+  VORTEX2D_API void Clear(Renderer::CommandEncoder& command);
 
   /**
    * @brief Copy to the difference field.
@@ -73,7 +73,7 @@ public:
   VORTEX2D_API void VelocityDiff();
 
 private:
-  const Renderer::Device& mDevice;
+  Renderer::Device& mDevice;
   Renderer::Texture mOutputVelocity;
   Renderer::Texture mDVelocity;
 

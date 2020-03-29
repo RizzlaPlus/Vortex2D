@@ -102,8 +102,8 @@ TEST(RigidbodyTests, Phi)
   sim.update_rigid_body_grids();
 
   RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  device->Execute([&](vk::CommandBuffer commandBuffer) {
-    solidPhi.Clear(commandBuffer, std::array<float, 4>{{1000.0f, 0.0f, 0.0f, 0.0f}});
+  device->Execute([&](CommandEncoder& command) {
+    solidPhi.Clear(command, std::array<float, 4>{{1000.0f, 0.0f, 0.0f, 0.0f}});
   });
 
   Vortex2D::Fluid::Rectangle rectangle(*device, rectangleSize * glm::vec2(size), false, size.x);
@@ -120,8 +120,7 @@ TEST(RigidbodyTests, Phi)
   device->Handle().waitIdle();
 
   Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { outTexture.CopyFrom(commandBuffer, solidPhi); });
+  device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, solidPhi); });
 
   CheckPhi(size, sim, outTexture);
 }
@@ -375,7 +374,7 @@ TEST(RigidbodyTests, ReduceJSum)
 
   CopyFrom(input, inputData);
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) { reduceBound.Record(commandBuffer); });
+  device->Execute([&](CommandEncoder& command) { reduceBound.Record(command); });
 
   std::vector<Vortex2D::Fluid::RigidBody::Velocity> outputData(1);
   CopyTo(output, outputData);
@@ -527,7 +526,7 @@ TEST(RigidbodyTests, Pressure)
   // setup equations
   Buffer<float> input(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
   Buffer<float> output(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
-  device->Execute([&](vk::CommandBuffer commandBuffer) { output.Clear(commandBuffer); });
+  device->Execute([&](CommandEncoder& command) { output.Clear(command); });
 
   std::vector<float> inputData(size.x * size.y, 0.1f);
   CopyFrom(input, inputData);

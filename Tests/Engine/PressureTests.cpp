@@ -140,8 +140,7 @@ TEST(PressureTest, ZeroDivs)
   std::vector<float> inputData(size.x * size.y);
   DrawSquare(size.x, size.y, inputData, {10.0f, 10.0f}, {30.0f, 30.0f}, -1.0f);
   input.CopyFrom(inputData);
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { liquidPhi.CopyFrom(commandBuffer, input); });
+  device->Execute([&](CommandEncoder& command) { liquidPhi.CopyFrom(command, input); });
 
   LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
   Buffer<glm::ivec2> valid(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);

@@ -14,6 +14,13 @@ namespace Vortex2D
 {
 namespace Renderer
 {
+void TextureBarrier(vk::Image image,
+                    vk::CommandBuffer commandBuffer,
+                    vk::ImageLayout oldLayout,
+                    vk::AccessFlags srcMask,
+                    vk::ImageLayout newLayout,
+                    vk::AccessFlags dstMask);
+
 struct SwapChainSupportDetails
 {
   SwapChainSupportDetails(vk::PhysicalDevice device, vk::SurfaceKHR surface)
@@ -30,10 +37,7 @@ struct SwapChainSupportDetails
   bool IsValid() const { return !formats.empty() && !presentModes.empty(); }
 };
 
-RenderWindow::RenderWindow(const Device& device,
-                           vk::SurfaceKHR surface,
-                           uint32_t width,
-                           uint32_t height)
+RenderWindow::RenderWindow(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
     : RenderTarget(width, height), mDevice(device), mIndex(0), mFrameIndex(0)
 {
   // get swap chain support details
@@ -86,9 +90,9 @@ RenderWindow::RenderWindow(const Device& device,
 
     mSwapChainImageViews.push_back(device.Handle().createImageViewUnique(imageViewInfo));
 
-    device.Execute([&](vk::CommandBuffer commandBuffer) {
+    mDevice.Execute([&](CommandEncoder& command) {
       TextureBarrier(image,
-                     commandBuffer,
+                     command.Handle(),
                      vk::ImageLayout::eUndefined,
                      vk::AccessFlagBits{},
                      vk::ImageLayout::eGeneral,
@@ -96,14 +100,14 @@ RenderWindow::RenderWindow(const Device& device,
 
       auto clearValue = vk::ClearColorValue().setFloat32({{0.0f, 0.0f, 0.0f, 0.0f}});
 
-      commandBuffer.clearColorImage(
+      command.Handle().clearColorImage(
           image,
           vk::ImageLayout::eGeneral,
           clearValue,
           vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
       TextureBarrier(image,
-                     commandBuffer,
+                     command.Handle(),
                      vk::ImageLayout::eGeneral,
                      vk::AccessFlagBits::eTransferWrite,
                      vk::ImageLayout::ePresentSrcKHR,

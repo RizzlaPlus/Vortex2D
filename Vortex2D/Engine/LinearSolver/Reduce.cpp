@@ -28,7 +28,7 @@ Renderer::ComputeSize MakeComputeSize(int size)
 }
 }  // namespace
 
-Reduce::Reduce(const Renderer::Device& device,
+Reduce::Reduce(Renderer::Device& device,
                const Renderer::SpirvBinary& spirv,
                const glm::ivec2& size,
                std::size_t typeSize)
@@ -67,10 +67,9 @@ Reduce::Bound Reduce::Bind(Renderer::GenericBuffer& input, Renderer::GenericBuff
     bounds.emplace_back(mReduce.Bind(computeSize, {*buffers[i], *buffers[i + 1]}));
     computeSize = MakeComputeSize(computeSize.WorkSize.x);
 
-    vk::Buffer buffer = buffers[i + 1]->Handle();
-    bufferBarriers.emplace_back([=](vk::CommandBuffer commandBuffer) {
-      Renderer::BufferBarrier(
-          buffer, commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    auto* buffer = buffers[i + 1];
+    bufferBarriers.emplace_back([=](Renderer::CommandEncoder& command) {
+      buffer->Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
     });
   }
 
@@ -84,21 +83,21 @@ Reduce::Bound::Bound(int size,
 {
 }
 
-void Reduce::Bound::Record(vk::CommandBuffer commandBuffer)
+void Reduce::Bound::Record(Renderer::CommandEncoder& command)
 {
   int localSize = 2 * Renderer::ComputeSize::GetLocalSize1D();
   int workGroupSize = mSize;
 
   for (std::size_t i = 0; i < mBounds.size(); i++)
   {
-    mBounds[i].Record(commandBuffer);
-    mBufferBarriers[i](commandBuffer);
+    mBounds[i].Record(command);
+    mBufferBarriers[i](command);
 
     workGroupSize = (workGroupSize + localSize - 1) / localSize;
   }
 }
 
-ReduceSum::ReduceSum(const Renderer::Device& device, const glm::ivec2& size)
+ReduceSum::ReduceSum(Renderer::Device& device, const glm::ivec2& size)
     : Reduce(device, SPIRV::Sum_comp, size, sizeof(float))
 {
 }
@@ -110,12 +109,12 @@ struct J
   alignas(4) float angular;
 };
 
-ReduceJ::ReduceJ(const Renderer::Device& device, const glm::ivec2& size)
+ReduceJ::ReduceJ(Renderer::Device& device, const glm::ivec2& size)
     : Reduce(device, SPIRV::SumJ_comp, size, sizeof(J))
 {
 }
 
-ReduceMax::ReduceMax(const Renderer::Device& device, const glm::ivec2& size)
+ReduceMax::ReduceMax(Renderer::Device& device, const glm::ivec2& size)
     : Reduce(device, SPIRV::Max_comp, size, sizeof(float))
 {
 }

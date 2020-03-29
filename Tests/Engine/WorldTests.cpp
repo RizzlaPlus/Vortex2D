@@ -231,8 +231,7 @@ TEST(CflTets, Max)
   }
 
   input.CopyFrom(velocityData);
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { velocity.CopyFrom(commandBuffer, input); });
+  device->Execute([&](Renderer::CommandEncoder& command) { velocity.CopyFrom(command, input); });
 
   cfl.Compute();
   EXPECT_NEAR(1.0f / (max * size.x), cfl.Get(), 1e-4f);

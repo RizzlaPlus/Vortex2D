@@ -292,21 +292,6 @@ int Device::GetFamilyIndex() const
   return mFamilyIndex;
 }
 
-vk::CommandBuffer Device::CreateCommandBuffer() const
-{
-  auto commandBufferInfo = vk::CommandBufferAllocateInfo()
-                               .setCommandBufferCount(1)
-                               .setCommandPool(*mCommandPool)
-                               .setLevel(vk::CommandBufferLevel::ePrimary);
-
-  return mDevice->allocateCommandBuffers(commandBufferInfo).at(0);
-}
-
-void Device::FreeCommandBuffer(vk::CommandBuffer commandBuffer) const
-{
-  mDevice->freeCommandBuffers(*mCommandPool, {commandBuffer});
-}
-
 void Device::Execute(CommandBuffer::CommandFn commandFn) const
 {
   (*mCommandBuffer).Record(commandFn).Submit().Wait();
@@ -520,6 +505,18 @@ vk::Pipeline Device::CreateComputePipeline(vk::ShaderModule shader,
        specConstInfo,
        mDevice->createComputePipelineUnique(*mPipelineCache, pipelineInfo)});
   return *mComputePipelines.back().Pipeline;
+}
+
+CommandEncoder Device::CreateCommandEncoder()
+{
+  auto commandBufferInfo = vk::CommandBufferAllocateInfo()
+                               .setCommandBufferCount(1)
+                               .setCommandPool(*mCommandPool)
+                               .setLevel(vk::CommandBufferLevel::ePrimary);
+
+  auto commandBufferUnique =
+      std::move(mDevice->allocateCommandBuffersUnique(commandBufferInfo).at(0));
+  return {*this, std::move(commandBufferUnique)};
 }
 
 }  // namespace Renderer

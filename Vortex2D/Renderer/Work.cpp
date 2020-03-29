@@ -87,11 +87,11 @@ DispatchParams::DispatchParams(int count)
 {
 }
 
-Work::Work(const Device& device,
+Work::Work(Device& device,
            const ComputeSize& computeSize,
            const SpirvBinary& spirv,
            const SpecConstInfo& additionalSpecConstInfo)
-    : mComputeSize(computeSize), mDevice(const_cast<Device&>(device))  // FIXME remove const_cast
+    : mComputeSize(computeSize), mDevice(device)
 {
   vk::ShaderModule shaderModule = mDevice.CreateShaderModule(spirv);
   SPIRV::Reflection reflection(spirv);
@@ -130,13 +130,13 @@ Work::Bound Work::Bind(ComputeSize computeSize, const std::vector<Renderer::Bind
 
   auto pipelineLayout = mDevice.CreatePipelineLayout(mLayout);
   auto bindGroupLayout = mDevice.CreateBindGroupLayout(mLayout);
-  auto descriptorSet = mDevice.CreateBindGroup(bindGroupLayout, mLayout, inputs);
+  auto bindGroup = mDevice.CreateBindGroup(bindGroupLayout, mLayout, inputs);
 
   return Bound(computeSize,
                mLayout.front().pushConstantSize,
                pipelineLayout,
                mPipeline,
-               std::move(descriptorSet.descriptorSet));
+               std::move(bindGroup));
 }
 
 Work::Bound Work::Bind(const std::vector<BindingInput>& inputs)
@@ -152,41 +152,41 @@ Work::Bound::Bound(const ComputeSize& computeSize,
                    uint32_t pushConstantSize,
                    vk::PipelineLayout layout,
                    vk::Pipeline pipeline,
-                   vk::UniqueDescriptorSet descriptor)
+                   BindGroup bindGroup)
     : mComputeSize(computeSize)
     , mPushConstantSize(pushConstantSize)
     , mLayout(layout)
     , mPipeline(pipeline)
-    , mDescriptor(std::move(descriptor))
+    , mBindGroup(std::move(bindGroup))
 {
 }
 
-void Work::Bound::Record(vk::CommandBuffer commandBuffer)
+void Work::Bound::Record(CommandEncoder& command)
 {
-  PushConstantOffset(commandBuffer, 0, mComputeSize.DomainSize.x);
+  PushConstantOffset(command, 0, mComputeSize.DomainSize.x);
   if (mComputeSize.DomainSize.y != 1)
   {
-    PushConstantOffset(commandBuffer, 4, mComputeSize.DomainSize.y);
+    PushConstantOffset(command, 4, mComputeSize.DomainSize.y);
   }
 
-  commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, mLayout, 0, {*mDescriptor}, {});
-  commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, mPipeline);
+  command.SetBindGroup(vk::PipelineBindPoint::eCompute, mLayout, mBindGroup);
+  command.SetPipeline(vk::PipelineBindPoint::eCompute, mPipeline);
 
-  commandBuffer.dispatch(mComputeSize.WorkSize.x, mComputeSize.WorkSize.y, 1);
+  command.Dispatch(mComputeSize.WorkSize.x, mComputeSize.WorkSize.y, 1);
 }
 
-void Work::Bound::RecordIndirect(vk::CommandBuffer commandBuffer,
+void Work::Bound::RecordIndirect(CommandEncoder& command,
                                  IndirectBuffer<DispatchParams>& dispatchParams)
 {
-  PushConstantOffset(commandBuffer, 0, mComputeSize.DomainSize.x);
+  PushConstantOffset(command, 0, mComputeSize.DomainSize.x);
   if (mComputeSize.DomainSize.y != 1)
   {
-    PushConstantOffset(commandBuffer, 4, mComputeSize.DomainSize.y);
+    PushConstantOffset(command, 4, mComputeSize.DomainSize.y);
   }
-  commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, mLayout, 0, {*mDescriptor}, {});
-  commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, mPipeline);
 
-  commandBuffer.dispatchIndirect(dispatchParams.Handle(), 0);
+  command.SetBindGroup(vk::PipelineBindPoint::eCompute, mLayout, mBindGroup);
+  command.SetPipeline(vk::PipelineBindPoint::eCompute, mPipeline);
+  command.DispatchIndirect(dispatchParams);
 }
 
 }  // namespace Renderer

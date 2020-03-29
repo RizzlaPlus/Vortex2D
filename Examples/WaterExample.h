@@ -17,7 +17,7 @@ extern glm::vec4 blue;
 class WaterExample : public Runner
 {
 public:
-  WaterExample(const Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
+  WaterExample(Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
       : gravity(device, {256.0f, 256.0f})
       , world(device, size, dt, 2, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
@@ -29,7 +29,7 @@ public:
     liquidPhi.Colour = blue;
   }
 
-  void Init(const Vortex2D::Renderer::Device& device,
+  void Init(Vortex2D::Renderer::Device& device,
             Vortex2D::Renderer::RenderTarget& renderTarget) override
   {
     // Add particles

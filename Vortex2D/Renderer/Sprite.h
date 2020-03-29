@@ -26,20 +26,18 @@ struct RenderTarget;
 class AbstractSprite : public Drawable, public Transformable
 {
 public:
-  VORTEX2D_API AbstractSprite(const Device& device,
-                              const SpirvBinary& fragShaderName,
-                              Texture& texture);
+  VORTEX2D_API AbstractSprite(Device& device, const SpirvBinary& fragShaderName, Texture& texture);
   VORTEX2D_API AbstractSprite(AbstractSprite&& other);
   VORTEX2D_API virtual ~AbstractSprite() override;
 
   VORTEX2D_API void Initialize(const RenderState& renderState) override;
   VORTEX2D_API void Update(const glm::mat4& projection, const glm::mat4& view) override;
-  VORTEX2D_API void Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState) override;
+  VORTEX2D_API void Draw(CommandEncoder& command, const RenderState& renderState) override;
 
   template <typename T>
-  void PushConstant(vk::CommandBuffer commandBuffer, uint32_t offset, const T& data)
+  void PushConstant(Renderer::CommandEncoder& command, uint32_t offset, const T& data)
   {
-    commandBuffer.pushConstants(
+    command.PushConstants(
         mPipelineLayout, vk::ShaderStageFlagBits::eFragment, offset, sizeof(T), &data);
   }
 
@@ -69,7 +67,7 @@ protected:
 class Sprite : public AbstractSprite
 {
 public:
-  VORTEX2D_API Sprite(const Device& device, Texture& texture);
+  VORTEX2D_API Sprite(Device& device, Texture& texture);
 };
 
 }  // namespace Renderer

@@ -30,7 +30,7 @@ public:
    * @param size
    * @param preconditioner
    */
-  VORTEX2D_API ConjugateGradient(const Renderer::Device& device,
+  VORTEX2D_API ConjugateGradient(Renderer::Device& device,
                                  const glm::ivec2& size,
                                  Preconditioner& preconditioner);
 
@@ -53,7 +53,7 @@ public:
   VORTEX2D_API float GetError() override;
 
 private:
-  const Renderer::Device& mDevice;
+  Renderer::Device& mDevice;
   Preconditioner& mPreconditioner;
 
   Renderer::Buffer<float> r, s, z, inner, alpha, beta, rho, rho_new, sigma;

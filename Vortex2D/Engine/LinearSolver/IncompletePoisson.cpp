@@ -11,7 +11,7 @@ namespace Vortex2D
 {
 namespace Fluid
 {
-IncompletePoisson::IncompletePoisson(const Renderer::Device& device, const glm::ivec2& size)
+IncompletePoisson::IncompletePoisson(Renderer::Device& device, const glm::ivec2& size)
     : mIncompletePoisson(device, size, SPIRV::IncompletePoisson_comp)
 {
 }
@@ -26,9 +26,9 @@ void IncompletePoisson::Bind(Renderer::GenericBuffer& d,
   mIncompletePoissonBound = mIncompletePoisson.Bind({d, l, b, pressure});
 }
 
-void IncompletePoisson::Record(vk::CommandBuffer commandBuffer)
+void IncompletePoisson::Record(Renderer::CommandEncoder& command)
 {
-  mIncompletePoissonBound.Record(commandBuffer);
+  mIncompletePoissonBound.Record(command);
 }
 
 }  // namespace Fluid

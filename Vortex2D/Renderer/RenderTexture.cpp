@@ -14,10 +14,7 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-RenderTexture::RenderTexture(const Device& device,
-                             uint32_t width,
-                             uint32_t height,
-                             vk::Format format)
+RenderTexture::RenderTexture(Device& device, uint32_t width, uint32_t height, vk::Format format)
     : RenderTarget(width, height), Texture(device, width, height, format), mDevice(device)
 {
   // Create render pass

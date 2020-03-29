@@ -39,7 +39,7 @@ public:
 class AbstractShape : public Shape
 {
 public:
-  VORTEX2D_API AbstractShape(const Device& device,
+  VORTEX2D_API AbstractShape(Device& device,
                              const SpirvBinary& fragShader,
                              const std::vector<glm::vec2>& vertices);
   VORTEX2D_API AbstractShape(AbstractShape&& other);
@@ -47,7 +47,7 @@ public:
 
   VORTEX2D_API void Initialize(const RenderState& renderState) override;
   VORTEX2D_API void Update(const glm::mat4& projection, const glm::mat4& view) override;
-  VORTEX2D_API void Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState) override;
+  VORTEX2D_API void Draw(CommandEncoder& encoder, const RenderState& renderState) override;
 
 protected:
   Device& mDevice;
@@ -67,7 +67,7 @@ protected:
 class Rectangle : public AbstractShape
 {
 public:
-  VORTEX2D_API Rectangle(const Device& device, const glm::vec2& size);
+  VORTEX2D_API Rectangle(Device& device, const glm::vec2& size);
 };
 
 /**
@@ -77,7 +77,7 @@ public:
 class IntRectangle : public AbstractShape
 {
 public:
-  VORTEX2D_API IntRectangle(const Device& device, const glm::vec2& size);
+  VORTEX2D_API IntRectangle(Device& device, const glm::vec2& size);
 };
 
 /**
@@ -87,12 +87,12 @@ public:
 class Ellipse : public Shape
 {
 public:
-  VORTEX2D_API Ellipse(const Device& device, const glm::vec2& radius);
+  VORTEX2D_API Ellipse(Device& device, const glm::vec2& radius);
   VORTEX2D_API ~Ellipse() override;
 
   void Initialize(const RenderState& renderState) override;
   void Update(const glm::mat4& projection, const glm::mat4& view) override;
-  void Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState) override;
+  void Draw(CommandEncoder& command, const RenderState& renderState) override;
 
 private:
   // std140 aligned structure
@@ -126,7 +126,7 @@ public:
 
   void Initialize(const RenderState& renderState) override;
   void Update(const glm::mat4& projection, const glm::mat4& view) override;
-  void Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState) override;
+  void Draw(CommandEncoder& command, const RenderState& renderState) override;
 
 private:
   glm::vec4 mColour;

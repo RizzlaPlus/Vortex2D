@@ -27,32 +27,32 @@ uint64_t GetMask(uint32_t validBits)
 }
 }  // namespace
 
-Timer::Timer(const Device& device) : mDevice(device), mStart(device), mStop(device)
+Timer::Timer(Device& device) : mDevice(device), mStart(device), mStop(device)
 {
   auto queryPoolInfo =
       vk::QueryPoolCreateInfo().setQueryType(vk::QueryType::eTimestamp).setQueryCount(2);
 
   mPool = device.Handle().createQueryPoolUnique(queryPoolInfo);
 
-  mStart.Record([&](vk::CommandBuffer commandBuffer) {
-    commandBuffer.resetQueryPool(*mPool, 0, 2);
-    commandBuffer.writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 0);
+  mStart.Record([&](CommandEncoder& command) {
+    command.Handle().resetQueryPool(*mPool, 0, 2);
+    command.Handle().writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 0);
   });
 
-  mStop.Record([&](vk::CommandBuffer commandBuffer) {
-    commandBuffer.writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 1);
+  mStop.Record([&](CommandEncoder& command) {
+    command.Handle().writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 1);
   });
 }
 
-void Timer::Start(vk::CommandBuffer commandBuffer)
+void Timer::Start(CommandEncoder& command)
 {
-  commandBuffer.resetQueryPool(*mPool, 0, 2);
-  commandBuffer.writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 0);
+  command.Handle().resetQueryPool(*mPool, 0, 2);
+  command.Handle().writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 0);
 }
 
-void Timer::Stop(vk::CommandBuffer commandBuffer)
+void Timer::Stop(CommandEncoder& command)
 {
-  commandBuffer.writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 1);
+  command.Handle().writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 1);
 }
 
 void Timer::Start()

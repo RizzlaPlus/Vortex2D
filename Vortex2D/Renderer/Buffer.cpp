@@ -14,7 +14,7 @@ namespace Vortex2D
 namespace Renderer
 {
 void BufferBarrier(vk::Buffer buffer,
-                   vk::CommandBuffer commandBuffer,
+                   vk::CommandBuffer command,
                    vk::AccessFlags oldAccess,
                    vk::AccessFlags newAccess)
 {
@@ -26,15 +26,15 @@ void BufferBarrier(vk::Buffer buffer,
                                   .setSrcAccessMask(oldAccess)
                                   .setDstAccessMask(newAccess);
 
-  commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands,
-                                vk::PipelineStageFlagBits::eAllCommands,
-                                {},
-                                nullptr,
-                                bufferMemoryBarriers,
-                                nullptr);
+  command.pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands,
+                          vk::PipelineStageFlagBits::eAllCommands,
+                          {},
+                          nullptr,
+                          bufferMemoryBarriers,
+                          nullptr);
 }
 
-GenericBuffer::GenericBuffer(const Device& device,
+GenericBuffer::GenericBuffer(Device& device,
                              vk::BufferUsageFlags usageFlags,
                              VmaMemoryUsage memoryUsage,
                              vk::DeviceSize deviceSize)
@@ -109,7 +109,7 @@ void GenericBuffer::Resize(vk::DeviceSize size)
   Create();
 }
 
-void GenericBuffer::CopyFrom(vk::CommandBuffer commandBuffer, GenericBuffer& srcBuffer)
+void GenericBuffer::CopyFrom(Renderer::CommandEncoder& command, GenericBuffer& srcBuffer)
 {
   if (mSize != srcBuffer.mSize)
   {
@@ -117,20 +117,18 @@ void GenericBuffer::CopyFrom(vk::CommandBuffer commandBuffer, GenericBuffer& src
   }
 
   // TODO improve barriers
-  srcBuffer.Barrier(
-      commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eTransferRead);
-  Barrier(commandBuffer, vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eTransferWrite);
+  srcBuffer.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eTransferRead);
+  Barrier(command, vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eTransferWrite);
 
   auto region = vk::BufferCopy().setSize(mSize);
 
-  commandBuffer.copyBuffer(srcBuffer.Handle(), mBuffer, region);
+  command.Handle().copyBuffer(srcBuffer.Handle(), mBuffer, region);
 
-  Barrier(commandBuffer, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead);
-  srcBuffer.Barrier(
-      commandBuffer, vk::AccessFlagBits::eTransferRead, vk::AccessFlagBits::eShaderRead);
+  Barrier(command, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead);
+  srcBuffer.Barrier(command, vk::AccessFlagBits::eTransferRead, vk::AccessFlagBits::eShaderRead);
 }
 
-void GenericBuffer::CopyFrom(vk::CommandBuffer commandBuffer, Texture& srcTexture)
+void GenericBuffer::CopyFrom(Renderer::CommandEncoder& command, Texture& srcTexture)
 {
   auto textureSize =
       srcTexture.GetWidth() * srcTexture.GetHeight() * GetBytesPerPixel(srcTexture.GetFormat());
@@ -139,7 +137,7 @@ void GenericBuffer::CopyFrom(vk::CommandBuffer commandBuffer, Texture& srcTextur
     throw std::runtime_error("Cannot copy texture of different sizes");
   }
 
-  srcTexture.Barrier(commandBuffer,
+  srcTexture.Barrier(command,
                      vk::ImageLayout::eGeneral,
                      vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eColorAttachmentWrite,
                      vk::ImageLayout::eTransferSrcOptimal,
@@ -149,30 +147,30 @@ void GenericBuffer::CopyFrom(vk::CommandBuffer commandBuffer, Texture& srcTextur
                   .setImageSubresource({vk::ImageAspectFlagBits::eColor, 0, 0, 1})
                   .setImageExtent({srcTexture.GetWidth(), srcTexture.GetHeight(), 1});
 
-  commandBuffer.copyImageToBuffer(
+  command.Handle().copyImageToBuffer(
       srcTexture.mImage, vk::ImageLayout::eTransferSrcOptimal, mBuffer, info);
 
-  srcTexture.Barrier(commandBuffer,
+  srcTexture.Barrier(command,
                      vk::ImageLayout::eTransferSrcOptimal,
                      vk::AccessFlagBits::eTransferRead,
                      vk::ImageLayout::eGeneral,
                      vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead);
 
-  Barrier(commandBuffer, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead);
+  Barrier(command, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead);
 }
 
-void GenericBuffer::Barrier(vk::CommandBuffer commandBuffer,
+void GenericBuffer::Barrier(CommandEncoder& command,
                             vk::AccessFlags oldAccess,
                             vk::AccessFlags newAccess)
 {
-  BufferBarrier(mBuffer, commandBuffer, oldAccess, newAccess);
+  BufferBarrier(mBuffer, command.Handle(), oldAccess, newAccess);
 }
 
-void GenericBuffer::Clear(vk::CommandBuffer commandBuffer)
+void GenericBuffer::Clear(Renderer::CommandEncoder& command)
 {
-  Barrier(commandBuffer, vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eTransferWrite);
-  commandBuffer.fillBuffer(mBuffer, 0, mSize, 0);
-  Barrier(commandBuffer, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead);
+  Barrier(command, vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eTransferWrite);
+  command.Handle().fillBuffer(mBuffer, 0, mSize, 0);
+  Barrier(command, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead);
 }
 
 void GenericBuffer::CopyFrom(uint32_t offset, const void* data, uint32_t size)

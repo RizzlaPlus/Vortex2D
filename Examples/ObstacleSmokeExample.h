@@ -22,7 +22,7 @@ extern glm::vec4 gray;
 class ObstacleSmokeExample : public Runner
 {
 public:
-  ObstacleSmokeExample(const Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
+  ObstacleSmokeExample(Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
       : density(device, size, vk::Format::eR8G8B8A8Unorm)
       , world(device, size, dt, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
@@ -57,7 +57,7 @@ public:
     solidPhi.Colour = green;
   }
 
-  void Init(const Vortex2D::Renderer::Device& device,
+  void Init(Vortex2D::Renderer::Device& device,
             Vortex2D::Renderer::RenderTarget& renderTarget) override
   {
     // Draw density

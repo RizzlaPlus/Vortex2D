@@ -6,12 +6,13 @@
 #ifndef Vortex2D_Preconditioner_h
 #define Vortex2D_Preconditioner_h
 
-#include <Vortex2D/Renderer/Buffer.h>
-#include <Vortex2D/Renderer/Texture.h>
-#include <Vortex2D/Renderer/Work.h>
-
 namespace Vortex2D
 {
+namespace Renderer
+{
+class CommandEncoder;
+class GenericBuffer;
+}  // namespace Renderer
 namespace Fluid
 {
 /**
@@ -37,7 +38,7 @@ struct Preconditioner
    * @brief Record the preconditioner
    * @param commandBuffer the command buffer to record into.
    */
-  virtual void Record(vk::CommandBuffer commandBuffer) = 0;
+  virtual void Record(Renderer::CommandEncoder& command) = 0;
 };
 
 }  // namespace Fluid

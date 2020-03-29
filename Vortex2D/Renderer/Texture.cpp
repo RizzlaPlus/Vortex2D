@@ -12,6 +12,32 @@ namespace Vortex2D
 {
 namespace Renderer
 {
+void TextureBarrier(vk::Image image,
+                    vk::CommandBuffer commandBuffer,
+                    vk::ImageLayout oldLayout,
+                    vk::AccessFlags srcMask,
+                    vk::ImageLayout newLayout,
+                    vk::AccessFlags dstMask)
+{
+  auto imageMemoryBarriers = vk::ImageMemoryBarrier()
+                                 .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+                                 .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+                                 .setOldLayout(oldLayout)
+                                 .setNewLayout(newLayout)
+                                 .setImage(image)
+                                 .setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1})
+                                 .setSrcAccessMask(srcMask)
+                                 .setDstAccessMask(dstMask);
+
+  commandBuffer.pipelineBarrier(
+      vk::PipelineStageFlagBits::eAllCommands | vk::PipelineStageFlagBits::eHost,
+      vk::PipelineStageFlagBits::eAllCommands | vk::PipelineStageFlagBits::eHost,
+      {},
+      nullptr,
+      nullptr,
+      imageMemoryBarriers);
+}
+
 vk::DeviceSize GetBytesPerPixel(vk::Format format)
 {
   switch (format)
@@ -56,7 +82,7 @@ vk::UniqueSampler SamplerBuilder::Create(vk::Device device)
   return device.createSamplerUnique(mSamplerInfo);
 }
 
-Texture::Texture(const Device& device,
+Texture::Texture(Device& device,
                  uint32_t width,
                  uint32_t height,
                  vk::Format format,
@@ -117,10 +143,10 @@ Texture::Texture(const Device& device,
 
   // Transition to eGeneral and clear texture
   // TODO perhaps have initial color or data in the constructor?
-  device.Execute([&](vk::CommandBuffer commandBuffer) {
+  device.Execute([&](CommandEncoder& command) {
     if (memoryUsage != VMA_MEMORY_USAGE_CPU_ONLY)
     {
-      Barrier(commandBuffer,
+      Barrier(command,
               imageLayout,
               vk::AccessFlagBits{},
               vk::ImageLayout::eGeneral,
@@ -128,13 +154,13 @@ Texture::Texture(const Device& device,
 
       auto clearValue = vk::ClearColorValue().setFloat32({{0.0f, 0.0f, 0.0f, 0.0f}});
 
-      commandBuffer.clearColorImage(
+      command.Handle().clearColorImage(
           mImage,
           vk::ImageLayout::eGeneral,
           clearValue,
           vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
-      Barrier(commandBuffer,
+      Barrier(command,
               vk::ImageLayout::eGeneral,
               vk::AccessFlagBits::eTransferWrite,
               vk::ImageLayout::eGeneral,
@@ -142,7 +168,7 @@ Texture::Texture(const Device& device,
     }
     else
     {
-      Barrier(commandBuffer,
+      Barrier(command,
               imageLayout,
               vk::AccessFlagBits{},
               vk::ImageLayout::eGeneral,
@@ -153,7 +179,7 @@ Texture::Texture(const Device& device,
 
 Texture::~Texture()
 {
-  if (mImage != VK_NULL_HANDLE)
+  if (mImage)
   {
     vmaDestroyImage(mDevice.Allocator(), mImage, mAllocation);
   }
@@ -169,38 +195,38 @@ Texture::Texture(Texture&& other)
     , mAllocationInfo(other.mAllocationInfo)
     , mImageView(std::move(other.mImageView))
 {
-  other.mImage = VK_NULL_HANDLE;
+  other.mImage = vk::Image();
   other.mAllocation = VK_NULL_HANDLE;
 }
 
-void Texture::Clear(vk::CommandBuffer commandBuffer, const std::array<int, 4>& colour)
+void Texture::Clear(CommandEncoder& command, const std::array<int, 4>& colour)
 {
   vk::ClearColorValue colourValue(colour);
-  Clear(commandBuffer, colourValue);
+  Clear(command, colourValue);
 }
 
-void Texture::Clear(vk::CommandBuffer commandBuffer, const std::array<float, 4>& colour)
+void Texture::Clear(CommandEncoder& command, const std::array<float, 4>& colour)
 {
   vk::ClearColorValue colourValue(colour);
-  Clear(commandBuffer, colourValue);
+  Clear(command, colourValue);
 }
 
-void Texture::Clear(vk::CommandBuffer commandBuffer, vk::ClearColorValue colour)
+void Texture::Clear(CommandEncoder& command, vk::ClearColorValue colour)
 {
   // TODO access flags wrong?
-  Barrier(commandBuffer,
+  Barrier(command,
           vk::ImageLayout::eGeneral,
           vk::AccessFlagBits{},
           vk::ImageLayout::eGeneral,
           vk::AccessFlagBits::eTransferWrite);
 
-  commandBuffer.clearColorImage(
+  command.Handle().clearColorImage(
       mImage,
       vk::ImageLayout::eGeneral,
       colour,
       vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
-  Barrier(commandBuffer,
+  Barrier(command,
           vk::ImageLayout::eGeneral,
           vk::AccessFlagBits::eTransferWrite,
           vk::ImageLayout::eGeneral,
@@ -301,19 +327,19 @@ void Texture::CopyTo(void* data)
   vmaUnmapMemory(mDevice.Allocator(), mAllocation);
 }
 
-void Texture::CopyFrom(vk::CommandBuffer commandBuffer, Texture& srcImage)
+void Texture::CopyFrom(CommandEncoder& command, Texture& srcImage)
 {
   if (!(mWidth == srcImage.mWidth && mHeight == srcImage.mHeight && mFormat == srcImage.mFormat))
   {
     throw std::runtime_error("Invalid source texture to copy");
   }
 
-  srcImage.Barrier(commandBuffer,
+  srcImage.Barrier(command,
                    vk::ImageLayout::eGeneral,
                    vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead,
                    vk::ImageLayout::eTransferSrcOptimal,
                    vk::AccessFlagBits::eTransferRead);
-  Barrier(commandBuffer,
+  Barrier(command,
           vk::ImageLayout::eGeneral,
           vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead,
           vk::ImageLayout::eTransferDstOptimal,
@@ -324,20 +350,20 @@ void Texture::CopyFrom(vk::CommandBuffer commandBuffer, Texture& srcImage)
                     .setDstSubresource({vk::ImageAspectFlagBits::eColor, 0, 0, 1})
                     .setExtent({mWidth, mHeight, 1});
 
-  commandBuffer.copyImage(srcImage.mImage,
-                          vk::ImageLayout::eTransferSrcOptimal,
-                          mImage,
-                          vk::ImageLayout::eTransferDstOptimal,
-                          region);
+  command.Handle().copyImage(srcImage.mImage,
+                             vk::ImageLayout::eTransferSrcOptimal,
+                             mImage,
+                             vk::ImageLayout::eTransferDstOptimal,
+                             region);
 
-  srcImage.Barrier(commandBuffer,
+  srcImage.Barrier(command,
                    vk::ImageLayout::eTransferSrcOptimal,
                    vk::AccessFlagBits::eTransferRead,
                    vk::ImageLayout::eGeneral,
                    vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead |
                        vk::AccessFlagBits::eHostRead);
 
-  Barrier(commandBuffer,
+  Barrier(command,
           vk::ImageLayout::eTransferDstOptimal,
           vk::AccessFlagBits::eTransferWrite,
           vk::ImageLayout::eGeneral,
@@ -345,13 +371,13 @@ void Texture::CopyFrom(vk::CommandBuffer commandBuffer, Texture& srcImage)
               vk::AccessFlagBits::eHostRead);
 }
 
-void Texture::Barrier(vk::CommandBuffer commandBuffer,
+void Texture::Barrier(CommandEncoder& command,
                       vk::ImageLayout oldLayout,
                       vk::AccessFlags srcMask,
                       vk::ImageLayout newLayout,
                       vk::AccessFlags dstMask)
 {
-  TextureBarrier(mImage, commandBuffer, oldLayout, srcMask, newLayout, dstMask);
+  TextureBarrier(mImage, command.Handle(), oldLayout, srcMask, newLayout, dstMask);
 }
 
 vk::ImageView Texture::GetView() const
@@ -377,32 +403,6 @@ vk::Format Texture::GetFormat() const
 vk::Image Texture::Handle() const
 {
   return mImage;
-}
-
-void TextureBarrier(vk::Image image,
-                    vk::CommandBuffer commandBuffer,
-                    vk::ImageLayout oldLayout,
-                    vk::AccessFlags srcMask,
-                    vk::ImageLayout newLayout,
-                    vk::AccessFlags dstMask)
-{
-  auto imageMemoryBarriers = vk::ImageMemoryBarrier()
-                                 .setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                                 .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-                                 .setOldLayout(oldLayout)
-                                 .setNewLayout(newLayout)
-                                 .setImage(image)
-                                 .setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1})
-                                 .setSrcAccessMask(srcMask)
-                                 .setDstAccessMask(dstMask);
-
-  commandBuffer.pipelineBarrier(
-      vk::PipelineStageFlagBits::eAllCommands | vk::PipelineStageFlagBits::eHost,
-      vk::PipelineStageFlagBits::eAllCommands | vk::PipelineStageFlagBits::eHost,
-      {},
-      nullptr,
-      nullptr,
-      imageMemoryBarriers);
 }
 
 }  // namespace Renderer

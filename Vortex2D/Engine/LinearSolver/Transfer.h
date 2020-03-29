@@ -23,7 +23,7 @@ public:
    * @brief Initialize prolongate and restrict compute pipelines
    * @param device
    */
-  VORTEX2D_API Transfer(const Renderer::Device& device);
+  VORTEX2D_API Transfer(Renderer::Device& device);
 
   /**
    * @brief Prolongate a level set on a finer level set. Setting the 4 cells to
@@ -70,7 +70,7 @@ public:
    * @param commandBuffer command buffer to record into.
    * @param level index of bound level sets.
    */
-  VORTEX2D_API void Prolongate(vk::CommandBuffer commandBuffer, std::size_t level);
+  VORTEX2D_API void Prolongate(Renderer::CommandEncoder& command, std::size_t level);
 
   /**
    * @brief Restrict the level set, using the bound level sets at the specified
@@ -78,7 +78,7 @@ public:
    * @param commandBuffer command buffer to record into.
    * @param level index of bound level sets.
    */
-  VORTEX2D_API void Restrict(vk::CommandBuffer commandBuffer, std::size_t level);
+  VORTEX2D_API void Restrict(Renderer::CommandEncoder& command, std::size_t level);
 
 private:
   const Renderer::Device& mDevice;

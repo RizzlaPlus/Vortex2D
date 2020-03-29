@@ -71,7 +71,7 @@ struct LinearSolver
    */
   struct Data
   {
-    VORTEX2D_API Data(const Renderer::Device& device,
+    VORTEX2D_API Data(Renderer::Device& device,
                       const glm::ivec2& size,
                       VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY);
 
@@ -86,7 +86,7 @@ struct LinearSolver
    */
   struct DebugData
   {
-    VORTEX2D_API DebugData(const Renderer::Device& device, const glm::ivec2& size);
+    VORTEX2D_API DebugData(Renderer::Device& device, const glm::ivec2& size);
 
     Renderer::RenderTexture Diagonal;
     Renderer::RenderTexture Lower;
@@ -99,7 +99,7 @@ struct LinearSolver
    */
   struct DebugCopy
   {
-    VORTEX2D_API DebugCopy(const Renderer::Device& device,
+    VORTEX2D_API DebugCopy(Renderer::Device& device,
                            const glm::ivec2& size,
                            Data& data,
                            DebugData& debugData);
@@ -154,7 +154,7 @@ struct LinearSolver
   class Error
   {
   public:
-    VORTEX2D_API Error(const Renderer::Device& device, const glm::ivec2& size);
+    VORTEX2D_API Error(Renderer::Device& device, const glm::ivec2& size);
 
     /**
      * @brief Bind the linear system.

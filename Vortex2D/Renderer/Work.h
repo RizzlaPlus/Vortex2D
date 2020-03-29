@@ -127,7 +127,7 @@ public:
    * @param spirv binary spirv
    * @param additionalSpecConstInfo additional specialization constants
    */
-  VORTEX2D_API Work(const Device& device,
+  VORTEX2D_API Work(Device& device,
                     const ComputeSize& computeSize,
                     const SpirvBinary& spirv,
                     const SpecConstInfo& additionalSpecConstInfo = {});
@@ -148,10 +148,10 @@ public:
      * @param args the data to push. A total of 128 bytes can be used.
      */
     template <typename... Args>
-    void PushConstant(vk::CommandBuffer commandBuffer, Args&&... args)
+    void PushConstant(CommandEncoder& command, Args&&... args)
     {
       int offset = mComputeSize.DomainSize.y != 1 ? 8 : 4;
-      PushConstantOffset(commandBuffer, offset, std::forward<Args>(args)...);
+      PushConstantOffset(command, offset, std::forward<Args>(args)...);
     }
 
     /**
@@ -159,7 +159,7 @@ public:
      * two additional push constants: the 2D domain size.
      * @param commandBuffer the command buffer to record into.
      */
-    VORTEX2D_API void Record(vk::CommandBuffer commandBuffer);
+    VORTEX2D_API void Record(CommandEncoder& command);
 
     /**
      * @brief Record the compute work in this command buffer. Use the provided
@@ -167,7 +167,7 @@ public:
      * @param commandBuffer the command buffer to record into.
      * @param dispatchParams the indirect buffer containing the parameters.
      */
-    VORTEX2D_API void RecordIndirect(vk::CommandBuffer commandBuffer,
+    VORTEX2D_API void RecordIndirect(CommandEncoder& command,
                                      IndirectBuffer<DispatchParams>& dispatchParams);
 
     friend class Work;
@@ -177,29 +177,26 @@ public:
           uint32_t pushConstantSize,
           vk::PipelineLayout layout,
           vk::Pipeline pipeline,
-          vk::UniqueDescriptorSet descriptor);
+          BindGroup bindGroup);
 
     template <typename Arg>
-    void PushConstantOffset(vk::CommandBuffer commandBuffer, uint32_t offset, Arg&& arg)
+    void PushConstantOffset(CommandEncoder& command, uint32_t offset, Arg&& arg)
     {
       if (offset + sizeof(Arg) <= mPushConstantSize)
       {
-        commandBuffer.pushConstants(
+        command.PushConstants(
             mLayout, vk::ShaderStageFlagBits::eCompute, offset, sizeof(Arg), &arg);
       }
     }
 
     template <typename Arg, typename... Args>
-    void PushConstantOffset(vk::CommandBuffer commandBuffer,
-                            uint32_t offset,
-                            Arg&& arg,
-                            Args&&... args)
+    void PushConstantOffset(CommandEncoder& command, uint32_t offset, Arg&& arg, Args&&... args)
     {
       if (offset + sizeof(Arg) <= mPushConstantSize)
       {
-        commandBuffer.pushConstants(
+        command.PushConstants(
             mLayout, vk::ShaderStageFlagBits::eCompute, offset, sizeof(Arg), &arg);
-        PushConstantOffset(commandBuffer, offset + sizeof(Arg), std::forward<Args>(args)...);
+        PushConstantOffset(command, offset + sizeof(Arg), std::forward<Args>(args)...);
       }
     }
 
@@ -207,7 +204,7 @@ public:
     uint32_t mPushConstantSize;
     vk::PipelineLayout mLayout;
     vk::Pipeline mPipeline;
-    vk::UniqueDescriptorSet mDescriptor;
+    BindGroup mBindGroup;
   };
 
   /**

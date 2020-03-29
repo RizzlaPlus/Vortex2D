@@ -85,7 +85,7 @@ TEST(ParticleTests, PrefixScan)
 
   auto bound = prefixScan.Bind(input, output, dispatchParams);
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) { bound.Record(commandBuffer); });
+  device->Execute([&](CommandEncoder& command) { bound.Record(command); });
 
   auto outputData = CalculatePrefixScan(inputData);
   CheckBuffer(outputData, output);
@@ -115,7 +115,7 @@ TEST(ParticleTests, PrefixScanBig)
 
   auto bound = prefixScan.Bind(input, output, dispatchParams);
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) { bound.Record(commandBuffer); });
+  device->Execute([&](CommandEncoder& command) { bound.Record(command); });
 
   auto outputData = CalculatePrefixScan(inputData);
   CheckBuffer(outputData, output);
@@ -401,8 +401,7 @@ TEST(ParticleTests, Phi)
   device->Handle().waitIdle();
 
   Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { outTexture.CopyFrom(commandBuffer, phi); });
+  device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, phi); });
 
   CheckPhi(size, sim, outTexture);
 }

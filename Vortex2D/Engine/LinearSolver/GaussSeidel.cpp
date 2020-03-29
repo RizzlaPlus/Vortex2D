@@ -13,7 +13,7 @@ namespace Vortex2D
 {
 namespace Fluid
 {
-GaussSeidel::GaussSeidel(const Renderer::Device& device, const glm::ivec2& size)
+GaussSeidel::GaussSeidel(Renderer::Device& device, const glm::ivec2& size)
     : mW(2.0f / (1.0f + std::sin(glm::pi<float>() / std::sqrt((float)(size.x * size.y)))))
     , mPreconditionerIterations(1)
     , mError(device, size)
@@ -45,8 +45,8 @@ void GaussSeidel::Bind(Renderer::GenericBuffer& d,
   mError.Bind(d, l, div, pressure);
   mGaussSeidelBound = mGaussSeidel.Bind({pressure, d, l, div});
 
-  mInitCmd.Record([&](vk::CommandBuffer commandBuffer) { pressure.Clear(commandBuffer); });
-  mGaussSeidelCmd.Record([&](vk::CommandBuffer commandBuffer) { Record(commandBuffer, 1); });
+  mInitCmd.Record([&](Renderer::CommandEncoder& command) { pressure.Clear(command); });
+  mGaussSeidelCmd.Record([&](Renderer::CommandEncoder& command) { Record(command, 1); });
 }
 
 void GaussSeidel::BindRigidbody(float /*delta*/,
@@ -90,24 +90,22 @@ float GaussSeidel::GetError()
   return mError.Submit().Wait().GetError();
 }
 
-void GaussSeidel::Record(vk::CommandBuffer commandBuffer)
+void GaussSeidel::Record(Renderer::CommandEncoder& command)
 {
   assert(mPressure != nullptr);
-  Record(commandBuffer, mPreconditionerIterations);
+  Record(command, mPreconditionerIterations);
 }
 
-void GaussSeidel::Record(vk::CommandBuffer commandBuffer, int iterations)
+void GaussSeidel::Record(Renderer::CommandEncoder& command, int iterations)
 {
   for (int i = 0; i < iterations; ++i)
   {
-    mGaussSeidelBound.PushConstant(commandBuffer, mW, 1);
-    mGaussSeidelBound.Record(commandBuffer);
-    mPressure->Barrier(
-        commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
-    mGaussSeidelBound.PushConstant(commandBuffer, mW, 0);
-    mGaussSeidelBound.Record(commandBuffer);
-    mPressure->Barrier(
-        commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    mGaussSeidelBound.PushConstant(command, mW, 1);
+    mGaussSeidelBound.Record(command);
+    mPressure->Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    mGaussSeidelBound.PushConstant(command, mW, 0);
+    mGaussSeidelBound.Record(command);
+    mPressure->Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
   }
 }
 
@@ -120,7 +118,7 @@ Renderer::ComputeSize MakeLocalSize(const glm::ivec2& size)
   return computeSize;
 }
 
-LocalGaussSeidel::LocalGaussSeidel(const Renderer::Device& device, const glm::ivec2& size)
+LocalGaussSeidel::LocalGaussSeidel(Renderer::Device& device, const glm::ivec2& size)
     : mLocalGaussSeidel(device, MakeLocalSize(size), SPIRV::LocalGaussSeidel_comp)
 {
   // TODO check size is within local size
@@ -137,11 +135,10 @@ void LocalGaussSeidel::Bind(Renderer::GenericBuffer& d,
   mLocalGaussSeidelBound = mLocalGaussSeidel.Bind({pressure, d, l, div});
 }
 
-void LocalGaussSeidel::Record(vk::CommandBuffer commandBuffer)
+void LocalGaussSeidel::Record(Renderer::CommandEncoder& command)
 {
-  mLocalGaussSeidelBound.Record(commandBuffer);
-  mPressure->Barrier(
-      commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+  mLocalGaussSeidelBound.Record(command);
+  mPressure->Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
 }
 
 }  // namespace Fluid

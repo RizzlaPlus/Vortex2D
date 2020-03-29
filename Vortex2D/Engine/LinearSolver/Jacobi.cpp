@@ -13,7 +13,7 @@ namespace Vortex2D
 {
 namespace Fluid
 {
-Jacobi::Jacobi(const Renderer::Device& device, const glm::ivec2& size)
+Jacobi::Jacobi(Renderer::Device& device, const glm::ivec2& size)
     : mW(1.0f)
     , mPreconditionerIterations(1)
     , mBackPressure(device, size.x * size.y)
@@ -41,26 +41,25 @@ void Jacobi::Bind(Renderer::GenericBuffer& d,
   mJacobiBackBound = mJacobi.Bind({mBackPressure, pressure, d, l, div});
 }
 
-void Jacobi::Record(vk::CommandBuffer commandBuffer)
+void Jacobi::Record(Renderer::CommandEncoder& command)
 {
   assert(mPressure != nullptr);
-  Record(commandBuffer, mPreconditionerIterations);
+  Record(command, mPreconditionerIterations);
 }
 
-void Jacobi::Record(vk::CommandBuffer commandBuffer, int iterations)
+void Jacobi::Record(Renderer::CommandEncoder& command, int iterations)
 {
-  mBackPressure.Clear(commandBuffer);
+  mBackPressure.Clear(command);
 
   for (int i = 0; i < iterations; i++)
   {
-    mJacobiFrontBound.PushConstant(commandBuffer, mW);
-    mJacobiFrontBound.Record(commandBuffer);
+    mJacobiFrontBound.PushConstant(command, mW);
+    mJacobiFrontBound.Record(command);
     mBackPressure.Barrier(
-        commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
-    mJacobiBackBound.PushConstant(commandBuffer, mW);
-    mJacobiBackBound.Record(commandBuffer);
-    mPressure->Barrier(
-        commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+        command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    mJacobiBackBound.PushConstant(command, mW);
+    mJacobiBackBound.Record(command);
+    mPressure->Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
   }
 }
 

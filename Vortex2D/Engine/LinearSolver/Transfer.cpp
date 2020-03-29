@@ -11,7 +11,7 @@ namespace Vortex2D
 {
 namespace Fluid
 {
-Transfer::Transfer(const Renderer::Device& device)
+Transfer::Transfer(Renderer::Device& device)
     : mDevice(device)
     , mProlongateWork(device, Renderer::ComputeSize::Default2D(), SPIRV::Prolongate_comp)
     , mRestrictWork(device, Renderer::ComputeSize::Default2D(), SPIRV::Restrict_comp)
@@ -56,22 +56,22 @@ void Transfer::RestrictBind(std::size_t level,
   mRestrictBuffer[level] = &coarse;
 }
 
-void Transfer::Prolongate(vk::CommandBuffer commandBuffer, std::size_t level)
+void Transfer::Prolongate(Renderer::CommandEncoder& command, std::size_t level)
 {
   assert(level < mProlongateBound.size());
 
-  mProlongateBound[level].Record(commandBuffer);
+  mProlongateBound[level].Record(command);
   mProlongateBuffer[level]->Barrier(
-      commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+      command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
 }
 
-void Transfer::Restrict(vk::CommandBuffer commandBuffer, std::size_t level)
+void Transfer::Restrict(Renderer::CommandEncoder& command, std::size_t level)
 {
   assert(level < mRestrictBound.size());
 
-  mRestrictBound[level].Record(commandBuffer);
+  mRestrictBound[level].Record(command);
   mRestrictBuffer[level]->Barrier(
-      commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+      command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
 }
 
 }  // namespace Fluid

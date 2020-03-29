@@ -14,6 +14,7 @@ namespace Renderer
 {
 class Texture;
 class Device;
+class CommandEncoder;
 
 /**
  * @brief A vulkan buffer which can be on the host or the device.
@@ -21,7 +22,7 @@ class Device;
 class GenericBuffer
 {
 public:
-  VORTEX2D_API GenericBuffer(const Device& device,
+  VORTEX2D_API GenericBuffer(Device& device,
                              vk::BufferUsageFlags usageFlags,
                              VmaMemoryUsage memoryUsage,
                              vk::DeviceSize deviceSize);
@@ -35,14 +36,14 @@ public:
    * @param commandBuffer command buffer to run the copy on.
    * @param srcBuffer the source buffer.
    */
-  VORTEX2D_API void CopyFrom(vk::CommandBuffer commandBuffer, GenericBuffer& srcBuffer);
+  VORTEX2D_API void CopyFrom(Renderer::CommandEncoder& command, GenericBuffer& srcBuffer);
 
   /**
    * @brief Copy a texture to this buffer
    * @param commandBuffer command buffer to run the copy on.
    * @param srcTexture the source texture
    */
-  VORTEX2D_API void CopyFrom(vk::CommandBuffer commandBuffer, Texture& srcTexture);
+  VORTEX2D_API void CopyFrom(Renderer::CommandEncoder& command, Texture& srcTexture);
 
   /**
    * @brief The vulkan handle
@@ -66,7 +67,7 @@ public:
    * @param oldAccess old access
    * @param newAccess new access
    */
-  VORTEX2D_API void Barrier(vk::CommandBuffer commandBuffer,
+  VORTEX2D_API void Barrier(CommandEncoder& command,
                             vk::AccessFlags oldAccess,
                             vk::AccessFlags newAccess);
 
@@ -74,7 +75,7 @@ public:
    * @brief Clear the buffer with 0
    * @param commandBuffer the command buffer to clear on
    */
-  VORTEX2D_API void Clear(vk::CommandBuffer commandBuffer);
+  VORTEX2D_API void Clear(Renderer::CommandEncoder& command);
 
   /**
    * @brief copy from data to buffer
@@ -95,7 +96,7 @@ public:
 protected:
   void Create();
 
-  const Device& mDevice;
+  Device& mDevice;
   vk::DeviceSize mSize;
   vk::BufferUsageFlags mUsageFlags;
   VmaMemoryUsage mMemoryUsage;
@@ -111,7 +112,7 @@ template <typename T>
 class VertexBuffer : public GenericBuffer
 {
 public:
-  VertexBuffer(const Device& device,
+  VertexBuffer(Device& device,
                std::size_t size,
                VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
       : GenericBuffer(device, vk::BufferUsageFlagBits::eVertexBuffer, memoryUsage, sizeof(T) * size)
@@ -126,7 +127,7 @@ template <typename T>
 class UniformBuffer : public GenericBuffer
 {
 public:
-  UniformBuffer(const Device& device, VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
+  UniformBuffer(Device& device, VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
       : GenericBuffer(device, vk::BufferUsageFlagBits::eUniformBuffer, memoryUsage, sizeof(T))
   {
   }
@@ -139,7 +140,7 @@ template <typename T>
 class Buffer : public GenericBuffer
 {
 public:
-  Buffer(const Device& device,
+  Buffer(Device& device,
          std::size_t size = 1,
          VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
       : GenericBuffer(device,
@@ -157,7 +158,7 @@ template <typename T>
 class IndirectBuffer : public GenericBuffer
 {
 public:
-  IndirectBuffer(const Device& device, VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
+  IndirectBuffer(Device& device, VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
       : GenericBuffer(
             device,
             vk::BufferUsageFlagBits::eIndirectBuffer | vk::BufferUsageFlagBits::eStorageBuffer,
@@ -174,7 +175,7 @@ template <typename T>
 class IndexBuffer : public GenericBuffer
 {
 public:
-  IndexBuffer(const Device& device,
+  IndexBuffer(Device& device,
               std::size_t size,
               VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
       : GenericBuffer(device, vk::BufferUsageFlagBits::eIndexBuffer, memoryUsage, sizeof(T) * size)
@@ -228,18 +229,6 @@ void CopyFrom(BufferType<T>& buffer, const std::vector<T>& t)
     throw std::runtime_error("Mismatch data size");
   buffer.CopyFrom(0u, t.data(), static_cast<uint32_t>(sizeof(T) * t.size()));
 }
-
-/**
- * @brief Inserts a barrier for the given buffer, command buffer and access.
- * @param buffer the vulkan buffer handle
- * @param commandBuffer the command buffer to inserts the barrier
- * @param oldAccess old access
- * @param newAccess new access
- */
-VORTEX2D_API void BufferBarrier(vk::Buffer buffer,
-                                vk::CommandBuffer commandBuffer,
-                                vk::AccessFlags oldAccess,
-                                vk::AccessFlags newAccess);
 
 }  // namespace Renderer
 }  // namespace Vortex2D

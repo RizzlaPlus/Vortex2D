@@ -58,11 +58,11 @@ std::vector<glm::vec2> GetBoundingBox(const std::vector<glm::vec2>& points, floa
 
 }  // namespace
 
-Polygon::Polygon(const Renderer::Device& device,
+Polygon::Polygon(Renderer::Device& device,
                  std::vector<glm::vec2> points,
                  bool inverse,
                  float extent)
-    : mDevice(const_cast<Renderer::Device&>(device))  // FIXME remove const_cast
+    : mDevice(device)
     , mSize(static_cast<uint32_t>(points.size()))
     , mInv(inverse)
     , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
@@ -85,9 +85,9 @@ Polygon::Polygon(const Renderer::Device& device,
       device, boundingBox.size(), VMA_MEMORY_USAGE_CPU_ONLY);
   Renderer::CopyFrom(localVertexBuffer, boundingBox);
 
-  device.Execute([&](vk::CommandBuffer commandBuffer) {
-    mPolygonVertexBuffer.CopyFrom(commandBuffer, localPolygonVertexBuffer);
-    mVertexBuffer.CopyFrom(commandBuffer, localVertexBuffer);
+  device.Execute([&](Renderer::CommandEncoder& command) {
+    mPolygonVertexBuffer.CopyFrom(command, localPolygonVertexBuffer);
+    mVertexBuffer.CopyFrom(command, localVertexBuffer);
   });
 
   SPIRV::Reflection reflectionVert(SPIRV::Position_vert);
@@ -125,22 +125,19 @@ void Polygon::Update(const glm::mat4& projection, const glm::mat4& view)
   Renderer::CopyFrom(mMVBuffer, view * GetTransform());
 }
 
-void Polygon::Draw(vk::CommandBuffer commandBuffer, const Renderer::RenderState& renderState)
+void Polygon::Draw(Renderer::CommandEncoder& command, const Renderer::RenderState& renderState)
 {
   auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
-  commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-  commandBuffer.pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, 4, &mSize);
-  commandBuffer.pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 4, 4, &mInv);
-  commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
-  commandBuffer.bindDescriptorSets(
-      vk::PipelineBindPoint::eGraphics, mPipelineLayout, 0, {*mBindGroup.descriptorSet}, {});
-  commandBuffer.draw(6, 1, 0, 0);
+
+  command.SetPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+  command.SetBindGroup(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mBindGroup);
+  command.SetVertexBuffer(mVertexBuffer);
+  command.PushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, 4, &mSize);
+  command.PushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 4, 4, &mInv);
+  command.Draw(6);
 }
 
-Rectangle::Rectangle(const Renderer::Device& device,
-                     const glm::vec2& size,
-                     bool inverse,
-                     float extent)
+Rectangle::Rectangle(Renderer::Device& device, const glm::vec2& size, bool inverse, float extent)
     : Polygon(device,
               {{0.0f, 0.0f}, {size.x, 0.0f}, {size.x, size.y}, {0.0f, size.y}},
               inverse,
@@ -160,13 +157,13 @@ void Rectangle::Update(const glm::mat4& projection, const glm::mat4& view)
   Polygon::Update(projection, view);
 }
 
-void Rectangle::Draw(vk::CommandBuffer commandBuffer, const Renderer::RenderState& renderState)
+void Rectangle::Draw(Renderer::CommandEncoder& command, const Renderer::RenderState& renderState)
 {
-  Polygon::Draw(commandBuffer, renderState);
+  Polygon::Draw(command, renderState);
 }
 
-Circle::Circle(const Renderer::Device& device, float radius, float extent)
-    : mDevice(const_cast<Renderer::Device&>(device))  // FIXME remove const_cast
+Circle::Circle(Renderer::Device& device, float radius, float extent)
+    : mDevice(device)
     , mSize(radius)
     , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
     , mMVBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
@@ -180,8 +177,8 @@ Circle::Circle(const Renderer::Device& device, float radius, float extent)
       device, boundingBox.size(), VMA_MEMORY_USAGE_CPU_ONLY);
   Renderer::CopyFrom(localVertexBuffer, boundingBox);
 
-  device.Execute([&](vk::CommandBuffer commandBuffer) {
-    mVertexBuffer.CopyFrom(commandBuffer, localVertexBuffer);
+  device.Execute([&](Renderer::CommandEncoder& command) {
+    mVertexBuffer.CopyFrom(command, localVertexBuffer);
   });
 
   SPIRV::Reflection reflectionVert(SPIRV::Position_vert);
@@ -218,15 +215,15 @@ void Circle::Update(const glm::mat4& projection, const glm::mat4& view)
   Renderer::CopyFrom(mMVBuffer, view * GetTransform());
 }
 
-void Circle::Draw(vk::CommandBuffer commandBuffer, const Renderer::RenderState& renderState)
+void Circle::Draw(Renderer::CommandEncoder& command, const Renderer::RenderState& renderState)
 {
   auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
-  commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-  commandBuffer.pushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, 4, &mSize);
-  commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
-  commandBuffer.bindDescriptorSets(
-      vk::PipelineBindPoint::eGraphics, mPipelineLayout, 0, {*mBindGroup.descriptorSet}, {});
-  commandBuffer.draw(6, 1, 0, 0);
+
+  command.SetPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+  command.SetBindGroup(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mBindGroup);
+  command.SetVertexBuffer(mVertexBuffer);
+  command.PushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, 4, &mSize);
+  command.Draw(6);
 }
 
 Renderer::ColorBlendState IntersectionBlend = [] {
@@ -253,7 +250,7 @@ Renderer::ColorBlendState UnionBlend = [] {
 
 Vortex2D::Renderer::Clear BoundariesClear = Vortex2D::Renderer::Clear({10000.0f, 0.0f, 0.0f, 0.0f});
 
-DistanceField::DistanceField(const Renderer::Device& device,
+DistanceField::DistanceField(Renderer::Device& device,
                              Renderer::RenderTexture& levelSet,
                              float scale)
     : Renderer::AbstractSprite(device, SPIRV::DistanceField_frag, levelSet), mScale(scale)
@@ -267,10 +264,11 @@ DistanceField::DistanceField(DistanceField&& other)
 
 DistanceField::~DistanceField() {}
 
-void DistanceField::Draw(vk::CommandBuffer commandBuffer, const Renderer::RenderState& renderState)
+void DistanceField::Draw(Renderer::CommandEncoder& command,
+                         const Renderer::RenderState& renderState)
 {
-  PushConstant(commandBuffer, 0, mScale);
-  AbstractSprite::Draw(commandBuffer, renderState);
+  PushConstant(command, 0, mScale);
+  AbstractSprite::Draw(command, renderState);
 }
 
 }  // namespace Fluid

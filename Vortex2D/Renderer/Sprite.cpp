@@ -15,10 +15,8 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-AbstractSprite::AbstractSprite(const Device& device,
-                               const SpirvBinary& fragShaderName,
-                               Texture& texture)
-    : mDevice(const_cast<Device&>(device))  // FIXME remove const_cast
+AbstractSprite::AbstractSprite(Device& device, const SpirvBinary& fragShaderName, Texture& texture)
+    : mDevice(device)
     , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
     , mVertexBuffer(device, 6)
     , mColourBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
@@ -32,8 +30,7 @@ AbstractSprite::AbstractSprite(const Device& device,
                                   {{0.0f, 1.0f}, {0.0f, texture.GetHeight()}}};
 
   Renderer::CopyFrom(localBuffer, vertices);
-  device.Execute(
-      [&](vk::CommandBuffer commandBuffer) { mVertexBuffer.CopyFrom(commandBuffer, localBuffer); });
+  device.Execute([&](CommandEncoder& command) { mVertexBuffer.CopyFrom(command, localBuffer); });
 
   SPIRV::Reflection reflectionVert(SPIRV::TexturePosition_vert);
   SPIRV::Reflection reflectionFrag(fragShaderName);
@@ -85,17 +82,17 @@ void AbstractSprite::Initialize(const RenderState& renderState)
   mDevice.CreateGraphicsPipeline(mPipeline, renderState);
 }
 
-void AbstractSprite::Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState)
+void AbstractSprite::Draw(CommandEncoder& command, const RenderState& renderState)
 {
   auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
-  commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-  commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
-  commandBuffer.bindDescriptorSets(
-      vk::PipelineBindPoint::eGraphics, mPipelineLayout, 0, {*mBindGroup.descriptorSet}, {});
-  commandBuffer.draw(6, 1, 0, 0);
+
+  command.SetPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+  command.SetBindGroup(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mBindGroup);
+  command.SetVertexBuffer(mVertexBuffer);
+  command.Draw(6);
 }
 
-Sprite::Sprite(const Device& device, Texture& texture)
+Sprite::Sprite(Device& device, Texture& texture)
     : AbstractSprite(device, SPIRV::TexturePosition_frag, texture)
 {
 }

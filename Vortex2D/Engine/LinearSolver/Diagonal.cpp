@@ -5,13 +5,15 @@
 
 #include "Diagonal.h"
 
+#include <Vortex2D/Renderer/CommandBuffer.h>
+
 #include "vortex2d_generated_spirv.h"
 
 namespace Vortex2D
 {
 namespace Fluid
 {
-Diagonal::Diagonal(const Renderer::Device& device, const glm::ivec2& size)
+Diagonal::Diagonal(Renderer::Device& device, const glm::ivec2& size)
     : mDiagonal(device, size, SPIRV::Diagonal_comp)
 {
 }
@@ -26,9 +28,9 @@ void Diagonal::Bind(Renderer::GenericBuffer& d,
   mDiagonalBound = mDiagonal.Bind({d, b, pressure});
 }
 
-void Diagonal::Record(vk::CommandBuffer commandBuffer)
+void Diagonal::Record(Renderer::CommandEncoder& command)
 {
-  mDiagonalBound.Record(commandBuffer);
+  mDiagonalBound.Record(command);
 }
 
 }  // namespace Fluid

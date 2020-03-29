@@ -19,32 +19,139 @@ const uint32_t zero = 0;
 
 }
 
-CommandBuffer::CommandBuffer(const Device& device, bool synchronise)
-    : mDevice(device)
-    , mSynchronise(synchronise)
-    , mRecorded(false)
-    , mCommandBuffer(device.CreateCommandBuffer())
-    , mFence(device.Handle().createFenceUnique({vk::FenceCreateFlagBits::eSignaled}))
+CommandEncoder::CommandEncoder(Device& device, vk::UniqueCommandBuffer commandBuffer)
+    : mDevice(&device), mCommandBuffer(std::move(commandBuffer))
 {
 }
 
-CommandBuffer::~CommandBuffer()
+CommandEncoder::CommandEncoder(CommandEncoder&& command)
+    : mDevice(command.mDevice), mCommandBuffer(std::move(command.mCommandBuffer))
 {
-  if (mCommandBuffer != vk::CommandBuffer(nullptr))
-  {
-    Wait().Reset();
-    mDevice.FreeCommandBuffer(mCommandBuffer);
-  }
+}
+
+CommandEncoder& CommandEncoder::operator=(CommandEncoder&& command)
+{
+  mDevice = command.mDevice;
+  mCommandBuffer = std::move(command.mCommandBuffer);
+
+  return *this;
+}
+
+void CommandEncoder::Begin()
+{
+  auto bufferBegin =
+      vk::CommandBufferBeginInfo().setFlags(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
+
+  mCommandBuffer->begin(bufferBegin);
+}
+
+void CommandEncoder::BeginRenderPass(const RenderTarget& renderTarget, vk::Framebuffer framebuffer)
+{
+  auto renderPassBegin = vk::RenderPassBeginInfo()
+                             .setFramebuffer(framebuffer)
+                             .setRenderPass(*renderTarget.RenderPass)
+                             .setRenderArea({{0, 0}, {renderTarget.Width, renderTarget.Height}});
+
+  mCommandBuffer->beginRenderPass(renderPassBegin, vk::SubpassContents::eInline);
+}
+
+void CommandEncoder::EndRenderPass()
+{
+  mCommandBuffer->endRenderPass();
+}
+
+void CommandEncoder::End()
+{
+  mCommandBuffer->end();
+}
+
+void CommandEncoder::SetPipeline(vk::PipelineBindPoint pipelineBindPoint, vk::Pipeline pipeline)
+{
+  mCommandBuffer->bindPipeline(pipelineBindPoint, pipeline);
+}
+
+void CommandEncoder::SetBindGroup(vk::PipelineBindPoint pipelineBindPoint,
+                                  vk::PipelineLayout layout,
+                                  BindGroup& bindGroup)
+{
+  mCommandBuffer->bindDescriptorSets(pipelineBindPoint, layout, 0, {*bindGroup.descriptorSet}, {});
+}
+
+void CommandEncoder::SetVertexBuffer(const GenericBuffer& buffer)
+{
+  mCommandBuffer->bindVertexBuffers(0, {buffer.Handle()}, {0ul});
+}
+
+void CommandEncoder::PushConstants(vk::PipelineLayout layout,
+                                   vk::ShaderStageFlags stageFlags,
+                                   uint32_t offset,
+                                   uint32_t size,
+                                   const void* pValues)
+{
+  mCommandBuffer->pushConstants(layout, stageFlags, offset, size, pValues);
+}
+
+void CommandEncoder::Draw(std::uint32_t vertexCount)
+{
+  mCommandBuffer->draw(vertexCount, 1, 0, 0);
+}
+
+void CommandEncoder::Dispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z)
+{
+  mCommandBuffer->dispatch(x, y, z);
+}
+
+void CommandEncoder::DispatchIndirect(GenericBuffer& buffer)
+{
+  mCommandBuffer->dispatchIndirect(buffer.Handle(), 0);
+}
+
+void CommandEncoder::Clear(const glm::ivec2& pos, const glm::uvec2& size, const glm::vec4& colour)
+{
+  auto clearValue =
+      vk::ClearValue().setColor(std::array<float, 4>{{colour.r, colour.g, colour.b, colour.a}});
+
+  auto clearAttachement = vk::ClearAttachment()
+                              .setAspectMask(vk::ImageAspectFlagBits::eColor)
+                              .setClearValue(clearValue);
+
+  auto clearRect = vk::ClearRect().setRect({{pos.x, pos.y}, {size.x, size.y}}).setLayerCount(1);
+
+  mCommandBuffer->clearAttachments({clearAttachement}, {clearRect});
+}
+
+void CommandEncoder::DebugMarkerBegin(const char* name, const glm::vec4& color)
+{
+  mCommandBuffer->debugMarkerBeginEXT({name, {{color.r, color.g, color.b, color.a}}},
+                                      mDevice->Loader());
+}
+
+void CommandEncoder::DebugMarkerEnd()
+{
+  mCommandBuffer->debugMarkerEndEXT(mDevice->Loader());
+}
+
+vk::CommandBuffer CommandEncoder::Handle()
+{
+  return *mCommandBuffer;
+}
+
+CommandBuffer::CommandBuffer(Device& device, bool synchronise)
+    : mDevice(device)
+    , mSynchronise(synchronise)
+    , mRecorded(false)
+    , mCommandEncoder(device.CreateCommandEncoder())
+    , mFence(device.Handle().createFenceUnique({vk::FenceCreateFlagBits::eSignaled}))
+{
 }
 
 CommandBuffer::CommandBuffer(CommandBuffer&& other)
     : mDevice(other.mDevice)
     , mSynchronise(other.mSynchronise)
     , mRecorded(other.mRecorded)
-    , mCommandBuffer(other.mCommandBuffer)
+    , mCommandEncoder(std::move(other.mCommandEncoder))
     , mFence(std::move(other.mFence))
 {
-  other.mCommandBuffer = nullptr;
   other.mRecorded = false;
 }
 
@@ -53,10 +160,9 @@ CommandBuffer& CommandBuffer::operator=(CommandBuffer&& other)
   assert(mDevice.Handle() == other.mDevice.Handle());
   mSynchronise = other.mSynchronise;
   mRecorded = other.mRecorded;
-  mCommandBuffer = other.mCommandBuffer;
+  mCommandEncoder = std::move(other.mCommandEncoder);
   mFence = std::move(other.mFence);
 
-  other.mCommandBuffer = nullptr;
   other.mRecorded = false;
 
   return *this;
@@ -66,12 +172,9 @@ CommandBuffer& CommandBuffer::Record(CommandBuffer::CommandFn commandFn)
 {
   Wait();
 
-  auto bufferBegin =
-      vk::CommandBufferBeginInfo().setFlags(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
-
-  mCommandBuffer.begin(bufferBegin);
-  commandFn(mCommandBuffer);
-  mCommandBuffer.end();
+  mCommandEncoder.Begin();
+  commandFn(mCommandEncoder);
+  mCommandEncoder.End();
   mRecorded = true;
 
   return *this;
@@ -83,22 +186,13 @@ CommandBuffer& CommandBuffer::Record(const RenderTarget& renderTarget,
 {
   Wait();
 
-  auto bufferBegin =
-      vk::CommandBufferBeginInfo().setFlags(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
+  mCommandEncoder.Begin();
+  mCommandEncoder.BeginRenderPass(renderTarget, framebuffer);
 
-  mCommandBuffer.begin(bufferBegin);
+  commandFn(mCommandEncoder);
 
-  auto renderPassBegin = vk::RenderPassBeginInfo()
-                             .setFramebuffer(framebuffer)
-                             .setRenderPass(*renderTarget.RenderPass)
-                             .setRenderArea({{0, 0}, {renderTarget.Width, renderTarget.Height}});
-
-  mCommandBuffer.beginRenderPass(renderPassBegin, vk::SubpassContents::eInline);
-
-  commandFn(mCommandBuffer);
-
-  mCommandBuffer.endRenderPass();
-  mCommandBuffer.end();
+  mCommandEncoder.EndRenderPass();
+  mCommandEncoder.End();
   mRecorded = true;
 
   return *this;
@@ -135,9 +229,11 @@ CommandBuffer& CommandBuffer::Submit(const std::initializer_list<vk::Semaphore>&
   std::vector<vk::PipelineStageFlags> waitStages(waitSemaphores.size(),
                                                  vk::PipelineStageFlagBits::eAllCommands);
 
+  vk::CommandBuffer commandBuffers[] = {mCommandEncoder.Handle()};
+
   auto submitInfo = vk::SubmitInfo()
                         .setCommandBufferCount(1)
-                        .setPCommandBuffers(&mCommandBuffer)
+                        .setPCommandBuffers(commandBuffers)
                         .setWaitSemaphoreCount(static_cast<uint32_t>(waitSemaphores.size()))
                         .setPWaitSemaphores(waitSemaphores.begin())
                         .setSignalSemaphoreCount(static_cast<uint32_t>(signalSemaphores.size()))
@@ -195,7 +291,7 @@ RenderCommand& RenderCommand::operator=(RenderCommand&& other)
   return *this;
 }
 
-RenderCommand::RenderCommand(const Device& device,
+RenderCommand::RenderCommand(Device& device,
                              RenderTarget& renderTarget,
                              const RenderState& renderState,
                              const vk::UniqueFramebuffer& frameBuffer,
@@ -208,17 +304,17 @@ RenderCommand::RenderCommand(const Device& device,
   }
 
   CommandBuffer cmd(device, true);
-  cmd.Record(renderTarget, *frameBuffer, [&](vk::CommandBuffer commandBuffer) {
+  cmd.Record(renderTarget, *frameBuffer, [&](CommandEncoder& command) {
     for (auto& drawable : drawables)
     {
-      drawable.get().Draw(commandBuffer, renderState);
+      drawable.get().Draw(command, renderState);
     }
   });
 
   mCmds.emplace_back(std::move(cmd));
 }
 
-RenderCommand::RenderCommand(const Device& device,
+RenderCommand::RenderCommand(Device& device,
                              RenderTarget& renderTarget,
                              const RenderState& renderState,
                              const std::vector<vk::UniqueFramebuffer>& frameBuffers,
@@ -234,10 +330,10 @@ RenderCommand::RenderCommand(const Device& device,
   for (auto& frameBuffer : frameBuffers)
   {
     CommandBuffer cmd(device, true);
-    cmd.Record(renderTarget, *frameBuffer, [&](vk::CommandBuffer commandBuffer) {
+    cmd.Record(renderTarget, *frameBuffer, [&](CommandEncoder& command) {
       for (auto& drawable : drawables)
       {
-        drawable.get().Draw(commandBuffer, renderState);
+        drawable.get().Draw(command, renderState);
       }
     });
 

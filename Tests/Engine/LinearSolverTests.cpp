@@ -42,7 +42,7 @@ TEST(LinearSolverTests, ReduceSum)
 
   CopyFrom(input, inputData);
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) { reduceBound.Record(commandBuffer); });
+  device->Execute([&](CommandEncoder& command) { reduceBound.Record(command); });
 
   std::vector<float> outputData(1, 0.0f);
   CopyTo(output, outputData);
@@ -70,7 +70,7 @@ TEST(LinearSolverTests, ReduceBigSum)
 
   CopyFrom(input, inputData);
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) { reduceBound.Record(commandBuffer); });
+  device->Execute([&](CommandEncoder& command) { reduceBound.Record(command); });
 
   std::vector<float> outputData(1, 0.0f);
   CopyTo(output, outputData);
@@ -98,7 +98,7 @@ TEST(LinearSolverTests, ReduceMax)
 
   CopyFrom(input, inputData);
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) { reduceBound.Record(commandBuffer); });
+  device->Execute([&](CommandEncoder& command) { reduceBound.Record(command); });
 
   std::vector<float> outputData(1, 0.0f);
   CopyTo(output, outputData);
@@ -129,9 +129,9 @@ TEST(LinearSolverTests, Transfer_Prolongate)
   CopyFrom(input, data);
 
   t.ProlongateBind(0, fineSize, output, fineDiagonal, input, coarseDiagonal);
-  device->Execute([&](vk::CommandBuffer commandBuffer) {
-    output.Clear(commandBuffer);
-    t.Prolongate(commandBuffer, 0);
+  device->Execute([&](CommandEncoder& command) {
+    output.Clear(command);
+    t.Prolongate(command, 0);
   });
 
   std::vector<float> outputData(fineSize.x * fineSize.y, 0.0f);
@@ -166,7 +166,7 @@ TEST(LinearSolverTests, Transfer_Restrict)
   CopyFrom(input, data);
 
   t.RestrictBind(0, fineSize, input, fineDiagonal, output, coarseDiagonal);
-  device->Execute([&](vk::CommandBuffer commandBuffer) { t.Restrict(commandBuffer, 0); });
+  device->Execute([&](CommandEncoder& command) { t.Restrict(command, 0); });
 
   std::vector<float> outputData(coarseSize.x * coarseSize.y, 1.0f);
   CopyTo(output, outputData);
@@ -291,7 +291,7 @@ TEST(LinearSolverTests, LocalGaussSeidel)
   LocalGaussSeidel solver(*device, size);
 
   solver.Bind(data.Diagonal, data.Lower, data.B, data.X);
-  device->Execute([&](vk::CommandBuffer commandBuffer) { solver.Record(commandBuffer); });
+  device->Execute([&](CommandEncoder& command) { solver.Record(command); });
 
   device->Queue().waitIdle();
 

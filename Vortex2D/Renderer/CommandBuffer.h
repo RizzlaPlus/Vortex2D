@@ -6,6 +6,7 @@
 #ifndef Vortex2d_CommandBuffer_h
 #define Vortex2d_CommandBuffer_h
 
+#include <Vortex2D/Renderer/BindGroup.h>
 #include <Vortex2D/Renderer/Common.h>
 #include <Vortex2D/Renderer/RenderTarget.h>
 
@@ -18,6 +19,50 @@ namespace Vortex2D
 namespace Renderer
 {
 class Device;
+class GenericBuffer;
+
+class CommandEncoder
+{
+public:
+  CommandEncoder(Device& device, vk::UniqueCommandBuffer commandBuffer);
+
+  CommandEncoder(CommandEncoder&&);
+  CommandEncoder& operator=(CommandEncoder&&);
+
+  void Begin();
+  void BeginRenderPass(const RenderTarget& renderTarget, vk::Framebuffer framebuffer);
+  void EndRenderPass();
+  void End();
+
+  VORTEX2D_API void SetPipeline(vk::PipelineBindPoint pipelineBindPoint, vk::Pipeline pipeline);
+
+  VORTEX2D_API void SetBindGroup(vk::PipelineBindPoint pipelineBindPoint,
+                                 vk::PipelineLayout layout,
+                                 BindGroup& bindGroup);
+
+  VORTEX2D_API void SetVertexBuffer(const GenericBuffer& buffer);
+
+  VORTEX2D_API void PushConstants(vk::PipelineLayout layout,
+                                  vk::ShaderStageFlags stageFlags,
+                                  uint32_t offset,
+                                  uint32_t size,
+                                  const void* pValues);
+
+  VORTEX2D_API void Draw(std::uint32_t vertexCount);
+  VORTEX2D_API void Dispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z);
+  VORTEX2D_API void DispatchIndirect(GenericBuffer& buffer);
+
+  VORTEX2D_API void Clear(const glm::ivec2& pos, const glm::uvec2& size, const glm::vec4& colour);
+
+  VORTEX2D_API void DebugMarkerBegin(const char* name, const glm::vec4& color);
+  VORTEX2D_API void DebugMarkerEnd();
+
+  vk::CommandBuffer Handle();
+
+private:
+  Device* mDevice;
+  vk::UniqueCommandBuffer mCommandBuffer;
+};
 
 /**
  * @brief Can record commands, then submit them (multiple times).
@@ -26,7 +71,7 @@ class Device;
 class CommandBuffer
 {
 public:
-  using CommandFn = std::function<void(vk::CommandBuffer)>;
+  using CommandFn = std::function<void(CommandEncoder&)>;
 
   /**
    * @brief Creates a command buffer which can be synchronized.
@@ -34,8 +79,7 @@ public:
    * @param synchronise flag to determine if the command buffer can be waited
    * on.
    */
-  VORTEX2D_API explicit CommandBuffer(const Device& device, bool synchronise = true);
-  VORTEX2D_API ~CommandBuffer();
+  VORTEX2D_API explicit CommandBuffer(Device& device, bool synchronise = true);
 
   VORTEX2D_API CommandBuffer(CommandBuffer&&);
   VORTEX2D_API CommandBuffer& operator=(CommandBuffer&&);
@@ -86,10 +130,10 @@ public:
   VORTEX2D_API explicit operator bool() const;
 
 private:
-  const Device& mDevice;
+  Device& mDevice;
   bool mSynchronise;
   bool mRecorded;
-  vk::CommandBuffer mCommandBuffer;
+  CommandEncoder mCommandEncoder;
   vk::UniqueFence mFence;
 };
 
@@ -129,13 +173,13 @@ public:
   friend class RenderWindow;
 
 private:
-  RenderCommand(const Device& device,
+  RenderCommand(Device& device,
                 RenderTarget& renderTarget,
                 const RenderState& renderState,
                 const vk::UniqueFramebuffer& frameBuffer,
                 RenderTarget::DrawableList drawables);
 
-  RenderCommand(const Device& device,
+  RenderCommand(Device& device,
                 RenderTarget& renderTarget,
                 const RenderState& renderState,
                 const std::vector<vk::UniqueFramebuffer>& frameBuffers,

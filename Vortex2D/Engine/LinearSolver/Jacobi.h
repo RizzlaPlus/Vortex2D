@@ -23,16 +23,16 @@ namespace Fluid
 class Jacobi : public Preconditioner
 {
 public:
-  Jacobi(const Renderer::Device& device, const glm::ivec2& size);
+  Jacobi(Renderer::Device& device, const glm::ivec2& size);
 
   void Bind(Renderer::GenericBuffer& d,
             Renderer::GenericBuffer& l,
             Renderer::GenericBuffer& b,
             Renderer::GenericBuffer& pressure) override;
 
-  void Record(vk::CommandBuffer commandBuffer) override;
+  void Record(Renderer::CommandEncoder& command) override;
 
-  void Record(vk::CommandBuffer commandBuffer, int iterations);
+  void Record(Renderer::CommandEncoder& command, int iterations);
 
   /**
    * @brief Set the w factor of the GS iterations : x_new = w * x_new + (1-w) *

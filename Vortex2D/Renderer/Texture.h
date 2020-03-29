@@ -13,6 +13,7 @@ namespace Vortex2D
 namespace Renderer
 {
 class Device;
+class CommandEncoder;
 
 /**
  * @brief Gets the number of bytes per pixel given the format
@@ -60,7 +61,7 @@ private:
 class Texture
 {
 public:
-  VORTEX2D_API Texture(const Device& device,
+  VORTEX2D_API Texture(Device& device,
                        uint32_t width,
                        uint32_t height,
                        vk::Format format,
@@ -106,9 +107,18 @@ public:
    * @param commandBuffer vulkan command buffer
    * @param srcImage source image
    */
-  VORTEX2D_API void CopyFrom(vk::CommandBuffer commandBuffer, Texture& srcImage);
+  VORTEX2D_API void CopyFrom(CommandEncoder& command, Texture& srcImage);
 
-  VORTEX2D_API void Barrier(vk::CommandBuffer commandBuffer,
+  /**
+   * @brief Inserts a barrier for the given texture, command buffer and access.
+   * @param image the vulkan image handle
+   * @param commandBuffer the vulkan command buffer
+   * @param oldLayout old layout
+   * @param srcMask old access
+   * @param newLayout new layout
+   * @param dstMask new access
+   */
+  VORTEX2D_API void Barrier(CommandEncoder& command,
                             vk::ImageLayout oldLayout,
                             vk::AccessFlags oldAccess,
                             vk::ImageLayout newLayout,
@@ -119,16 +129,16 @@ public:
   VORTEX2D_API uint32_t GetHeight() const;
   VORTEX2D_API vk::Format GetFormat() const;
 
-  VORTEX2D_API void Clear(vk::CommandBuffer commandBuffer, const std::array<int, 4>& colour);
-  VORTEX2D_API void Clear(vk::CommandBuffer commandBuffer, const std::array<float, 4>& colour);
+  VORTEX2D_API void Clear(CommandEncoder& command, const std::array<int, 4>& colour);
+  VORTEX2D_API void Clear(CommandEncoder& command, const std::array<float, 4>& colour);
 
   VORTEX2D_API vk::Image Handle() const;
 
   friend class GenericBuffer;
 
 private:
-  void Clear(vk::CommandBuffer commandBuffer, vk::ClearColorValue colourValue);
-  const Device& mDevice;
+  void Clear(CommandEncoder& command, vk::ClearColorValue colourValue);
+  Device& mDevice;
   uint32_t mWidth;
   uint32_t mHeight;
   vk::Format mFormat;
@@ -137,22 +147,6 @@ private:
   VmaAllocationInfo mAllocationInfo;
   vk::UniqueImageView mImageView;
 };
-
-/**
- * @brief Inserts a barrier for the given texture, command buffer and access.
- * @param image the vulkan image handle
- * @param commandBuffer the vulkan command buffer
- * @param oldLayout old layout
- * @param srcMask old access
- * @param newLayout new layout
- * @param dstMask new access
- */
-VORTEX2D_API void TextureBarrier(vk::Image image,
-                                 vk::CommandBuffer commandBuffer,
-                                 vk::ImageLayout oldLayout,
-                                 vk::AccessFlags srcMask,
-                                 vk::ImageLayout newLayout,
-                                 vk::AccessFlags dstMask);
 
 }  // namespace Renderer
 }  // namespace Vortex2D

@@ -39,7 +39,7 @@ glm::ivec2 NextPowerOfTwo(const glm::ivec2& s)
   return {NextPowerOfTwo(s.x), NextPowerOfTwo(s.y)};
 }
 
-World::World(const Renderer::Device& device,
+World::World(Renderer::Device& device,
              const glm::ivec2& size,
              float dt,
              int numSubSteps,
@@ -78,15 +78,15 @@ World::World(const Renderer::Device& device,
   mExtrapolation.ConstrainBind(mDynamicSolidPhi);
   mLiquidPhi.ExtrapolateBind(mDynamicSolidPhi);
 
-  mCopySolidPhi.Record([&](vk::CommandBuffer commandBuffer) {
-    mDynamicSolidPhi.CopyFrom(commandBuffer, mStaticSolidPhi);
+  mCopySolidPhi.Record([&](Renderer::CommandEncoder& command) {
+    mDynamicSolidPhi.CopyFrom(command, mStaticSolidPhi);
   });
 
   mPreconditioner.BuildHierarchiesBind(mProjection, mDynamicSolidPhi, mLiquidPhi);
   mLinearSolver.Bind(mData.Diagonal, mData.Lower, mData.B, mData.X);
 
-  mDevice.Execute([&](vk::CommandBuffer commandBuffer) {
-    mStaticSolidPhi.Clear(commandBuffer, std::array<float, 4>{{10000.0f, 0.0f, 0.0f, 0.0f}});
+  mDevice.Execute([&](Renderer::CommandEncoder& command) {
+    mStaticSolidPhi.Clear(command, std::array<float, 4>{{10000.0f, 0.0f, 0.0f, 0.0f}});
   });
 }
 
@@ -186,7 +186,7 @@ Renderer::Texture& World::GetVelocity()
   return mVelocity;
 }
 
-SmokeWorld::SmokeWorld(const Renderer::Device& device,
+SmokeWorld::SmokeWorld(Renderer::Device& device,
                        const glm::ivec2& size,
                        float dt,
                        Velocity::InterpolationMode interpolationMode)
@@ -240,7 +240,7 @@ void SmokeWorld::FieldBind(Density& density)
   mAdvection.AdvectBind(density);
 }
 
-WaterWorld::WaterWorld(const Renderer::Device& device,
+WaterWorld::WaterWorld(Renderer::Device& device,
                        const glm::ivec2& size,
                        float dt,
                        int numSubSteps,

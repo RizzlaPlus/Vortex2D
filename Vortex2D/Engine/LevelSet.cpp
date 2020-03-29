@@ -14,9 +14,7 @@ namespace Vortex2D
 {
 namespace Fluid
 {
-LevelSet::LevelSet(const Renderer::Device& device,
-                   const glm::ivec2& size,
-                   int reinitializeIterations)
+LevelSet::LevelSet(Renderer::Device& device, const glm::ivec2& size, int reinitializeIterations)
     : Renderer::RenderTexture(device, size.x, size.y, vk::Format::eR32Sfloat)
     , mDevice(device)
     , mLevelSet0(device, size.x, size.y, vk::Format::eR32Sfloat)
@@ -36,44 +34,42 @@ LevelSet::LevelSet(const Renderer::Device& device,
     , mReinitialiseCmd(device, false)
     , mShrinkWrapCmd(device, false)
 {
-  mReinitialiseCmd.Record([&, reinitializeIterations](vk::CommandBuffer commandBuffer) {
-    commandBuffer.debugMarkerBeginEXT({"Reinitialise", {{0.98f, 0.49f, 0.26f, 1.0f}}},
-                                      mDevice.Loader());
+  mReinitialiseCmd.Record([&, reinitializeIterations](Renderer::CommandEncoder& command) {
+    command.DebugMarkerBegin("Reinitialise", {0.98f, 0.49f, 0.26f, 1.0f});
 
-    mLevelSet0.CopyFrom(commandBuffer, *this);
+    mLevelSet0.CopyFrom(command, *this);
 
     for (int i = 0; i < reinitializeIterations / 2; i++)
     {
-      mRedistanceFront.PushConstant(commandBuffer, 0.1f);
-      mRedistanceFront.Record(commandBuffer);
-      mLevelSetBack.Barrier(commandBuffer,
+      mRedistanceFront.PushConstant(command, 0.1f);
+      mRedistanceFront.Record(command);
+      mLevelSetBack.Barrier(command,
                             vk::ImageLayout::eGeneral,
                             vk::AccessFlagBits::eShaderWrite,
                             vk::ImageLayout::eGeneral,
                             vk::AccessFlagBits::eShaderRead);
-      mRedistanceBack.PushConstant(commandBuffer, 0.1f);
-      mRedistanceBack.Record(commandBuffer);
-      Barrier(commandBuffer,
+      mRedistanceBack.PushConstant(command, 0.1f);
+      mRedistanceBack.Record(command);
+      Barrier(command,
               vk::ImageLayout::eGeneral,
               vk::AccessFlagBits::eShaderWrite,
               vk::ImageLayout::eGeneral,
               vk::AccessFlagBits::eShaderRead);
     }
 
-    commandBuffer.debugMarkerEndEXT(mDevice.Loader());
+    command.DebugMarkerEnd();
   });
 
-  mShrinkWrapCmd.Record([&](vk::CommandBuffer commandBuffer) {
-    commandBuffer.debugMarkerBeginEXT({"Shrink Wrap", {{0.36f, 0.71f, 0.38f, 1.0f}}},
-                                      mDevice.Loader());
-    mShrinkWrapBound.Record(commandBuffer);
-    mLevelSetBack.Barrier(commandBuffer,
+  mShrinkWrapCmd.Record([&](Renderer::CommandEncoder& command) {
+    command.DebugMarkerBegin("Shrink Wrap", {0.36f, 0.71f, 0.38f, 1.0f});
+    mShrinkWrapBound.Record(command);
+    mLevelSetBack.Barrier(command,
                           vk::ImageLayout::eGeneral,
                           vk::AccessFlagBits::eShaderWrite,
                           vk::ImageLayout::eGeneral,
                           vk::AccessFlagBits::eShaderRead);
-    CopyFrom(commandBuffer, mLevelSetBack);
-    commandBuffer.debugMarkerEndEXT(mDevice.Loader());
+    CopyFrom(command, mLevelSetBack);
+    command.DebugMarkerEnd();
   });
 }
 
@@ -99,16 +95,15 @@ LevelSet::LevelSet(LevelSet&& other)
 void LevelSet::ExtrapolateBind(Renderer::Texture& solidPhi)
 {
   mExtrapolateBound = mExtrapolate.Bind({solidPhi, *this});
-  mExtrapolateCmd.Record([&](vk::CommandBuffer commandBuffer) {
-    commandBuffer.debugMarkerBeginEXT({"Extrapolate phi", {{0.53f, 0.09f, 0.16f, 1.0f}}},
-                                      mDevice.Loader());
-    mExtrapolateBound.Record(commandBuffer);
-    Barrier(commandBuffer,
+  mExtrapolateCmd.Record([&](Renderer::CommandEncoder& command) {
+    command.DebugMarkerBegin("Extrapolate phi", {0.53f, 0.09f, 0.16f, 1.0f});
+    mExtrapolateBound.Record(command);
+    Barrier(command,
             vk::ImageLayout::eGeneral,
             vk::AccessFlagBits::eShaderWrite,
             vk::ImageLayout::eGeneral,
             vk::AccessFlagBits::eShaderRead);
-    commandBuffer.debugMarkerEndEXT(mDevice.Loader());
+    command.DebugMarkerEnd();
   });
 }
 

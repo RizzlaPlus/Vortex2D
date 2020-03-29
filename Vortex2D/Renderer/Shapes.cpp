@@ -18,10 +18,10 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-AbstractShape::AbstractShape(const Device& device,
+AbstractShape::AbstractShape(Device& device,
                              const SpirvBinary& fragName,
                              const std::vector<glm::vec2>& vertices)
-    : mDevice(const_cast<Device&>(device))  // FIXME remove const_cast
+    : mDevice(device)
     , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
     , mColourBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
     , mVertexBuffer(device, vertices.size())
@@ -29,9 +29,7 @@ AbstractShape::AbstractShape(const Device& device,
 {
   VertexBuffer<glm::vec2> localVertices(device, vertices.size(), VMA_MEMORY_USAGE_CPU_ONLY);
   Renderer::CopyFrom(localVertices, vertices);
-  device.Execute([&](vk::CommandBuffer commandBuffer) {
-    mVertexBuffer.CopyFrom(commandBuffer, localVertices);
-  });
+  device.Execute([&](CommandEncoder& command) { mVertexBuffer.CopyFrom(command, localVertices); });
 
   SPIRV::Reflection reflectionVert(SPIRV::Position_vert);
   SPIRV::Reflection reflectionFrag(fragName);
@@ -81,17 +79,17 @@ void AbstractShape::Update(const glm::mat4& projection, const glm::mat4& view)
   Renderer::CopyFrom(mColourBuffer, Colour);
 }
 
-void AbstractShape::Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState)
+void AbstractShape::Draw(CommandEncoder& command, const RenderState& renderState)
 {
   auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
-  commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-  commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
-  commandBuffer.bindDescriptorSets(
-      vk::PipelineBindPoint::eGraphics, mPipelineLayout, 0, {*mBindGroup.descriptorSet}, {});
-  commandBuffer.draw(mNumVertices, 1, 0, 0);
+
+  command.SetPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+  command.SetBindGroup(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mBindGroup);
+  command.SetVertexBuffer(mVertexBuffer);
+  command.Draw(mNumVertices);
 }
 
-Rectangle::Rectangle(const Device& device, const glm::vec2& size)
+Rectangle::Rectangle(Device& device, const glm::vec2& size)
     : AbstractShape(device,
                     SPIRV::Position_frag,
                     {{0.0f, 0.0f},
@@ -106,7 +104,7 @@ Rectangle::Rectangle(const Device& device, const glm::vec2& size)
 {
 }
 
-IntRectangle::IntRectangle(const Device& device, const glm::vec2& size)
+IntRectangle::IntRectangle(Device& device, const glm::vec2& size)
     : AbstractShape(device,
                     SPIRV::IntPosition_frag,
                     {{0.0f, 0.0f},
@@ -121,8 +119,8 @@ IntRectangle::IntRectangle(const Device& device, const glm::vec2& size)
 {
 }
 
-Ellipse::Ellipse(const Device& device, const glm::vec2& radius)
-    : mDevice(const_cast<Device&>(device))  // FIXME remove const_cast
+Ellipse::Ellipse(Device& device, const glm::vec2& radius)
+    : mDevice(device)
     , mRadius(radius)
     , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
     , mColourBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
@@ -137,9 +135,7 @@ Ellipse::Ellipse(const Device& device, const glm::vec2& radius)
                                      {radius.x + 1.0f, radius.y + 1.0f},
                                      {-radius.x, radius.y + 1.0f}};
   Renderer::CopyFrom(localVertices, vertices);
-  device.Execute([&](vk::CommandBuffer commandBuffer) {
-    mVertexBuffer.CopyFrom(commandBuffer, localVertices);
-  });
+  device.Execute([&](CommandEncoder& command) { mVertexBuffer.CopyFrom(command, localVertices); });
 
   SPIRV::Reflection reflectionVert(SPIRV::Ellipse_vert);
   SPIRV::Reflection reflectionFrag(SPIRV::Ellipse_frag);
@@ -189,14 +185,14 @@ void Ellipse::Update(const glm::mat4& projection, const glm::mat4& view)
   Renderer::CopyFrom(mSizeBuffer, size);
 }
 
-void Ellipse::Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState)
+void Ellipse::Draw(CommandEncoder& command, const RenderState& renderState)
 {
   auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
-  commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-  commandBuffer.bindVertexBuffers(0, {mVertexBuffer.Handle()}, {0ul});
-  commandBuffer.bindDescriptorSets(
-      vk::PipelineBindPoint::eGraphics, mPipelineLayout, 0, {*mBindGroup.descriptorSet}, {});
-  commandBuffer.draw(6, 1, 0, 0);
+
+  command.SetPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+  command.SetBindGroup(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mBindGroup);
+  command.SetVertexBuffer(mVertexBuffer);
+  command.Draw(6);
 }
 
 Clear::Clear(const glm::vec4& colour) : mColour(colour) {}
@@ -207,19 +203,11 @@ void Clear::Initialize(const RenderState& /*renderState*/) {}
 
 void Clear::Update(const glm::mat4& /*projection*/, const glm::mat4& /*view*/) {}
 
-void Clear::Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState)
+void Clear::Draw(CommandEncoder& command, const RenderState& renderState)
 {
-  auto clearValue =
-      vk::ClearValue().setColor(std::array<float, 4>{{mColour.r, mColour.g, mColour.b, mColour.a}});
-
-  auto clearAttachement = vk::ClearAttachment()
-                              .setAspectMask(vk::ImageAspectFlagBits::eColor)
-                              .setClearValue(clearValue);
-
-  auto clearRect =
-      vk::ClearRect().setRect({{0, 0}, {renderState.Width, renderState.Height}}).setLayerCount(1);
-
-  commandBuffer.clearAttachments({clearAttachement}, {clearRect});
+  command.Clear({0, 0},
+                {renderState.Width, renderState.Height},
+                {mColour.r, mColour.g, mColour.b, mColour.a});
 }
 
 }  // namespace Renderer

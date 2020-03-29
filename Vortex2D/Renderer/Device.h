@@ -53,8 +53,6 @@ public:
   VORTEX2D_API int GetFamilyIndex() const;
 
   // Command buffer functions
-  VORTEX2D_API vk::CommandBuffer CreateCommandBuffer() const;
-  VORTEX2D_API void FreeCommandBuffer(vk::CommandBuffer commandBuffer) const;
   VORTEX2D_API void Execute(CommandBuffer::CommandFn commandFn) const;
 
   // Memory allocator
@@ -101,6 +99,8 @@ public:
   VORTEX2D_API vk::Pipeline CreateComputePipeline(vk::ShaderModule shader,
                                                   vk::PipelineLayout layout,
                                                   SpecConstInfo specConstInfo = {});
+
+  VORTEX2D_API CommandEncoder CreateCommandEncoder();
 
 private:
   /**

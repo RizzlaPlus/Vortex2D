@@ -17,7 +17,7 @@ extern glm::vec4 gray;
 class SmokeExample : public Runner
 {
 public:
-  SmokeExample(const Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
+  SmokeExample(Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
       : source1(device, glm::vec2(20.0f))
       , source2(device, glm::vec2(20.0f))
       , force1(device, glm::vec2(20.0f))
@@ -42,7 +42,7 @@ public:
     solidPhi.Colour = green;
   }
 
-  void Init(const Vortex2D::Renderer::Device& device,
+  void Init(Vortex2D::Renderer::Device& device,
             Vortex2D::Renderer::RenderTarget& renderTarget) override
   {
     // Draw liquid boundaries

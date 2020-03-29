@@ -5,6 +5,8 @@
 
 #include "LinearSolver.h"
 
+#include <Vortex2D/Renderer/CommandBuffer.h>
+
 #include "vortex2d_generated_spirv.h"
 
 namespace Vortex2D
@@ -20,7 +22,7 @@ LinearSolver::Parameters::Parameters(SolverType type, unsigned iterations, float
 {
 }
 
-LinearSolver::Data::Data(const Renderer::Device& device,
+LinearSolver::Data::Data(Renderer::Device& device,
                          const glm::ivec2& size,
                          VmaMemoryUsage memoryUsage)
     : Diagonal(device, size.x * size.y, memoryUsage)
@@ -28,15 +30,15 @@ LinearSolver::Data::Data(const Renderer::Device& device,
     , B(device, size.x * size.y, memoryUsage)
     , X(device, size.x * size.y, memoryUsage)
 {
-  device.Execute([&](vk::CommandBuffer commandBuffer) {
-    Diagonal.Clear(commandBuffer);
-    Lower.Clear(commandBuffer);
-    B.Clear(commandBuffer);
-    X.Clear(commandBuffer);
+  device.Execute([&](Renderer::CommandEncoder& command) {
+    Diagonal.Clear(command);
+    Lower.Clear(command);
+    B.Clear(command);
+    X.Clear(command);
   });
 }
 
-LinearSolver::DebugData::DebugData(const Renderer::Device& device, const glm::ivec2& size)
+LinearSolver::DebugData::DebugData(Renderer::Device& device, const glm::ivec2& size)
     : Diagonal(device, size.x, size.y, vk::Format::eR32Sfloat)
     , Lower(device, size.x, size.y, vk::Format::eR32G32Sfloat)
     , B(device, size.x, size.y, vk::Format::eR32Sfloat)
@@ -44,7 +46,7 @@ LinearSolver::DebugData::DebugData(const Renderer::Device& device, const glm::iv
 {
 }
 
-LinearSolver::DebugCopy::DebugCopy(const Renderer::Device& device,
+LinearSolver::DebugCopy::DebugCopy(Renderer::Device& device,
                                    const glm::ivec2& size,
                                    LinearSolver::Data& data,
                                    LinearSolver::DebugData& debugData)
@@ -59,11 +61,10 @@ LinearSolver::DebugCopy::DebugCopy(const Renderer::Device& device,
                                                debugData.B}))
     , mCopy(device, false)
 {
-  mCopy.Record([&](vk::CommandBuffer commandBuffer) {
-    commandBuffer.debugMarkerBeginEXT({"Debug data copy", {{0.30f, 0.01f, 0.19f, 1.0f}}},
-                                      device.Loader());
-    mDebugDataCopyBound.Record(commandBuffer);
-    commandBuffer.debugMarkerEndEXT(device.Loader());
+  mCopy.Record([&](Renderer::CommandEncoder& command) {
+    command.DebugMarkerBegin("Debug data copy", {0.30f, 0.01f, 0.19f, 1.0f});
+    mDebugDataCopyBound.Record(command);
+    command.DebugMarkerEnd();
   });
 }
 
@@ -106,7 +107,7 @@ LinearSolver::Parameters IterativeParams(float errorTolerance)
       LinearSolver::Parameters::SolverType::Iterative, 1000, errorTolerance);
 }
 
-LinearSolver::Error::Error(const Renderer::Device& device, const glm::ivec2& size)
+LinearSolver::Error::Error(Renderer::Device& device, const glm::ivec2& size)
     : mResidual(device, size.x * size.y)
     , mError(device)
     , mLocalError(device, 1, VMA_MEMORY_USAGE_GPU_TO_CPU)
@@ -127,16 +128,14 @@ void LinearSolver::Error::Bind(Renderer::GenericBuffer& d,
 {
   mResidualBound = mResidualWork.Bind({pressure, d, l, div, mResidual});
 
-  mErrorCmd.Record([&](vk::CommandBuffer commandBuffer) {
-    mResidualBound.Record(commandBuffer);
-    mResidual.Barrier(
-        commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+  mErrorCmd.Record([&](Renderer::CommandEncoder& command) {
+    mResidualBound.Record(command);
+    mResidual.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
 
-    mReduceMaxBound.Record(commandBuffer);
-    mError.Barrier(
-        commandBuffer, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    mReduceMaxBound.Record(command);
+    mError.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
 
-    mLocalError.CopyFrom(commandBuffer, mError);
+    mLocalError.CopyFrom(command, mError);
   });
 }
 

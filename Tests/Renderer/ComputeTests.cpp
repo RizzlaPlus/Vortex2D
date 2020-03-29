@@ -41,9 +41,9 @@ TEST(ComputeTests, BufferCopy)
 
   CopyFrom(inBuffer, data);
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) {
-    buffer.CopyFrom(commandBuffer, inBuffer);
-    outBuffer.CopyFrom(commandBuffer, buffer);
+  device->Execute([&](CommandEncoder& command) {
+    buffer.CopyFrom(command, inBuffer);
+    outBuffer.CopyFrom(command, buffer);
   });
 
   CheckBuffer(data, outBuffer);
@@ -58,8 +58,7 @@ TEST(ComputeTests, UpdateVectorBuffer)
   std::vector<float> data(size, 1.1f);
   CopyFrom(inBuffer, data);
 
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { outBuffer.CopyFrom(commandBuffer, inBuffer); });
+  device->Execute([&](CommandEncoder& command) { outBuffer.CopyFrom(command, inBuffer); });
 
   std::vector<float> outData(size);
   CopyTo(outBuffer, outData);
@@ -101,11 +100,10 @@ TEST(ComputeTests, BufferCompute)
 
   auto pipeline = device->CreateComputePipeline(shader, pipelineLayout);
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) {
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline);
-    commandBuffer.bindDescriptorSets(
-        vk::PipelineBindPoint::eCompute, pipelineLayout, 0, {*bindGroup.descriptorSet}, {});
-    commandBuffer.dispatch(1, 1, 1);
+  device->Execute([&](CommandEncoder& command) {
+    command.SetPipeline(vk::PipelineBindPoint::eCompute, pipeline);
+    command.SetBindGroup(vk::PipelineBindPoint::eCompute, pipelineLayout, bindGroup);
+    command.Dispatch(1, 1, 1);
   });
 
   std::vector<Particle> output(100);
@@ -143,13 +141,12 @@ TEST(ComputeTests, ImageCompute)
 
   auto pipeline = device->CreateComputePipeline(shader, pipelineLayout);
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) {
-    inTexture.CopyFrom(commandBuffer, stagingTexture);
-    commandBuffer.bindDescriptorSets(
-        vk::PipelineBindPoint::eCompute, pipelineLayout, 0, {*bindGroup.descriptorSet}, {});
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline);
-    commandBuffer.dispatch(16, 16, 1);
-    stagingTexture.CopyFrom(commandBuffer, outTexture);
+  device->Execute([&](CommandEncoder& command) {
+    inTexture.CopyFrom(command, stagingTexture);
+    command.SetPipeline(vk::PipelineBindPoint::eCompute, pipeline);
+    command.SetBindGroup(vk::PipelineBindPoint::eCompute, pipelineLayout, bindGroup);
+    command.Dispatch(16, 16, 1);
+    stagingTexture.CopyFrom(command, outTexture);
   });
 
   std::vector<float> doubleData(data.size(), 2.0f);
@@ -163,7 +160,7 @@ TEST(ComputeTests, Work)
 
   auto boundWork = work.Bind({buffer});
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) { boundWork.Record(commandBuffer); });
+  device->Execute([&](CommandEncoder& command) { boundWork.Record(command); });
 
   std::vector<float> expectedOutput(16 * 16);
   for (int i = 0; i < 16; i++)
@@ -202,9 +199,9 @@ TEST(ComputeTests, WorkIndirect)
   auto bound = work.Bind({buffer, dispatchParams});
 
   CommandBuffer cmd(*device, true);
-  cmd.Record([&](vk::CommandBuffer commandBuffer) {
-    buffer.Clear(commandBuffer);
-    bound.RecordIndirect(commandBuffer, dispatchParams);
+  cmd.Record([&](CommandEncoder& command) {
+    buffer.Clear(command);
+    bound.RecordIndirect(command, dispatchParams);
   });
 
   // Run first time
@@ -262,19 +259,18 @@ TEST(ComputeTests, FloatImage)
   std::vector<glm::vec4> data(size.x * size.y, glm::vec4(2.0f, 3.0f, 0.0f, 0.0f));
   localTexture.CopyFrom(data);
 
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { texture.CopyFrom(commandBuffer, localTexture); });
+  device->Execute([&](CommandEncoder& command) { texture.CopyFrom(command, localTexture); });
 
   auto boundWork = work.Bind({texture});
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) {
-    boundWork.Record(commandBuffer);
-    texture.Barrier(commandBuffer,
+  device->Execute([&](CommandEncoder& command) {
+    boundWork.Record(command);
+    texture.Barrier(command,
                     vk::ImageLayout::eGeneral,
                     vk::AccessFlagBits::eShaderWrite,
                     vk::ImageLayout::eGeneral,
                     vk::AccessFlagBits::eShaderRead);
-    localTexture.CopyFrom(commandBuffer, texture);
+    localTexture.CopyFrom(command, texture);
   });
 
   CheckTexture<glm::vec4>(data, localTexture);
@@ -301,7 +297,7 @@ TEST(ComputeTests, Stencil)
 
   CopyFrom(input, inputData);
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) { boundWork.Record(commandBuffer); });
+  device->Execute([&](CommandEncoder& command) { boundWork.Record(command); });
 
   std::vector<float> expectedOutput(size.x * size.y, 0.0f);
   for (int i = 1; i < size.x - 1; i++)
@@ -342,10 +338,10 @@ TEST(ComputeTests, Checkerboard)
 
   auto boundWork = work.Bind({buffer});
 
-  device->Execute([&](vk::CommandBuffer commandBuffer) {
-    buffer.Clear(commandBuffer);
-    boundWork.PushConstant(commandBuffer, 1);
-    boundWork.Record(commandBuffer);
+  device->Execute([&](CommandEncoder& command) {
+    buffer.Clear(command);
+    boundWork.PushConstant(command, 1);
+    boundWork.Record(command);
   });
 
   std::vector<float> expectedOutput(size.x * size.y, 0.0f);
@@ -379,7 +375,7 @@ TEST(ComputeTests, Timer)
   auto boundWork = work.Bind({buffer});
 
   CommandBuffer cmd(*device);
-  cmd.Record([&](vk::CommandBuffer commandBuffer) { boundWork.Record(commandBuffer); });
+  cmd.Record([&](CommandEncoder& command) { boundWork.Record(command); });
 
   Timer timer(*device);
 
