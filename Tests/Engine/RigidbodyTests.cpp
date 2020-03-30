@@ -119,7 +119,7 @@ TEST(RigidbodyTests, Phi)
 
   device->Handle().waitIdle();
 
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, solidPhi); });
 
   CheckPhi(size, sim, outTexture);
@@ -154,8 +154,8 @@ TEST(RigidbodyTests, Div)
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<glm::ivec2> valid(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
+  Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
   Pressure pressure(*device, 0.01f, size, data, velocity, solidPhi, liquidPhi, valid);
 
   Vortex2D::Fluid::Rectangle rectangle(*device, rectangleSize * glm::vec2(size), false, size.x);
@@ -211,8 +211,8 @@ TEST(RigidbodyTests, VelocityDiv)
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<glm::ivec2> valid(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
+  Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
   Pressure pressure(*device, 0.01f, size, data, velocity, solidPhi, liquidPhi, valid);
 
   Vortex2D::Fluid::Rectangle rectangle(*device, rectangleSize * glm::vec2(size), false, size.x);
@@ -270,8 +270,8 @@ TEST(RigidbodyTests, RotationDiv)
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<glm::ivec2> valid(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
+  Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
   Pressure pressure(*device, 0.01f, size, data, velocity, solidPhi, liquidPhi, valid);
 
   Vortex2D::Fluid::Rectangle rectangle(*device, rectangleSize * glm::vec2(size), false, size.x);
@@ -329,8 +329,8 @@ TEST(RigidbodyTests, VelocityRotationDiv)
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<glm::ivec2> valid(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
+  Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
   Pressure pressure(*device, 0.01f, size, data, velocity, solidPhi, liquidPhi, valid);
 
   Vortex2D::Fluid::Rectangle rectangle(*device, rectangleSize * glm::vec2(size), false, size.x);
@@ -357,8 +357,8 @@ TEST(RigidbodyTests, ReduceJSum)
 {
   glm::ivec2 size(10, 15);
   int n = size.x * size.y;
-  Buffer<Vortex2D::Fluid::RigidBody::Velocity> input(*device, n, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<Vortex2D::Fluid::RigidBody::Velocity> output(*device, 1, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<Vortex2D::Fluid::RigidBody::Velocity> input(*device, n, MemoryUsage::Cpu);
+  Buffer<Vortex2D::Fluid::RigidBody::Velocity> output(*device, 1, MemoryUsage::Cpu);
 
   ReduceJ reduce(*device, size);
   auto reduceBound = reduce.Bind(input, output);
@@ -420,8 +420,8 @@ TEST(RigidbodyTests, Force)
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
-  Buffer<float> pressure(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<float> diagonal(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<float> pressure(*device, size.x * size.y, MemoryUsage::Cpu);
+  Buffer<float> diagonal(*device, size.x * size.y, MemoryUsage::Cpu);
 
   std::vector<float> computedPressureData(size.x * size.y, 0.0f);
   std::vector<float> computedDiagonalData(size.x * size.y, 0.0f);
@@ -507,8 +507,8 @@ TEST(RigidbodyTests, Pressure)
   SetLiquidPhi(*device, size, liquidPhi, sim);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<glm::ivec2> valid(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
+  Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
   Pressure pressure(*device, 0.01f, size, data, velocity, solidPhi, liquidPhi, valid);
 
   Vortex2D::Fluid::Rectangle rectangle(*device, rectangleSize * glm::vec2(size));
@@ -524,8 +524,8 @@ TEST(RigidbodyTests, Pressure)
   rigidBody.RenderPhi();
 
   // setup equations
-  Buffer<float> input(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<float> output(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<float> input(*device, size.x * size.y, MemoryUsage::Cpu);
+  Buffer<float> output(*device, size.x * size.y, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { output.Clear(command); });
 
   std::vector<float> inputData(size.x * size.y, 0.1f);
@@ -581,7 +581,7 @@ TEST(RigidbodyTests, PressureVelocity)
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   BuildLinearEquation(size, data.Diagonal, data.Lower, data.B, sim);
 
@@ -654,7 +654,7 @@ TEST(RigidbodyTests, PressureRotation)
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   BuildLinearEquation(size, data.Diagonal, data.Lower, data.B, sim);
 

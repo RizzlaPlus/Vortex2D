@@ -17,11 +17,11 @@ namespace Renderer
 {
 AbstractSprite::AbstractSprite(Device& device, const SpirvBinary& fragShaderName, Texture& texture)
     : mDevice(device)
-    , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
+    , mMVPBuffer(device, MemoryUsage::CpuToGpu)
     , mVertexBuffer(device, 6)
-    , mColourBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
+    , mColourBuffer(device, MemoryUsage::CpuToGpu)
 {
-  VertexBuffer<Vertex> localBuffer(device, 6, VMA_MEMORY_USAGE_CPU_ONLY);
+  VertexBuffer<Vertex> localBuffer(device, 6, MemoryUsage::Cpu);
   std::vector<Vertex> vertices = {{{0.0f, 0.0f}, {0.0f, 0.0f}},
                                   {{1.0f, 0.0f}, {texture.GetWidth(), 0.0f}},
                                   {{0.0f, 1.0f}, {0.0f, texture.GetHeight()}},

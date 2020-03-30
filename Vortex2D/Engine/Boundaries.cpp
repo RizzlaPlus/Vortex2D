@@ -65,8 +65,8 @@ Polygon::Polygon(Renderer::Device& device,
     : mDevice(device)
     , mSize(static_cast<uint32_t>(points.size()))
     , mInv(inverse)
-    , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
-    , mMVBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
+    , mMVPBuffer(device, Renderer::MemoryUsage::CpuToGpu)
+    , mMVBuffer(device, Renderer::MemoryUsage::CpuToGpu)
     , mVertexBuffer(device, 6ul)
     , mPolygonVertexBuffer(device, static_cast<unsigned>(points.size()))
 {
@@ -77,12 +77,12 @@ Polygon::Polygon(Renderer::Device& device,
   }
 
   Renderer::Buffer<glm::vec2> localPolygonVertexBuffer(
-      device, points.size(), VMA_MEMORY_USAGE_CPU_ONLY);
+      device, points.size(), Renderer::MemoryUsage::Cpu);
   Renderer::CopyFrom(localPolygonVertexBuffer, points);
 
   auto boundingBox = GetBoundingBox(points, extent);
   Renderer::Buffer<glm::vec2> localVertexBuffer(
-      device, boundingBox.size(), VMA_MEMORY_USAGE_CPU_ONLY);
+      device, boundingBox.size(), Renderer::MemoryUsage::Cpu);
   Renderer::CopyFrom(localVertexBuffer, boundingBox);
 
   device.Execute([&](Renderer::CommandEncoder& command) {
@@ -165,8 +165,8 @@ void Rectangle::Draw(Renderer::CommandEncoder& command, const Renderer::RenderSt
 Circle::Circle(Renderer::Device& device, float radius, float extent)
     : mDevice(device)
     , mSize(radius)
-    , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
-    , mMVBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
+    , mMVPBuffer(device, Renderer::MemoryUsage::CpuToGpu)
+    , mMVBuffer(device, Renderer::MemoryUsage::CpuToGpu)
     , mVertexBuffer(device, 6)
 {
   std::vector<glm::vec2> points = {
@@ -174,7 +174,7 @@ Circle::Circle(Renderer::Device& device, float radius, float extent)
 
   auto boundingBox = GetBoundingBox(points, extent);
   Renderer::Buffer<glm::vec2> localVertexBuffer(
-      device, boundingBox.size(), VMA_MEMORY_USAGE_CPU_ONLY);
+      device, boundingBox.size(), Renderer::MemoryUsage::Cpu);
   Renderer::CopyFrom(localVertexBuffer, boundingBox);
 
   device.Execute([&](Renderer::CommandEncoder& command) {

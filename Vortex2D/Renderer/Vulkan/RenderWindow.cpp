@@ -3,7 +3,7 @@
 //  Vortex2D
 //
 
-#include "RenderWindow.h"
+#include <Vortex2D/Renderer/RenderWindow.h>
 
 #include <Vortex2D/Renderer/Vulkan/RenderPass.h>
 

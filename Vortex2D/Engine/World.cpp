@@ -248,7 +248,7 @@ WaterWorld::WaterWorld(Renderer::Device& device,
     : World(device, size, dt, numSubSteps, interpolationMode)
     , mParticles(device,
                  vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eVertexBuffer,
-                 VMA_MEMORY_USAGE_GPU_ONLY,
+                 Renderer::MemoryUsage::Gpu,
                  8 * size.x * size.y * sizeof(Particle))
     , mParticleCount(device, size, mParticles, interpolationMode, {0}, 0.02f)
 {

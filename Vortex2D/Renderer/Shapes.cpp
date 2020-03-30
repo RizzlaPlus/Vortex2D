@@ -22,12 +22,12 @@ AbstractShape::AbstractShape(Device& device,
                              const SpirvBinary& fragName,
                              const std::vector<glm::vec2>& vertices)
     : mDevice(device)
-    , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
-    , mColourBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
+    , mMVPBuffer(device, MemoryUsage::CpuToGpu)
+    , mColourBuffer(device, MemoryUsage::CpuToGpu)
     , mVertexBuffer(device, vertices.size())
     , mNumVertices(static_cast<uint32_t>(vertices.size()))
 {
-  VertexBuffer<glm::vec2> localVertices(device, vertices.size(), VMA_MEMORY_USAGE_CPU_ONLY);
+  VertexBuffer<glm::vec2> localVertices(device, vertices.size(), MemoryUsage::Cpu);
   Renderer::CopyFrom(localVertices, vertices);
   device.Execute([&](CommandEncoder& command) { mVertexBuffer.CopyFrom(command, localVertices); });
 
@@ -122,12 +122,12 @@ IntRectangle::IntRectangle(Device& device, const glm::vec2& size)
 Ellipse::Ellipse(Device& device, const glm::vec2& radius)
     : mDevice(device)
     , mRadius(radius)
-    , mMVPBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
-    , mColourBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
+    , mMVPBuffer(device, MemoryUsage::CpuToGpu)
+    , mColourBuffer(device, MemoryUsage::CpuToGpu)
     , mVertexBuffer(device, 6)
-    , mSizeBuffer(device, VMA_MEMORY_USAGE_CPU_TO_GPU)
+    , mSizeBuffer(device, MemoryUsage::CpuToGpu)
 {
-  VertexBuffer<glm::vec2> localVertices(device, 6, VMA_MEMORY_USAGE_CPU_ONLY);
+  VertexBuffer<glm::vec2> localVertices(device, 6, MemoryUsage::Cpu);
   std::vector<glm::vec2> vertices = {{-radius.x, -radius.y},
                                      {radius.x + 1.0f, -radius.y},
                                      {-radius.x, radius.y + 1.0f},

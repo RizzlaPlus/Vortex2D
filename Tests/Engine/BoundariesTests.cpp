@@ -114,7 +114,7 @@ TEST(BoundariesTests, Square)
   levelSet.Record({clear, square}).Submit();
   device->Handle().waitIdle();
 
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
   CheckLevelSet(data, outTexture);
@@ -142,7 +142,7 @@ TEST(BoundariesTests, InverseSquare)
   levelSet.Record({clear, square}).Submit();
   device->Handle().waitIdle();
 
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
   CheckLevelSet(data, outTexture);
@@ -166,7 +166,7 @@ TEST(BoundariesTests, Circle)
   levelSet.Record({clear, circle}).Submit();
   device->Handle().waitIdle();
 
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
   CheckLevelSet(data, outTexture);
@@ -202,7 +202,7 @@ TEST(BoundariesTests, Intersection)
   levelSet.Record({clear, square1, square2}, UnionBlend).Submit();
   device->Handle().waitIdle();
 
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
   CheckLevelSet(data, outTexture);
@@ -230,7 +230,7 @@ TEST(BoundariesTest, DistanceField)
   LevelSet levelSet(*device, size);
 
   std::vector<float> data(size.x * size.y, 0.1f);
-  Texture localLevelSet(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture localLevelSet(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) {
     localLevelSet.CopyFrom(data);
     levelSet.CopyFrom(command, localLevelSet);
@@ -241,7 +241,7 @@ TEST(BoundariesTest, DistanceField)
 
   RenderTexture output(*device, size.x, size.y, vk::Format::eR8G8B8A8Unorm);
   Texture localOutput(
-      *device, size.x, size.y, vk::Format::eR8G8B8A8Unorm, VMA_MEMORY_USAGE_CPU_ONLY);
+      *device, size.x, size.y, vk::Format::eR8G8B8A8Unorm, MemoryUsage::Cpu);
 
   output.Record({distance}).Submit();
   device->Handle().waitIdle();

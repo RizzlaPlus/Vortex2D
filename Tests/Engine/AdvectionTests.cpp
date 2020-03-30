@@ -73,7 +73,7 @@ TEST(AdvectionTests, Advect)
   glm::ivec2 pos(3, 4);
 
   Texture velocityInput(
-      *device, size.x, size.y, vk::Format::eR32G32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+      *device, size.x, size.y, vk::Format::eR32G32Sfloat, MemoryUsage::Cpu);
   Velocity velocity(*device, size);
 
   std::vector<glm::vec2> velocityData(size.x * size.y, vel / glm::vec2(size));
@@ -82,7 +82,7 @@ TEST(AdvectionTests, Advect)
   device->Execute([&](CommandEncoder& command) { velocity.CopyFrom(command, velocityInput); });
 
   Texture fieldInput(
-      *device, size.x, size.y, vk::Format::eB8G8R8A8Unorm, VMA_MEMORY_USAGE_CPU_ONLY);
+      *device, size.x, size.y, vk::Format::eB8G8R8A8Unorm, MemoryUsage::Cpu);
   Density field(*device, size, vk::Format::eB8G8R8A8Unorm);
 
   std::vector<glm::u8vec4> fieldData(size.x * size.y);
@@ -119,8 +119,8 @@ TEST(AdvectionTests, ParticleAdvect)
   sim.advance(0.01f);
 
   // setup particles
-  Buffer<Particle> particles(*device, 8 * size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
-  IndirectBuffer<DispatchParams> dispatchParams(*device, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<Particle> particles(*device, 8 * size.x * size.y, MemoryUsage::Cpu);
+  IndirectBuffer<DispatchParams> dispatchParams(*device, MemoryUsage::Cpu);
 
   DispatchParams params(static_cast<int32_t>(sim.particles.size()));
   CopyFrom(dispatchParams, params);
@@ -184,8 +184,8 @@ TEST(AdvectionTests, ParticleProject)
   sim.add_particle(bottomRight);
 
   // setup particles
-  Buffer<Particle> particles(*device, 8 * size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
-  IndirectBuffer<DispatchParams> dispatchParams(*device, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<Particle> particles(*device, 8 * size.x * size.y, MemoryUsage::Cpu);
+  IndirectBuffer<DispatchParams> dispatchParams(*device, MemoryUsage::Cpu);
 
   DispatchParams params(static_cast<int32_t>(sim.particles.size()));
   CopyFrom(dispatchParams, params);

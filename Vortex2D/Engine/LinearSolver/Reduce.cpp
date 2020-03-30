@@ -39,7 +39,7 @@ Reduce::Reduce(Renderer::Device& device,
   {
     mBuffers.emplace_back(device,
                           vk::BufferUsageFlagBits::eStorageBuffer,
-                          VMA_MEMORY_USAGE_GPU_ONLY,
+                          Renderer::MemoryUsage::Gpu,
                           typeSize * computeSize.WorkSize.x);
 
     computeSize = MakeComputeSize(computeSize.WorkSize.x);

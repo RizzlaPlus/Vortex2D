@@ -3,7 +3,7 @@
 //  Vortex2D
 //
 
-#include "Timer.h"
+#include <Vortex2D/Renderer/Timer.h>
 
 #include <Vortex2D/Renderer/CommandBuffer.h>
 #include <Vortex2D/Renderer/Device.h>

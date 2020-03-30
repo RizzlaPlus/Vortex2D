@@ -24,7 +24,7 @@ LinearSolver::Parameters::Parameters(SolverType type, unsigned iterations, float
 
 LinearSolver::Data::Data(Renderer::Device& device,
                          const glm::ivec2& size,
-                         VmaMemoryUsage memoryUsage)
+                         Renderer::MemoryUsage memoryUsage)
     : Diagonal(device, size.x * size.y, memoryUsage)
     , Lower(device, size.x * size.y, memoryUsage)
     , B(device, size.x * size.y, memoryUsage)
@@ -110,7 +110,7 @@ LinearSolver::Parameters IterativeParams(float errorTolerance)
 LinearSolver::Error::Error(Renderer::Device& device, const glm::ivec2& size)
     : mResidual(device, size.x * size.y)
     , mError(device)
-    , mLocalError(device, 1, VMA_MEMORY_USAGE_GPU_TO_CPU)
+    , mLocalError(device, 1, Renderer::MemoryUsage::GpuToCpu)
     , mResidualWork(device, size, SPIRV::Residual_comp)
     , mReduceMax(device, size)
     , mReduceMaxBound(mReduceMax.Bind(mResidual, mError))

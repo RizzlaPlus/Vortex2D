@@ -55,7 +55,7 @@ void SetVelocity(Vortex2D::Renderer::Device& device,
                  FluidSim& sim)
 {
   Vortex2D::Renderer::Texture input(
-      device, size.x, size.y, vk::Format::eR32G32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+      device, size.x, size.y, vk::Format::eR32G32Sfloat, Vortex2D::Renderer::MemoryUsage::Cpu);
 
   std::vector<glm::vec2> velocityData(size.x * size.y, glm::vec2(0.0f));
   for (int i = 0; i < size.x; i++)
@@ -80,7 +80,7 @@ void SetSolidPhi(Vortex2D::Renderer::Device& device,
                  float scale)
 {
   Vortex2D::Renderer::Texture input(
-      device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+      device, size.x, size.y, vk::Format::eR32Sfloat, Vortex2D::Renderer::MemoryUsage::Cpu);
 
   std::vector<float> phi(size.x * size.y, 0.0f);
   for (int i = 0; i < size.x; i++)
@@ -104,7 +104,7 @@ void SetLiquidPhi(Vortex2D::Renderer::Device& device,
                   float scale)
 {
   Vortex2D::Renderer::Texture input(
-      device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+      device, size.x, size.y, vk::Format::eR32Sfloat, Vortex2D::Renderer::MemoryUsage::Cpu);
 
   std::vector<float> phi(size.x * size.y, 0.0f);
   for (int i = 0; i < size.x; i++)
@@ -206,7 +206,7 @@ void PrintVelocity(Vortex2D::Renderer::Device& device,
                    Vortex2D::Renderer::Texture& velocity)
 {
   Vortex2D::Renderer::Texture output(
-      device, size.x, size.y, vk::Format::eR32G32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+      device, size.x, size.y, vk::Format::eR32G32Sfloat, Vortex2D::Renderer::MemoryUsage::Cpu);
   device.Execute(
       [&](Vortex2D::Renderer::CommandEncoder& command) { output.CopyFrom(command, velocity); });
 
@@ -245,7 +245,7 @@ void CheckVelocity(Vortex2D::Renderer::Device& device,
                    float error)
 {
   Vortex2D::Renderer::Texture output(
-      device, size.x, size.y, vk::Format::eR32G32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+      device, size.x, size.y, vk::Format::eR32G32Sfloat, Vortex2D::Renderer::MemoryUsage::Cpu);
   device.Execute(
       [&](Vortex2D::Renderer::CommandEncoder& command) { output.CopyFrom(command, velocity); });
 
@@ -273,7 +273,7 @@ void CheckVelocity(Vortex2D::Renderer::Device& device,
   assert(velocityData.size() == size.x * size.y);
 
   Vortex2D::Renderer::Texture output(
-      device, size.x, size.y, vk::Format::eR32G32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+      device, size.x, size.y, vk::Format::eR32G32Sfloat, Vortex2D::Renderer::MemoryUsage::Cpu);
   device.Execute(
       [&](Vortex2D::Renderer::CommandEncoder& command) { output.CopyFrom(command, velocity); });
 

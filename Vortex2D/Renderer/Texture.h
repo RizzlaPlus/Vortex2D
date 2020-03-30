@@ -65,7 +65,7 @@ public:
                        uint32_t width,
                        uint32_t height,
                        vk::Format format,
-                       VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY);
+                       MemoryUsage memoryUsage = MemoryUsage::Gpu);
   VORTEX2D_API Texture(Texture&& other);
 
   VORTEX2D_API virtual ~Texture();
@@ -73,9 +73,9 @@ public:
   template <typename T>
   void CopyFrom(const std::vector<T>& data)
   {
-    if (data.size() != mWidth * mHeight)
+    if (data.size() != GetWidth() * GetHeight())
       throw std::runtime_error("Invalid input data size");
-    if (sizeof(T) != GetBytesPerPixel(mFormat))
+    if (sizeof(T) != GetBytesPerPixel(GetFormat()))
       throw std::runtime_error("Invalid input data format");
     CopyFrom(data.data());
   }
@@ -83,9 +83,9 @@ public:
   template <typename T>
   void CopyTo(std::vector<T>& data)
   {
-    if (data.size() != mWidth * mHeight)
+    if (data.size() != GetWidth() * GetHeight())
       throw std::runtime_error("Invalid input data size");
-    if (sizeof(T) != GetBytesPerPixel(mFormat))
+    if (sizeof(T) != GetBytesPerPixel(GetFormat()))
       throw std::runtime_error("Invalid input data format");
     CopyTo(data.data());
   }
@@ -134,18 +134,9 @@ public:
 
   VORTEX2D_API vk::Image Handle() const;
 
-  friend class GenericBuffer;
-
 private:
-  void Clear(CommandEncoder& command, vk::ClearColorValue colourValue);
-  Device& mDevice;
-  uint32_t mWidth;
-  uint32_t mHeight;
-  vk::Format mFormat;
-  VkImage mImage;
-  VmaAllocation mAllocation;
-  VmaAllocationInfo mAllocationInfo;
-  vk::UniqueImageView mImageView;
+  struct Impl;
+  std::unique_ptr<Impl> mImpl;
 };
 
 }  // namespace Renderer

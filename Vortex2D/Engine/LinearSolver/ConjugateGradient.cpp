@@ -28,7 +28,7 @@ ConjugateGradient::ConjugateGradient(Renderer::Device& device,
     , rho_new(device, 1)
     , sigma(device, 1)
     , error(device)
-    , localError(device, 1, VMA_MEMORY_USAGE_GPU_TO_CPU)
+    , localError(device, 1, Renderer::MemoryUsage::GpuToCpu)
     , matrixMultiply(device, size, SPIRV::MultiplyMatrix_comp)
     , scalarDivision(device, glm::ivec2(1), SPIRV::Divide_comp)
     , scalarMultiply(device, size, SPIRV::Multiply_comp)

@@ -210,7 +210,7 @@ TEST(CflTets, Max)
   Fluid::Cfl cfl(*device, size, velocity);
 
   Renderer::Texture input(
-      *device, size.x, size.y, vk::Format::eR32G32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+      *device, size.x, size.y, vk::Format::eR32G32Sfloat, Renderer::MemoryUsage::Cpu);
 
   std::random_device rd;
   std::mt19937 gen(rd());

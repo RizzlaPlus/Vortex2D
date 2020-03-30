@@ -27,8 +27,8 @@ TEST(LinearSolverTests, ReduceSum)
 {
   glm::ivec2 size(10, 15);
   int total_size = size.x * size.y;
-  Buffer<float> input(*device, total_size, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<float> output(*device, 1, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<float> input(*device, total_size, MemoryUsage::Cpu);
+  Buffer<float> output(*device, 1, MemoryUsage::Cpu);
 
   ReduceSum reduce(*device, size);
   auto reduceBound = reduce.Bind(input, output);
@@ -55,8 +55,8 @@ TEST(LinearSolverTests, ReduceBigSum)
   glm::ivec2 size(1000);
   int total_size = size.x * size.y;  // 1 million
 
-  Buffer<float> input(*device, total_size, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<float> output(*device, 1, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<float> input(*device, total_size, MemoryUsage::Cpu);
+  Buffer<float> output(*device, 1, MemoryUsage::Cpu);
 
   ReduceSum reduce(*device, size);
   auto reduceBound = reduce.Bind(input, output);
@@ -83,8 +83,8 @@ TEST(LinearSolverTests, ReduceMax)
   glm::ivec2 size(10, 15);
   int total_size = size.x * size.y;
 
-  Buffer<float> input(*device, total_size, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<float> output(*device, 1, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<float> input(*device, total_size, MemoryUsage::Cpu);
+  Buffer<float> output(*device, 1, MemoryUsage::Cpu);
 
   ReduceMax reduce(*device, size);
   auto reduceBound = reduce.Bind(input, output);
@@ -113,16 +113,16 @@ TEST(LinearSolverTests, Transfer_Prolongate)
 
   Transfer t(*device);
 
-  Buffer<float> fineDiagonal(*device, fineSize.x * fineSize.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<float> fineDiagonal(*device, fineSize.x * fineSize.y, MemoryUsage::Cpu);
   std::vector<float> fineDiagonalData(fineSize.x * fineSize.y, {1.0f});
   CopyFrom(fineDiagonal, fineDiagonalData);
 
-  Buffer<float> coarseDiagonal(*device, coarseSize.x * coarseSize.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<float> coarseDiagonal(*device, coarseSize.x * coarseSize.y, MemoryUsage::Cpu);
   std::vector<float> coarseDiagonalData(coarseSize.x * coarseSize.y, {1.0f});
   CopyFrom(coarseDiagonal, coarseDiagonalData);
 
-  Buffer<float> input(*device, coarseSize.x * coarseSize.y, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<float> output(*device, fineSize.x * fineSize.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<float> input(*device, coarseSize.x * coarseSize.y, MemoryUsage::Cpu);
+  Buffer<float> output(*device, fineSize.x * fineSize.y, MemoryUsage::Cpu);
 
   std::vector<float> data(coarseSize.x * coarseSize.y, 0.0f);
   std::iota(data.begin(), data.end(), 1.0f);
@@ -150,16 +150,16 @@ TEST(LinearSolverTests, Transfer_Restrict)
 
   Transfer t(*device);
 
-  Buffer<float> fineDiagonal(*device, fineSize.x * fineSize.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<float> fineDiagonal(*device, fineSize.x * fineSize.y, MemoryUsage::Cpu);
   std::vector<float> fineDiagonalData(fineSize.x * fineSize.y, {1.0f});
   CopyFrom(fineDiagonal, fineDiagonalData);
 
-  Buffer<float> coarseDiagonal(*device, coarseSize.x * coarseSize.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<float> coarseDiagonal(*device, coarseSize.x * coarseSize.y, MemoryUsage::Cpu);
   std::vector<float> coarseDiagonalData(coarseSize.x * coarseSize.y, {1.0f});
   CopyFrom(coarseDiagonal, coarseDiagonalData);
 
-  Buffer<float> input(*device, fineSize.x * fineSize.y, VMA_MEMORY_USAGE_CPU_ONLY);
-  Buffer<float> output(*device, coarseSize.x * coarseSize.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<float> input(*device, fineSize.x * fineSize.y, MemoryUsage::Cpu);
+  Buffer<float> output(*device, coarseSize.x * coarseSize.y, MemoryUsage::Cpu);
 
   std::vector<float> data(fineSize.x * fineSize.y, 1.0f);
   std::iota(data.begin(), data.end(), 1.0f);
@@ -182,7 +182,7 @@ TEST(LinearSolverTests, Error)
   glm::ivec2 size(20);
 
   LinearSolver::Error error(*device, size);
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   error.Bind(data.Diagonal, data.Lower, data.B, data.X);
 
@@ -220,7 +220,7 @@ TEST(LinearSolverTests, Simple_SOR)
   sim.extrapolate_phi();
   sim.apply_projection(0.01f);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   BuildLinearEquation(size, data.Diagonal, data.Lower, data.B, sim);
 
@@ -252,7 +252,7 @@ TEST(LinearSolverTests, Complex_SOR)
   sim.extrapolate_phi();
   sim.apply_projection(0.01f);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   BuildLinearEquation(size, data.Diagonal, data.Lower, data.B, sim);
 
@@ -284,7 +284,7 @@ TEST(LinearSolverTests, LocalGaussSeidel)
   sim.extrapolate_phi();
   sim.apply_projection(0.01f);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   BuildLinearEquation(size, data.Diagonal, data.Lower, data.B, sim);
 
@@ -313,7 +313,7 @@ TEST(LinearSolverTests, Diagonal_Simple_PCG)
   sim.extrapolate_phi();
   sim.apply_projection(0.01f);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   BuildLinearEquation(size, data.Diagonal, data.Lower, data.B, sim);
 
@@ -347,7 +347,7 @@ TEST(LinearSolverTests, GaussSeidel_Simple_PCG)
   sim.extrapolate_phi();
   sim.apply_projection(0.01f);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   BuildLinearEquation(size, data.Diagonal, data.Lower, data.B, sim);
 
@@ -383,7 +383,7 @@ TEST(LinearSolverTests, IncompletePoisson_Simple_PCG)
   sim.extrapolate_phi();
   sim.apply_projection(0.01f);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   BuildLinearEquation(size, data.Diagonal, data.Lower, data.B, sim);
 
@@ -406,7 +406,7 @@ TEST(LinearSolverTests, Zero_PCG)
 {
   glm::ivec2 size(50);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   Diagonal preconditioner(*device, size);
 
@@ -447,12 +447,12 @@ TEST(LinearSolverTests, Multigrid_Simple_PCG)
   sim.extrapolate_phi();
   sim.apply_projection(0.01f);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   Velocity velocity(*device, size);
   Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
   Texture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Buffer<glm::ivec2> valid(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
 
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
   SetLiquidPhi(*device, size, liquidPhi, sim, (float)size.x);
@@ -494,12 +494,12 @@ TEST(LinearSolverTests, Multigrid_Simple)
   sim.extrapolate_phi();
   sim.apply_projection(0.01f);
 
-  LinearSolver::Data data(*device, size, VMA_MEMORY_USAGE_CPU_ONLY);
+  LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   Velocity velocity(*device, size);
   Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
   Texture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Buffer<glm::ivec2> valid(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
 
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
   SetLiquidPhi(*device, size, liquidPhi, sim, (float)size.x);

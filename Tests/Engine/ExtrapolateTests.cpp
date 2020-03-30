@@ -59,7 +59,7 @@ TEST(ExtrapolateTest, Extrapolate)
   sim.add_force(0.01f);
   sim.apply_projection(0.01f);
 
-  Buffer<glm::ivec2> valid(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
   SetValid(size, sim, valid);
 
   Velocity velocity(*device, size);
@@ -91,7 +91,7 @@ TEST(ExtrapolateTest, Constrain)
   sim.add_force(0.01f);
   sim.apply_projection(0.01f);
 
-  Buffer<glm::ivec2> valid(*device, size.x * size.y, VMA_MEMORY_USAGE_CPU_ONLY);
+  Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
 
   Texture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);

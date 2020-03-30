@@ -10,8 +10,19 @@
 #define VULKAN_HPP_TYPESAFE_CONVERSION 1
 #include <vulkan/vulkan.hpp>
 
-#define VMA_RECORDING_ENABLED 0
+namespace Vortex2D
+{
+namespace Renderer
+{
+enum class MemoryUsage
+{
+  Gpu,
+  Cpu,
+  CpuToGpu,
+  GpuToCpu,
+};
 
-#include <Vortex2D/Renderer/Vulkan/vk_mem_alloc.h>
+}  // namespace Renderer
+}  // namespace Vortex2D
 
 #endif

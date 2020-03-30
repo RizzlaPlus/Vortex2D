@@ -57,7 +57,7 @@ TEST(LevelSetTests, SimpleCircle)
   glm::ivec2 size(50);
 
   LevelSet levelSet(*device, size, 2000);
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
 
   Ellipse circle(*device, glm::vec2{rad0} * glm::vec2(size));
   circle.Position = glm::vec2(c0[0], c0[1]) * glm::vec2(size) - glm::vec2(0.5f);
@@ -81,7 +81,7 @@ TEST(LevelSetTests, ComplexCircles)
   glm::ivec2 size(50);
 
   LevelSet levelSet(*device, size, 2000);
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
 
   Ellipse circle0(*device, glm::vec2{rad0} * glm::vec2(size));
   Ellipse circle1(*device, glm::vec2{rad1} * glm::vec2(size));
@@ -115,9 +115,9 @@ TEST(LevelSetTests, Extrapolate)
 {
   glm::ivec2 size(50);
 
-  Texture localSolidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture localSolidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
   Texture localLiquidPhi(
-      *device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+      *device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
   Texture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
 
   std::vector<float> solidData(size.x * size.y, 1.0);
@@ -153,8 +153,8 @@ TEST(LevelSetTests, ShrinkWrap)
   glm::ivec2 size(10);
   LevelSet levelSet(*device, size);
 
-  Texture inTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture inTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
 
   std::vector<float> inData(size.x * size.y, -0.5f);
   inData[6 + 5 * 5] = -0.4f;

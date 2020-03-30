@@ -24,12 +24,12 @@ class GenericBuffer
 public:
   VORTEX2D_API GenericBuffer(Device& device,
                              vk::BufferUsageFlags usageFlags,
-                             VmaMemoryUsage memoryUsage,
+                             MemoryUsage memoryUsage,
                              vk::DeviceSize deviceSize);
 
-  VORTEX2D_API virtual ~GenericBuffer();
-
   VORTEX2D_API GenericBuffer(GenericBuffer&& other);
+
+  VORTEX2D_API virtual ~GenericBuffer();
 
   /**
    * @brief Copy a buffer to this buffer
@@ -93,16 +93,9 @@ public:
    */
   VORTEX2D_API void CopyTo(uint32_t offset, void* data, uint32_t size);
 
-protected:
-  void Create();
-
-  Device& mDevice;
-  vk::DeviceSize mSize;
-  vk::BufferUsageFlags mUsageFlags;
-  VmaMemoryUsage mMemoryUsage;
-  VkBuffer mBuffer;
-  VmaAllocation mAllocation;
-  VmaAllocationInfo mAllocationInfo;
+private:
+  struct Impl;
+  std::unique_ptr<Impl> mImpl;
 };
 
 /**
@@ -112,9 +105,7 @@ template <typename T>
 class VertexBuffer : public GenericBuffer
 {
 public:
-  VertexBuffer(Device& device,
-               std::size_t size,
-               VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
+  VertexBuffer(Device& device, std::size_t size, MemoryUsage memoryUsage = MemoryUsage::Gpu)
       : GenericBuffer(device, vk::BufferUsageFlagBits::eVertexBuffer, memoryUsage, sizeof(T) * size)
   {
   }
@@ -127,7 +118,7 @@ template <typename T>
 class UniformBuffer : public GenericBuffer
 {
 public:
-  UniformBuffer(Device& device, VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
+  UniformBuffer(Device& device, MemoryUsage memoryUsage = MemoryUsage::Gpu)
       : GenericBuffer(device, vk::BufferUsageFlagBits::eUniformBuffer, memoryUsage, sizeof(T))
   {
   }
@@ -140,9 +131,7 @@ template <typename T>
 class Buffer : public GenericBuffer
 {
 public:
-  Buffer(Device& device,
-         std::size_t size = 1,
-         VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
+  Buffer(Device& device, std::size_t size = 1, MemoryUsage memoryUsage = MemoryUsage::Gpu)
       : GenericBuffer(device,
                       vk::BufferUsageFlagBits::eStorageBuffer,
                       memoryUsage,
@@ -158,7 +147,7 @@ template <typename T>
 class IndirectBuffer : public GenericBuffer
 {
 public:
-  IndirectBuffer(Device& device, VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
+  IndirectBuffer(Device& device, MemoryUsage memoryUsage = MemoryUsage::Gpu)
       : GenericBuffer(
             device,
             vk::BufferUsageFlagBits::eIndirectBuffer | vk::BufferUsageFlagBits::eStorageBuffer,
@@ -175,9 +164,7 @@ template <typename T>
 class IndexBuffer : public GenericBuffer
 {
 public:
-  IndexBuffer(Device& device,
-              std::size_t size,
-              VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY)
+  IndexBuffer(Device& device, std::size_t size, MemoryUsage memoryUsage = MemoryUsage::Gpu)
       : GenericBuffer(device, vk::BufferUsageFlagBits::eIndexBuffer, memoryUsage, sizeof(T) * size)
   {
     static_assert(std::is_same<uint16_t, T>::value || std::is_same<uint32_t, T>::value,

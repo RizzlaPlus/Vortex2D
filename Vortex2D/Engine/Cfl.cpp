@@ -17,7 +17,7 @@ Cfl::Cfl(Renderer::Device& device, const glm::ivec2& size, Velocity& velocity)
     , mVelocity(velocity)
     , mVelocityMaxWork(device, size, SPIRV::VelocityMax_comp)
     , mVelocityMax(device, size.x * size.y)
-    , mCfl(device, 1, VMA_MEMORY_USAGE_GPU_TO_CPU)
+    , mCfl(device, 1, Renderer::MemoryUsage::GpuToCpu)
     , mVelocityMaxCmd(mDevice, true)
     , mReduceVelocityMax(device, size)
 {
