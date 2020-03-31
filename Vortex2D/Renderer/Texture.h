@@ -20,7 +20,7 @@ class CommandEncoder;
  * @param format of texture
  * @return bytes per pixel
  */
-VORTEX2D_API std::uint64_t GetBytesPerPixel(vk::Format format);
+VORTEX2D_API std::uint64_t GetBytesPerPixel(Format format);
 
 class Sampler
 {
@@ -89,7 +89,7 @@ public:
   VORTEX2D_API Texture(Device& device,
                        uint32_t width,
                        uint32_t height,
-                       vk::Format format,
+                       Format format,
                        MemoryUsage memoryUsage = MemoryUsage::Gpu);
   VORTEX2D_API Texture(Texture&& other);
 
@@ -152,7 +152,7 @@ public:
   VORTEX2D_API vk::ImageView GetView() const;
   VORTEX2D_API uint32_t GetWidth() const;
   VORTEX2D_API uint32_t GetHeight() const;
-  VORTEX2D_API vk::Format GetFormat() const;
+  VORTEX2D_API Format GetFormat() const;
 
   VORTEX2D_API void Clear(CommandEncoder& command, const std::array<int, 4>& colour);
   VORTEX2D_API void Clear(CommandEncoder& command, const std::array<float, 4>& colour);

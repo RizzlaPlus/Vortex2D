@@ -37,21 +37,21 @@ void TextureBarrier(vk::Image image,
       imageMemoryBarriers);
 }
 
-std::uint64_t GetBytesPerPixel(vk::Format format)
+std::uint64_t GetBytesPerPixel(Format format)
 {
   switch (format)
   {
-    case vk::Format::eR8Uint:
-    case vk::Format::eR8Sint:
+    case Format::R8Uint:
+    case Format::R8Sint:
       return 1;
-    case vk::Format::eR32Sfloat:
-    case vk::Format::eR32Sint:
-    case vk::Format::eR8G8B8A8Unorm:
-    case vk::Format::eB8G8R8A8Unorm:
+    case Format::R32Sfloat:
+    case Format::R32Sint:
+    case Format::R8G8B8A8Unorm:
+    case Format::B8G8R8A8Unorm:
       return 4;
-    case vk::Format::eR32G32Sfloat:
+    case Format::R32G32Sfloat:
       return 8;
-    case vk::Format::eR32G32B32A32Sfloat:
+    case Format::R32G32B32A32Sfloat:
       return 16;
     default:
       throw std::runtime_error("unsupported format");
@@ -102,13 +102,13 @@ struct Texture::Impl
   Device& mDevice;
   uint32_t mWidth;
   uint32_t mHeight;
-  vk::Format mFormat;
+  Format mFormat;
   VkImage mImage;
   VmaAllocation mAllocation;
   VmaAllocationInfo mAllocationInfo;
   vk::UniqueImageView mImageView;
 
-  Impl(Device& device, uint32_t width, uint32_t height, vk::Format format, MemoryUsage memoryUsage)
+  Impl(Device& device, uint32_t width, uint32_t height, Format format, MemoryUsage memoryUsage)
       : mDevice(device), mWidth(width), mHeight(height), mFormat(format)
   {
     vk::ImageUsageFlags usageFlags =
@@ -128,7 +128,7 @@ struct Texture::Impl
                          .setExtent({width, height, 1})
                          .setMipLevels(1)
                          .setArrayLayers(1)
-                         .setFormat(format)
+                         .setFormat(ConvertFormat(format))
                          .setTiling(memoryUsage == MemoryUsage::Cpu ? vk::ImageTiling::eLinear
                                                                     : vk::ImageTiling::eOptimal)
                          .setInitialLayout(imageLayout)
@@ -153,7 +153,7 @@ struct Texture::Impl
     {
       auto imageViewInfo = vk::ImageViewCreateInfo()
                                .setImage(mImage)
-                               .setFormat(format)
+                               .setFormat(ConvertFormat(format))
                                .setViewType(vk::ImageViewType::e2D)
                                .setComponents({vk::ComponentSwizzle::eIdentity,
                                                vk::ComponentSwizzle::eIdentity,
@@ -410,7 +410,7 @@ struct Texture::Impl
 
   uint32_t GetHeight() const { return mHeight; }
 
-  vk::Format GetFormat() const { return mFormat; }
+  Format GetFormat() const { return mFormat; }
 
   vk::Image Handle() const { return mImage; }
 };
@@ -418,7 +418,7 @@ struct Texture::Impl
 Texture::Texture(Device& device,
                  uint32_t width,
                  uint32_t height,
-                 vk::Format format,
+                 Format format,
                  MemoryUsage memoryUsage)
     : mImpl(std::make_unique<Impl>(device, width, height, format, memoryUsage))
 {
@@ -467,7 +467,7 @@ uint32_t Texture::GetHeight() const
   return mImpl->GetHeight();
 }
 
-vk::Format Texture::GetFormat() const
+Format Texture::GetFormat() const
 {
   return mImpl->GetFormat();
 }

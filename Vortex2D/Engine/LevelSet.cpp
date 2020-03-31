@@ -15,10 +15,10 @@ namespace Vortex2D
 namespace Fluid
 {
 LevelSet::LevelSet(Renderer::Device& device, const glm::ivec2& size, int reinitializeIterations)
-    : Renderer::RenderTexture(device, size.x, size.y, vk::Format::eR32Sfloat)
+    : Renderer::RenderTexture(device, size.x, size.y, Renderer::Format::R32Sfloat)
     , mDevice(device)
-    , mLevelSet0(device, size.x, size.y, vk::Format::eR32Sfloat)
-    , mLevelSetBack(device, size.x, size.y, vk::Format::eR32Sfloat)
+    , mLevelSet0(device, size.x, size.y, Renderer::Format::R32Sfloat)
+    , mLevelSetBack(device, size.x, size.y, Renderer::Format::R32Sfloat)
     , mSampler(device, Renderer::Sampler::AddressMode::ClampToEdge)
     , mExtrapolate(device, size, SPIRV::Extrapolate_comp)
     , mRedistance(device, size, SPIRV::Redistance_comp)

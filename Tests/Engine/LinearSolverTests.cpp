@@ -450,8 +450,8 @@ TEST(LinearSolverTests, Multigrid_Simple_PCG)
   LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   Velocity velocity(*device, size);
-  Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Texture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  Texture liquidPhi(*device, size.x, size.y, Format::R32Sfloat);
+  Texture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
   Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
 
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
@@ -497,8 +497,8 @@ TEST(LinearSolverTests, Multigrid_Simple)
   LinearSolver::Data data(*device, size, MemoryUsage::Cpu);
 
   Velocity velocity(*device, size);
-  Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Texture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  Texture liquidPhi(*device, size.x, size.y, Format::R32Sfloat);
+  Texture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
   Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
 
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);

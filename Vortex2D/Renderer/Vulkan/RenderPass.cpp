@@ -9,9 +9,9 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-RenderpassBuilder& RenderpassBuilder::Attachement(vk::Format format)
+RenderpassBuilder& RenderpassBuilder::Attachement(Format format)
 {
-  mAttachementDescriptions.push_back({{}, format});
+  mAttachementDescriptions.push_back({{}, ConvertFormat(format)});
   return *this;
 }
 

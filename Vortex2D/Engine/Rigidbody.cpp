@@ -24,7 +24,7 @@ RigidBody::RigidBody(Renderer::Device& device,
     : mSize(static_cast<float>(size.x))
     , mDevice(device)
     , mDrawable(drawable)
-    , mPhi(device, size.x, size.y, vk::Format::eR32Sfloat)
+    , mPhi(device, size.x, size.y, Renderer::Format::R32Sfloat)
     , mVelocity(device)
     , mForce(device, size.x * size.y)
     , mReducedForce(device, 1)

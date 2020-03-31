@@ -123,9 +123,9 @@ TEST(ComputeTests, BufferCompute)
 
 TEST(ComputeTests, ImageCompute)
 {
-  Texture stagingTexture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
-  Texture inTexture(*device, 50, 50, vk::Format::eR32Sfloat);
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sfloat);
+  Texture stagingTexture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
+  Texture inTexture(*device, 50, 50, Format::R32Sfloat);
+  Texture outTexture(*device, 50, 50, Format::R32Sfloat);
 
   std::vector<float> data(50 * 50, 1.0f);
   stagingTexture.CopyFrom(data);
@@ -250,8 +250,8 @@ TEST(ComputeTests, FloatImage)
 {
   glm::ivec2 size(20);
 
-  Texture localTexture(*device, size.x, size.y, vk::Format::eR32G32B32A32Sfloat, MemoryUsage::Cpu);
-  Texture texture(*device, size.x, size.y, vk::Format::eR32G32B32A32Sfloat);
+  Texture localTexture(*device, size.x, size.y, Format::R32G32B32A32Sfloat, MemoryUsage::Cpu);
+  Texture texture(*device, size.x, size.y, Format::R32G32B32A32Sfloat);
 
   Work work(*device, size, ImageFloat_comp);
 

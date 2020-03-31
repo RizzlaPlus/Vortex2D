@@ -21,7 +21,7 @@ class Watermill
 {
 public:
   Watermill(Vortex2D::Renderer::Device& device, const glm::ivec2& size, b2World& rWorld)
-      : mWatermillTexture(device, 150, 150, vk::Format::eR32Sfloat)
+      : mWatermillTexture(device, 150, 150, Vortex2D::Renderer::Format::R32Sfloat)
       , mWatermill(device, mWatermillTexture)
       , mRigidbody(device, size, mWatermill, Vortex2D::Fluid::RigidBody::Type::eStrong)
   {

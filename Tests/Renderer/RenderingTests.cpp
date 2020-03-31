@@ -20,7 +20,7 @@ extern Device* device;
 
 TEST(RenderingTest, WriteHostTextureInt)
 {
-  Texture texture(*device, 50, 50, vk::Format::eR8Uint, MemoryUsage::Cpu);
+  Texture texture(*device, 50, 50, Format::R8Uint, MemoryUsage::Cpu);
 
   std::vector<uint8_t> data(50 * 50, 0);
   DrawSquare<uint8_t>(50, 50, data, glm::vec2(10.0f, 15.0f), glm::vec2(5.0f, 8.0f), 12);
@@ -32,7 +32,7 @@ TEST(RenderingTest, WriteHostTextureInt)
 
 TEST(RenderingTest, WriteHostTextureFloat)
 {
-  Texture texture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  Texture texture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
 
   std::vector<float> data(50 * 50, 0.0f);
   DrawSquare(50, 50, data, glm::vec2(10.0f, 15.0f), glm::vec2(5.0f, 8.0f), 1.0f);
@@ -44,9 +44,9 @@ TEST(RenderingTest, WriteHostTextureFloat)
 
 TEST(RenderingTest, TextureCopy)
 {
-  Texture texture(*device, 50, 50, vk::Format::eR8Sint);
-  Texture inTexture(*device, 50, 50, vk::Format::eR8Sint, MemoryUsage::Cpu);
-  Texture outTexture(*device, 50, 50, vk::Format::eR8Sint, MemoryUsage::Cpu);
+  Texture texture(*device, 50, 50, Format::R8Sint);
+  Texture inTexture(*device, 50, 50, Format::R8Sint, MemoryUsage::Cpu);
+  Texture outTexture(*device, 50, 50, Format::R8Sint, MemoryUsage::Cpu);
 
   std::vector<int8_t> data(50 * 50, 0);
   DrawSquare<int8_t>(50, 50, data, glm::vec2(10.0f, 15.0f), glm::vec2(5.0f, 8.0f), -5);
@@ -63,7 +63,7 @@ TEST(RenderingTest, TextureCopy)
 
 TEST(RenderingTest, TextureBufferCopy)
 {
-  Texture texture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  Texture texture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
   Buffer<float> buffer(*device, 50 * 50, MemoryUsage::Cpu);
 
   std::vector<float> data(50 * 50, 0);
@@ -78,7 +78,7 @@ TEST(RenderingTest, TextureBufferCopy)
 
 TEST(RenderingTest, ClearTexture)
 {
-  RenderTexture texture(*device, 50, 50, vk::Format::eR32Sfloat);
+  RenderTexture texture(*device, 50, 50, Format::R32Sfloat);
 
   std::vector<float> data(50 * 50, 3.5f);
 
@@ -86,7 +86,7 @@ TEST(RenderingTest, ClearTexture)
 
   texture.Record({clear}).Submit();
 
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  Texture outTexture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
 
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, texture); });
 
@@ -95,7 +95,7 @@ TEST(RenderingTest, ClearTexture)
 
 TEST(RenderingTest, IntClearTexture)
 {
-  RenderTexture texture(*device, 50, 50, vk::Format::eR32Sint);
+  RenderTexture texture(*device, 50, 50, Format::R32Sint);
 
   std::vector<int> data(50 * 50, 3);
 
@@ -103,7 +103,7 @@ TEST(RenderingTest, IntClearTexture)
     texture.Clear(command, std::array<int, 4>{3, 0, 0, 0});
   });
 
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sint, MemoryUsage::Cpu);
+  Texture outTexture(*device, 50, 50, Format::R32Sint, MemoryUsage::Cpu);
 
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, texture); });
 
@@ -114,10 +114,10 @@ TEST(RenderingTest, BlendAdd)
 {
   glm::ivec2 size(50);
 
-  RenderTexture texture(*device, size.x, size.y, vk::Format::eR32G32Sfloat);
+  RenderTexture texture(*device, size.x, size.y, Format::R32G32Sfloat);
 
   std::vector<glm::vec2> data(size.x * size.y, glm::vec2(0.1f, 0.0f));
-  Texture localTexture(*device, size.x, size.y, vk::Format::eR32G32Sfloat, MemoryUsage::Cpu);
+  Texture localTexture(*device, size.x, size.y, Format::R32G32Sfloat, MemoryUsage::Cpu);
   localTexture.CopyFrom(data);
 
   device->Execute([&](CommandEncoder& command) { texture.CopyFrom(command, localTexture); });
@@ -146,8 +146,8 @@ TEST(RenderingTest, MoveCommandBuffer)
 {
   RenderCommand renderCommand;
 
-  RenderTexture texture(*device, 50, 50, vk::Format::eR32Sfloat);
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  RenderTexture texture(*device, 50, 50, Format::R32Sfloat);
+  Texture outTexture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
 
   {
     Clear clear1({1.0f, 0.0f, 0.0f, 1.0f});
@@ -205,15 +205,15 @@ TEST(RenderingTest, Sprite)
 {
   glm::ivec2 size(20);
 
-  Texture texture(*device, size.x, size.y, vk::Format::eR8G8B8A8Unorm);
-  Texture localTexture(*device, size.x, size.y, vk::Format::eR8G8B8A8Unorm, MemoryUsage::Cpu);
+  Texture texture(*device, size.x, size.y, Format::R8G8B8A8Unorm);
+  Texture localTexture(*device, size.x, size.y, Format::R8G8B8A8Unorm, MemoryUsage::Cpu);
 
   std::vector<glm::u8vec4> data(size.x * size.y, glm::u8vec4(1, 2, 3, 4));
   localTexture.CopyFrom(data);
 
   device->Execute([&](CommandEncoder& command) { texture.CopyFrom(command, localTexture); });
 
-  RenderTexture output(*device, size.x, size.y, vk::Format::eR8G8B8A8Unorm);
+  RenderTexture output(*device, size.x, size.y, Format::R8G8B8A8Unorm);
   Sprite sprite(*device, texture);
 
   output.Record({sprite}).Submit();

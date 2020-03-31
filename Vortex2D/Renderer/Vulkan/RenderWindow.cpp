@@ -51,7 +51,7 @@ RenderWindow::RenderWindow(Device& device, vk::SurfaceKHR surface, uint32_t widt
   uint32_t numFramebuffers = details.capabilities.minImageCount + 1;
 
   // TODO choose given the details
-  auto format = vk::Format::eB8G8R8A8Unorm;
+  auto format = Format::B8G8R8A8Unorm;
 
   // TODO find if better mode is available
   auto mode = vk::PresentModeKHR::eFifo;
@@ -59,7 +59,7 @@ RenderWindow::RenderWindow(Device& device, vk::SurfaceKHR surface, uint32_t widt
   // create swap chain
   auto swapChainInfo = vk::SwapchainCreateInfoKHR()
                            .setSurface(surface)
-                           .setImageFormat(format)
+                           .setImageFormat(ConvertFormat(format))
                            .setImageColorSpace(vk::ColorSpaceKHR::eSrgbNonlinear)
                            .setMinImageCount(numFramebuffers)
                            .setImageExtent({Width, Height})
@@ -81,7 +81,7 @@ RenderWindow::RenderWindow(Device& device, vk::SurfaceKHR surface, uint32_t widt
     auto imageViewInfo = vk::ImageViewCreateInfo()
                              .setImage(image)
                              .setViewType(vk::ImageViewType::e2D)
-                             .setFormat(format)
+                             .setFormat(ConvertFormat(format))
                              .setComponents({vk::ComponentSwizzle::eIdentity,
                                              vk::ComponentSwizzle::eIdentity,
                                              vk::ComponentSwizzle::eIdentity,

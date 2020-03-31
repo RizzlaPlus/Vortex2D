@@ -101,7 +101,7 @@ TEST(RigidbodyTests, Phi)
 
   sim.update_rigid_body_grids();
 
-  RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  RenderTexture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
   device->Execute([&](CommandEncoder& command) {
     solidPhi.Clear(command, std::array<float, 4>{{1000.0f, 0.0f, 0.0f, 0.0f}});
   });
@@ -119,7 +119,7 @@ TEST(RigidbodyTests, Phi)
 
   device->Handle().waitIdle();
 
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, solidPhi); });
 
   CheckPhi(size, sim, outTexture);
@@ -148,8 +148,8 @@ TEST(RigidbodyTests, Div)
   sim.add_force(0.01f);
 
   Velocity velocity(*device, size);
-  RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  RenderTexture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
+  Texture liquidPhi(*device, size.x, size.y, Format::R32Sfloat);
 
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
@@ -205,8 +205,8 @@ TEST(RigidbodyTests, VelocityDiv)
   sim.add_force(0.01f);
 
   Velocity velocity(*device, size);
-  RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  RenderTexture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
+  Texture liquidPhi(*device, size.x, size.y, Format::R32Sfloat);
 
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
@@ -264,8 +264,8 @@ TEST(RigidbodyTests, RotationDiv)
   sim.add_force(0.01f);
 
   Velocity velocity(*device, size);
-  RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  RenderTexture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
+  Texture liquidPhi(*device, size.x, size.y, Format::R32Sfloat);
 
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
@@ -323,8 +323,8 @@ TEST(RigidbodyTests, VelocityRotationDiv)
   sim.add_force(0.01f);
 
   Velocity velocity(*device, size);
-  RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  RenderTexture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
+  Texture liquidPhi(*device, size.x, size.y, Format::R32Sfloat);
 
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
@@ -414,8 +414,8 @@ TEST(RigidbodyTests, Force)
   sim.add_force(0.01f);
 
   Velocity velocity(*device, size);
-  RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  RenderTexture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
+  Texture liquidPhi(*device, size.x, size.y, Format::R32Sfloat);
 
   BuildInputs(*device, size, sim, velocity, solidPhi, liquidPhi);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
@@ -491,8 +491,8 @@ TEST(RigidbodyTests, Pressure)
   sim.update_rigid_body_grids();
 
   Velocity velocity(*device, size);
-  RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  RenderTexture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
+  Texture liquidPhi(*device, size.x, size.y, Format::R32Sfloat);
 
   SetVelocity(*device, size, velocity, sim);
 
@@ -572,8 +572,8 @@ TEST(RigidbodyTests, PressureVelocity)
   sim.add_force(0.01f);
 
   Velocity velocity(*device, size);
-  RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  RenderTexture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
+  Texture liquidPhi(*device, size.x, size.y, Format::R32Sfloat);
 
   sim.rigid_u_mass = sim.rbd->getMass();
   sim.rigid_v_mass = sim.rbd->getMass();
@@ -645,8 +645,8 @@ TEST(RigidbodyTests, PressureRotation)
   sim.add_force(0.01f);
 
   Velocity velocity(*device, size);
-  RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
-  Texture liquidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  RenderTexture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
+  Texture liquidPhi(*device, size.x, size.y, Format::R32Sfloat);
 
   sim.rigid_u_mass = sim.rbd->getMass();
   sim.rigid_v_mass = sim.rbd->getMass();
@@ -715,7 +715,7 @@ TEST(RigidbodyTests, VelocityConstrain)
   sim.rbd->setAngularMomentum(0.0f);
   sim.rbd->setLinearVelocity(Vec2f(solid_velocity.x, solid_velocity.y));
 
-  RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  RenderTexture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
   extrapolate(sim.u, sim.u_valid);
@@ -775,7 +775,7 @@ TEST(RigidbodyTests, RotationConstrain)
   float w;
   sim.rbd->getAngularVelocity(w);
 
-  RenderTexture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  RenderTexture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
   extrapolate(sim.u, sim.u_valid);

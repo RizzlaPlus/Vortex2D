@@ -23,7 +23,7 @@ class ObstacleSmokeExample : public Runner
 {
 public:
   ObstacleSmokeExample(Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
-      : density(device, size, vk::Format::eR8G8B8A8Unorm)
+      : density(device, size, Vortex2D::Renderer::Format::R8G8B8A8Unorm)
       , world(device, size, dt, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
       , velocityClear({0.0f, 0.0f, 0.0f, 0.0f})

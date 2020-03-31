@@ -22,6 +22,18 @@ enum class MemoryUsage
   GpuToCpu,
 };
 
+enum class Format
+{
+  R8Uint,
+  R8Sint,
+  R32Sfloat,
+  R32Sint,
+  R8G8B8A8Unorm,
+  B8G8R8A8Unorm,
+  R32G32Sfloat,
+  R32G32B32A32Sfloat,
+};
+
 }  // namespace Renderer
 }  // namespace Vortex2D
 

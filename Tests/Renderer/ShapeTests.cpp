@@ -30,8 +30,8 @@ TEST(ShapeTests, Square)
 
   Clear clear(glm::vec4(0.0f));
 
-  RenderTexture texture(*device, 50, 50, vk::Format::eR32Sfloat);
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  RenderTexture texture(*device, 50, 50, Format::R32Sfloat);
+  Texture outTexture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
 
   texture.Record({clear, rect}).Submit();
 
@@ -53,8 +53,8 @@ TEST(ShapeTests, IntSquare)
   rect.Position = glm::vec2(5.0f, 7.0f);
   rect.Colour = glm::vec4(1);
 
-  RenderTexture texture(*device, 50, 50, vk::Format::eR32Sint);
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sint, MemoryUsage::Cpu);
+  RenderTexture texture(*device, 50, 50, Format::R32Sint);
+  Texture outTexture(*device, 50, 50, Format::R32Sint, MemoryUsage::Cpu);
 
   texture.Record({rect}).Submit();
 
@@ -81,8 +81,8 @@ TEST(ShapeTests, MultipleSquares)
 
   Clear clear(glm::vec4(0.0f));
 
-  RenderTexture texture(*device, 50, 50, vk::Format::eR32Sfloat);
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  RenderTexture texture(*device, 50, 50, Format::R32Sfloat);
+  Texture outTexture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
 
   texture.Record({clear, rect1}).Submit();
   texture.Record({rect2}).Submit();
@@ -106,8 +106,8 @@ TEST(ShapeTests, Circle)
 
   Clear clear(glm::vec4(0.0f));
 
-  RenderTexture texture(*device, 50, 50, vk::Format::eR32Sfloat);
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  RenderTexture texture(*device, 50, 50, Format::R32Sfloat);
+  Texture outTexture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
 
   texture.Record({clear, ellipse}).Submit();
 
@@ -129,8 +129,8 @@ TEST(ShapeTests, Ellipse)
 
   Clear clear(glm::vec4(0.0f));
 
-  RenderTexture texture(*device, 50, 50, vk::Format::eR32Sfloat);
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  RenderTexture texture(*device, 50, 50, Format::R32Sfloat);
+  Texture outTexture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
 
   texture.Record({clear, ellipse}).Submit();
 
@@ -154,8 +154,8 @@ TEST(ShapeTests, ScaledEllipse)
 
   Clear clear(glm::vec4(0.0f));
 
-  RenderTexture texture(*device, 50, 50, vk::Format::eR32Sfloat);
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  RenderTexture texture(*device, 50, 50, Format::R32Sfloat);
+  Texture outTexture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
 
   texture.Record({clear, ellipse}).Submit();
 
@@ -179,8 +179,8 @@ TEST(ShapeTests, RotatedEllipse)
 
   Clear clear(glm::vec4(0.0f));
 
-  RenderTexture texture(*device, 50, 50, vk::Format::eR32Sfloat);
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  RenderTexture texture(*device, 50, 50, Format::R32Sfloat);
+  Texture outTexture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
 
   texture.Record({clear, ellipse}).Submit();
 
@@ -203,8 +203,8 @@ TEST(ShapeTests, RenderScaledEllipse)
 
   Clear clear(glm::vec4(0.0f));
 
-  RenderTexture texture(*device, 50, 50, vk::Format::eR32Sfloat);
-  Texture outTexture(*device, 50, 50, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  RenderTexture texture(*device, 50, 50, Format::R32Sfloat);
+  Texture outTexture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
 
   texture.View = glm::scale(glm::vec3(2.0f, 2.0f, 1.0f));
   texture.Record({clear, ellipse}).Submit();

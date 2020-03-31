@@ -73,7 +73,7 @@ TEST(AdvectionTests, Advect)
   glm::ivec2 pos(3, 4);
 
   Texture velocityInput(
-      *device, size.x, size.y, vk::Format::eR32G32Sfloat, MemoryUsage::Cpu);
+      *device, size.x, size.y, Format::R32G32Sfloat, MemoryUsage::Cpu);
   Velocity velocity(*device, size);
 
   std::vector<glm::vec2> velocityData(size.x * size.y, vel / glm::vec2(size));
@@ -82,8 +82,8 @@ TEST(AdvectionTests, Advect)
   device->Execute([&](CommandEncoder& command) { velocity.CopyFrom(command, velocityInput); });
 
   Texture fieldInput(
-      *device, size.x, size.y, vk::Format::eB8G8R8A8Unorm, MemoryUsage::Cpu);
-  Density field(*device, size, vk::Format::eB8G8R8A8Unorm);
+      *device, size.x, size.y, Format::B8G8R8A8Unorm, MemoryUsage::Cpu);
+  Density field(*device, size, Format::B8G8R8A8Unorm);
 
   std::vector<glm::u8vec4> fieldData(size.x * size.y);
   fieldData[pos.x + size.x * pos.y].x = 128;
@@ -141,7 +141,7 @@ TEST(AdvectionTests, ParticleAdvect)
   SetVelocity(*device, size, velocity, sim);
 
   // setup level set
-  Texture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  Texture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
   // advection
@@ -204,7 +204,7 @@ TEST(AdvectionTests, ParticleProject)
   Velocity velocity(*device, size);
 
   // setup level set
-  Texture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  Texture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
   // advection

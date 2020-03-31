@@ -41,10 +41,10 @@ GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Shader(vk::ShaderModule 
 
 GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::VertexAttribute(uint32_t location,
                                                                         uint32_t binding,
-                                                                        vk::Format format,
+                                                                        Format format,
                                                                         uint32_t offset)
 {
-  VertexAttributeDescriptions.push_back({location, binding, format, offset});
+  VertexAttributeDescriptions.push_back({location, binding, ConvertFormat(format), offset});
   return *this;
 }
 

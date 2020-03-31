@@ -12,10 +12,10 @@ namespace Vortex2D
 namespace Fluid
 {
 Velocity::Velocity(Renderer::Device& device, const glm::ivec2& size)
-    : Renderer::RenderTexture(device, size.x, size.y, vk::Format::eR32G32Sfloat)
+    : Renderer::RenderTexture(device, size.x, size.y, Renderer::Format::R32G32Sfloat)
     , mDevice(device)
-    , mOutputVelocity(device, size.x, size.y, vk::Format::eR32G32Sfloat)
-    , mDVelocity(device, size.x, size.y, vk::Format::eR32G32Sfloat)
+    , mOutputVelocity(device, size.x, size.y, Renderer::Format::R32G32Sfloat)
+    , mDVelocity(device, size.x, size.y, Renderer::Format::R32G32Sfloat)
     , mVelocityDiff(device, size, SPIRV::VelocityDifference_comp)
     , mVelocityDiffBound(mVelocityDiff.Bind({mDVelocity, *this, mOutputVelocity}))
     , mSaveCopyCmd(mDevice, false)

@@ -39,10 +39,10 @@ LinearSolver::Data::Data(Renderer::Device& device,
 }
 
 LinearSolver::DebugData::DebugData(Renderer::Device& device, const glm::ivec2& size)
-    : Diagonal(device, size.x, size.y, vk::Format::eR32Sfloat)
-    , Lower(device, size.x, size.y, vk::Format::eR32G32Sfloat)
-    , B(device, size.x, size.y, vk::Format::eR32Sfloat)
-    , X(device, size.x, size.y, vk::Format::eR32Sfloat)
+    : Diagonal(device, size.x, size.y, Renderer::Format::R32Sfloat)
+    , Lower(device, size.x, size.y, Renderer::Format::R32G32Sfloat)
+    , B(device, size.x, size.y, Renderer::Format::R32Sfloat)
+    , X(device, size.x, size.y, Renderer::Format::R32Sfloat)
 {
 }
 

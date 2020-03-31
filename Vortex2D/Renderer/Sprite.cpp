@@ -49,8 +49,8 @@ AbstractSprite::AbstractSprite(Device& device, const SpirvBinary& fragShaderName
   mPipeline = GraphicsPipelineDescriptor()
                   .Shader(vertexShader, vk::ShaderStageFlagBits::eVertex)
                   .Shader(fragShader, vk::ShaderStageFlagBits::eFragment)
-                  .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, pos))
-                  .VertexAttribute(1, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, uv))
+                  .VertexAttribute(0, 0, Format::R32G32Sfloat, offsetof(Vertex, pos))
+                  .VertexAttribute(1, 0, Format::R32G32Sfloat, offsetof(Vertex, uv))
                   .VertexBinding(0, sizeof(Vertex))
                   .Layout(mPipelineLayout);
 }

@@ -23,7 +23,7 @@ public:
    * @param format
    * @return
    */
-  RenderpassBuilder& Attachement(vk::Format format);
+  RenderpassBuilder& Attachement(Format format);
 
   /**
    * @brief operation to perform when loading the framebuffer (clear, load, etc)

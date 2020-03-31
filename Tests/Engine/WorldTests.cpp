@@ -28,7 +28,7 @@ float PressureRigidbody_VelocityTest(float scale)
 
   Fluid::SmokeWorld world(*device, size, dt, Fluid::Velocity::InterpolationMode::Cubic);
 
-  Fluid::Density density(*device, size, vk::Format::eR8G8B8A8Unorm);
+  Fluid::Density density(*device, size, Renderer::Format::R8G8B8A8Unorm);
   world.FieldBind(density);
 
   Renderer::Clear fluidClear({-1.0f, 0.0f, 0.0f, 0.0f});
@@ -104,7 +104,7 @@ float PressureRigidbody_RotationTest(float scale)
 
   Fluid::SmokeWorld world(*device, size, dt, Fluid::Velocity::InterpolationMode::Cubic);
 
-  Fluid::Density density(*device, size, vk::Format::eR8G8B8A8Unorm);
+  Fluid::Density density(*device, size, Renderer::Format::R8G8B8A8Unorm);
   world.FieldBind(density);
 
   Renderer::Clear fluidClear({-1.0f, 0.0f, 0.0f, 0.0f});
@@ -210,7 +210,7 @@ TEST(CflTets, Max)
   Fluid::Cfl cfl(*device, size, velocity);
 
   Renderer::Texture input(
-      *device, size.x, size.y, vk::Format::eR32G32Sfloat, Renderer::MemoryUsage::Cpu);
+      *device, size.x, size.y, Renderer::Format::R32G32Sfloat, Renderer::MemoryUsage::Cpu);
 
   std::random_device rd;
   std::mt19937 gen(rd());

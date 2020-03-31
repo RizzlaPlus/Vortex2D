@@ -22,7 +22,7 @@ public:
       , source2(device, glm::vec2(20.0f))
       , force1(device, glm::vec2(20.0f))
       , force2(device, glm::vec2(20.0f))
-      , density(device, size, vk::Format::eR8G8B8A8Unorm)
+      , density(device, size, Vortex2D::Renderer::Format::R8G8B8A8Unorm)
       , world(device, size, dt, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
   {

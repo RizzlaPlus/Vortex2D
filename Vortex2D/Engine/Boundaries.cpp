@@ -106,7 +106,7 @@ Polygon::Polygon(Renderer::Device& device,
                           vk::ShaderStageFlagBits::eVertex)
                   .Shader(mDevice.CreateShaderModule(SPIRV::PolygonDist_frag),
                           vk::ShaderStageFlagBits::eFragment)
-                  .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, 0)
+                  .VertexAttribute(0, 0, Renderer::Format::R32G32Sfloat, 0)
                   .VertexBinding(0, sizeof(glm::vec2))
                   .Layout(mPipelineLayout);
 }
@@ -196,7 +196,7 @@ Circle::Circle(Renderer::Device& device, float radius, float extent)
                           vk::ShaderStageFlagBits::eVertex)
                   .Shader(mDevice.CreateShaderModule(SPIRV::CircleDist_frag),
                           vk::ShaderStageFlagBits::eFragment)
-                  .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, 0)
+                  .VertexAttribute(0, 0, Renderer::Format::R32G32Sfloat, 0)
                   .VertexBinding(0, sizeof(glm::vec2))
                   .Layout(mPipelineLayout);
 }

@@ -47,7 +47,7 @@ AbstractShape::AbstractShape(Device& device,
   mPipeline = GraphicsPipelineDescriptor()
                   .Shader(vertexShader, vk::ShaderStageFlagBits::eVertex)
                   .Shader(fragShader, vk::ShaderStageFlagBits::eFragment)
-                  .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, 0)
+                  .VertexAttribute(0, 0, Format::R32G32Sfloat, 0)
                   .VertexBinding(0, sizeof(glm::vec2))
                   .Layout(mPipelineLayout);
 }
@@ -153,7 +153,7 @@ Ellipse::Ellipse(Device& device, const glm::vec2& radius)
   mPipeline = GraphicsPipelineDescriptor()
                   .Shader(vertexShader, vk::ShaderStageFlagBits::eVertex)
                   .Shader(fragShader, vk::ShaderStageFlagBits::eFragment)
-                  .VertexAttribute(0, 0, vk::Format::eR32G32Sfloat, 0)
+                  .VertexAttribute(0, 0, Format::R32G32Sfloat, 0)
                   .VertexBinding(0, sizeof(glm::vec2))
                   .Layout(mPipelineLayout);
 }

@@ -93,7 +93,7 @@ TEST(ExtrapolateTest, Constrain)
 
   Buffer<glm::ivec2> valid(*device, size.x * size.y, MemoryUsage::Cpu);
 
-  Texture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+  Texture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
   SetSolidPhi(*device, size, solidPhi, sim, (float)size.x);
 
   extrapolate(sim.u, sim.u_valid);

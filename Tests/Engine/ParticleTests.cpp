@@ -400,7 +400,7 @@ TEST(ParticleTests, Phi)
   particleCount.Phi();
   device->Handle().waitIdle();
 
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, MemoryUsage::Cpu);
+  Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, phi); });
 
   CheckPhi(size, sim, outTexture);

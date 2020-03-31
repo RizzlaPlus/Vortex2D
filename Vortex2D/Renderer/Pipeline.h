@@ -43,7 +43,7 @@ public:
    */
   VORTEX2D_API GraphicsPipelineDescriptor& VertexAttribute(uint32_t location,
                                                            uint32_t binding,
-                                                           vk::Format format,
+                                                           Format format,
                                                            uint32_t offset);
 
   /**
