@@ -20,6 +20,7 @@ AbstractSprite::AbstractSprite(Device& device, const SpirvBinary& fragShaderName
     , mMVPBuffer(device, MemoryUsage::CpuToGpu)
     , mVertexBuffer(device, 6)
     , mColourBuffer(device, MemoryUsage::CpuToGpu)
+    , mSampler(device, Sampler::AddressMode::Repeat, Sampler::Filter::Linear)
 {
   VertexBuffer<Vertex> localBuffer(device, 6, MemoryUsage::Cpu);
   std::vector<Vertex> vertices = {{{0.0f, 0.0f}, {0.0f, 0.0f}},
@@ -37,12 +38,10 @@ AbstractSprite::AbstractSprite(Device& device, const SpirvBinary& fragShaderName
 
   SPIRV::ShaderLayouts layout = {reflectionVert, reflectionFrag};
 
-  mSampler = SamplerBuilder().Filter(vk::Filter::eLinear).Create(device.Handle());
-
   mPipelineLayout = mDevice.CreatePipelineLayout(layout);
   auto bindGroupLayout = mDevice.CreateBindGroupLayout(layout);
   mBindGroup = mDevice.CreateBindGroup(
-      bindGroupLayout, layout, {{mMVPBuffer, 0}, {*mSampler, texture, 1}, {mColourBuffer, 2}});
+      bindGroupLayout, layout, {{mMVPBuffer, 0}, {mSampler, texture, 1}, {mColourBuffer, 2}});
 
   vk::ShaderModule vertexShader = mDevice.CreateShaderModule(SPIRV::TexturePosition_vert);
   vk::ShaderModule fragShader = mDevice.CreateShaderModule(fragShaderName);

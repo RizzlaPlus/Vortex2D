@@ -37,7 +37,7 @@ void TextureBarrier(vk::Image image,
       imageMemoryBarriers);
 }
 
-vk::DeviceSize GetBytesPerPixel(vk::Format format)
+std::uint64_t GetBytesPerPixel(vk::Format format)
 {
   switch (format)
   {
@@ -58,27 +58,43 @@ vk::DeviceSize GetBytesPerPixel(vk::Format format)
   }
 }
 
-SamplerBuilder::SamplerBuilder()
+vk::SamplerAddressMode ConvertAddressMode(Sampler::AddressMode addressMode)
 {
-  // TODO add sampler configuration
-  mSamplerInfo = vk::SamplerCreateInfo().setMaxAnisotropy(1.0f);
+  switch (addressMode)
+  {
+    case Sampler::AddressMode::Repeat:
+      return vk::SamplerAddressMode::eRepeat;
+    case Sampler::AddressMode::ClampToEdge:
+      return vk::SamplerAddressMode::eClampToEdge;
+  }
 }
 
-SamplerBuilder& SamplerBuilder::AddressMode(vk::SamplerAddressMode mode)
+vk::Filter ConvertFilter(Sampler::Filter filter)
 {
-  mSamplerInfo.setAddressModeU(mode).setAddressModeV(mode);
-  return *this;
+  switch (filter)
+  {
+    case Sampler::Filter::Linear:
+      return vk::Filter::eLinear;
+    case Sampler::Filter::Nearest:
+      return vk::Filter::eNearest;
+  }
 }
 
-SamplerBuilder& SamplerBuilder::Filter(vk::Filter filter)
+Sampler::Sampler(Device& device, AddressMode addressMode, Filter filter)
 {
-  mSamplerInfo.setMagFilter(filter).setMinFilter(filter);
-  return *this;
+  auto samplerInfo = vk::SamplerCreateInfo()
+                         .setMaxAnisotropy(1.0f)
+                         .setMagFilter(ConvertFilter(filter))
+                         .setMinFilter(ConvertFilter(filter))
+                         .setAddressModeU(ConvertAddressMode(addressMode))
+                         .setAddressModeV(ConvertAddressMode(addressMode));
+
+  mSampler = device.Handle().createSamplerUnique(samplerInfo);
 }
 
-vk::UniqueSampler SamplerBuilder::Create(vk::Device device)
+vk::Sampler Sampler::Handle()
 {
-  return device.createSamplerUnique(mSamplerInfo);
+  return *mSampler;
 }
 
 struct Texture::Impl
@@ -242,7 +258,7 @@ struct Texture::Impl
 
   void CopyFrom(const void* data)
   {
-    vk::DeviceSize bytesPerPixel = GetBytesPerPixel(mFormat);
+    std::uint64_t bytesPerPixel = GetBytesPerPixel(mFormat);
 
     // TODO use always mapped functionality of VMA
 
@@ -289,7 +305,7 @@ struct Texture::Impl
 
   void CopyTo(void* data)
   {
-    vk::DeviceSize bytesPerPixel = GetBytesPerPixel(mFormat);
+    std::uint64_t bytesPerPixel = GetBytesPerPixel(mFormat);
 
     // TODO use always mapped functionality of VMA
 

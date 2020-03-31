@@ -25,7 +25,7 @@ public:
   VORTEX2D_API GenericBuffer(Device& device,
                              vk::BufferUsageFlags usageFlags,
                              MemoryUsage memoryUsage,
-                             vk::DeviceSize deviceSize);
+                             std::uint64_t deviceSize);
 
   VORTEX2D_API GenericBuffer(GenericBuffer&& other);
 
@@ -53,13 +53,13 @@ public:
   /**
    * @brief The size in bytes of the buffer
    */
-  VORTEX2D_API vk::DeviceSize Size() const;
+  VORTEX2D_API std::uint64_t Size() const;
 
   /**
    * @brief Resize the buffer. Invalidates the buffer handle
    * @param size buffer size
    */
-  VORTEX2D_API void Resize(vk::DeviceSize size);
+  VORTEX2D_API void Resize(std::uint64_t size);
 
   /**
    * @brief Inserts a barrier for this buffer

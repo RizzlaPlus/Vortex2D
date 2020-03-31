@@ -54,7 +54,7 @@ protected:
   UniformBuffer<glm::mat4> mMVPBuffer;
   VertexBuffer<Vertex> mVertexBuffer;
   Renderer::UniformBuffer<glm::vec4> mColourBuffer;
-  vk::UniqueSampler mSampler;
+  Renderer::Sampler mSampler;
   vk::PipelineLayout mPipelineLayout;
   BindGroup mBindGroup;
   GraphicsPipelineDescriptor mPipeline;

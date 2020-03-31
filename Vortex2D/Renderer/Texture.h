@@ -20,7 +20,32 @@ class CommandEncoder;
  * @param format of texture
  * @return bytes per pixel
  */
-VORTEX2D_API vk::DeviceSize GetBytesPerPixel(vk::Format format);
+VORTEX2D_API std::uint64_t GetBytesPerPixel(vk::Format format);
+
+class Sampler
+{
+public:
+  enum class AddressMode
+  {
+    ClampToEdge,
+    Repeat,
+  };
+
+  enum class Filter
+  {
+    Linear,
+    Nearest,
+  };
+
+  Sampler(Device& device,
+          AddressMode adressMode = AddressMode::Repeat,
+          Filter filter = Filter::Nearest);
+
+  vk::Sampler Handle();
+
+private:
+  vk::UniqueSampler mSampler;
+};
 
 /**
  * @brief Factory for a vullkan sampler

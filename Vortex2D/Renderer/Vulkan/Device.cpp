@@ -124,8 +124,12 @@ void Bind(vk::Device device,
               descriptorWrites.back().pImageInfo)
           {
             descriptorWrites.back().descriptorCount++;
+
+            vk::Sampler sampler =
+                image.Sampler != nullptr ? image.Sampler->Handle() : vk::Sampler{};
+
             imageInfo[numImages++] = vk::DescriptorImageInfo(
-                image.Sampler, image.Texture->GetView(), vk::ImageLayout::eGeneral);
+                sampler, image.Texture->GetView(), vk::ImageLayout::eGeneral);
           }
           else
           {

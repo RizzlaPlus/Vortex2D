@@ -37,7 +37,7 @@ void BufferBarrier(vk::Buffer buffer,
 struct GenericBuffer::Impl
 {
   Device& mDevice;
-  vk::DeviceSize mSize;
+  std::uint64_t mSize;
   vk::BufferUsageFlags mUsageFlags;
   MemoryUsage mMemoryUsage;
   VkBuffer mBuffer;
@@ -47,7 +47,7 @@ struct GenericBuffer::Impl
   Impl(Device& device,
        vk::BufferUsageFlags usageFlags,
        MemoryUsage memoryUsage,
-       vk::DeviceSize deviceSize)
+       std::uint64_t deviceSize)
       : mDevice(device)
       , mSize(deviceSize)
       , mUsageFlags(usageFlags | vk::BufferUsageFlagBits::eTransferDst |
@@ -100,9 +100,9 @@ struct GenericBuffer::Impl
 
   vk::Buffer Handle() const { return mBuffer; }
 
-  vk::DeviceSize Size() const { return mSize; }
+  std::uint64_t Size() const { return mSize; }
 
-  void Resize(vk::DeviceSize size)
+  void Resize(std::uint64_t size)
   {
     if (mBuffer != VK_NULL_HANDLE)
     {
@@ -227,7 +227,7 @@ struct GenericBuffer::Impl
 GenericBuffer::GenericBuffer(Device& device,
                              vk::BufferUsageFlags usageFlags,
                              MemoryUsage memoryUsage,
-                             vk::DeviceSize deviceSize)
+                             std::uint64_t deviceSize)
     : mImpl(std::make_unique<GenericBuffer::Impl>(device, usageFlags, memoryUsage, deviceSize))
 {
 }
@@ -251,12 +251,12 @@ vk::Buffer GenericBuffer::Handle() const
   return mImpl->Handle();
 }
 
-vk::DeviceSize GenericBuffer::Size() const
+std::uint64_t GenericBuffer::Size() const
 {
   return mImpl->Size();
 }
 
-void GenericBuffer::Resize(vk::DeviceSize size)
+void GenericBuffer::Resize(std::uint64_t size)
 {
   mImpl->Resize(size);
 }

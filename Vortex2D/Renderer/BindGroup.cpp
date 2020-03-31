@@ -23,16 +23,17 @@ BindingInput::BindingInput(Renderer::Texture& texture, uint32_t bind)
 {
 }
 
-BindingInput::BindingInput(vk::Sampler sampler, Renderer::Texture& texture, uint32_t bind)
-    : Bind(bind), Input(Image(sampler, texture))
+BindingInput::BindingInput(Sampler& sampler, Renderer::Texture& texture, uint32_t bind)
+    : Bind(bind), Input(Image(texture, sampler))
 {
 }
 
-Image::Image(vk::Sampler sampler, Renderer::Texture& texture) : Sampler(sampler), Texture(&texture)
+Image::Image(Renderer::Texture& texture, Renderer::Sampler& sampler)
+    : Texture(&texture), Sampler(&sampler)
 {
 }
 
-Image::Image(Renderer::Texture& texture) : Sampler(), Texture(&texture) {}
+Image::Image(Renderer::Texture& texture) : Texture(&texture), Sampler(nullptr) {}
 
 }  // namespace Renderer
 }  // namespace Vortex2D

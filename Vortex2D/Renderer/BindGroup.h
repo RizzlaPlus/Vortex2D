@@ -33,11 +33,11 @@ struct BindGroup
  */
 struct Image
 {
-  Image(vk::Sampler sampler, Renderer::Texture& texture);
+  Image(Renderer::Texture& texture, Sampler& sampler);
   Image(Renderer::Texture& texture);
 
-  vk::Sampler Sampler;
   Renderer::Texture* Texture;
+  Sampler* Sampler;
 };
 
 /**
@@ -49,7 +49,7 @@ struct BindingInput
 
   VORTEX2D_API BindingInput(Renderer::GenericBuffer& buffer, uint32_t bind = DefaultBind);
   VORTEX2D_API BindingInput(Renderer::Texture& texture, uint32_t bind = DefaultBind);
-  VORTEX2D_API BindingInput(vk::Sampler sampler,
+  VORTEX2D_API BindingInput(Sampler& sampler,
                             Renderer::Texture& texture,
                             uint32_t bind = DefaultBind);
 
