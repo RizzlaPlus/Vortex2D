@@ -41,6 +41,11 @@ enum ShaderStage
   Compute,
 };
 
+enum PrimitiveTopology
+{
+  Triangle,
+};
+
 }  // namespace Renderer
 }  // namespace Vortex2D
 

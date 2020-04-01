@@ -11,32 +11,12 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-GraphicsPipelineDescriptor::GraphicsPipelineDescriptor()
-{
-  InputAssembly =
-      vk::PipelineInputAssemblyStateCreateInfo().setTopology(vk::PrimitiveTopology::eTriangleList);
-
-  RasterizationInfo = vk::PipelineRasterizationStateCreateInfo()
-                          .setLineWidth(1.0f)
-                          .setCullMode(vk::CullModeFlagBits::eNone)
-                          .setFrontFace(vk::FrontFace::eCounterClockwise)
-                          .setPolygonMode(vk::PolygonMode::eFill);
-
-  // TODO multisample as parameter
-  MultisampleInfo = vk::PipelineMultisampleStateCreateInfo()
-                        .setRasterizationSamples(vk::SampleCountFlagBits::e1)
-                        .setMinSampleShading(1.0f);
-}
+GraphicsPipelineDescriptor::GraphicsPipelineDescriptor() {}
 
 GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Shader(vk::ShaderModule shader,
                                                                ShaderStage shaderStage)
 {
-  auto shaderStageInfo =
-      vk::PipelineShaderStageCreateInfo().setModule(shader).setPName("main").setStage(
-          ConvertShaderStage(shaderStage));
-
-  ShaderStages.push_back(shaderStageInfo);
-
+  shaders.push_back({shader, shaderStage});
   return *this;
 }
 
@@ -45,45 +25,54 @@ GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::VertexAttribute(uint32_t
                                                                         Format format,
                                                                         uint32_t offset)
 {
-  VertexAttributeDescriptions.push_back({location, binding, ConvertFormat(format), offset});
+  vertexAttributes.push_back({location, binding, format, offset});
   return *this;
 }
 
 GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::VertexBinding(uint32_t binding,
-                                                                      uint32_t stride,
-                                                                      vk::VertexInputRate inputRate)
+                                                                      uint32_t stride)
 {
-  VertexBindingDescriptions.push_back({binding, stride, inputRate});
+  vertexBindings.push_back({binding, stride});
   return *this;
 }
 
-GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Topology(vk::PrimitiveTopology topology)
+GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Topology(PrimitiveTopology topology)
 {
-  InputAssembly.setTopology(topology);
+  primitiveTopology = topology;
   return *this;
 }
 
-GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Layout(vk::PipelineLayout pipelineLayout)
+GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Layout(vk::PipelineLayout layout)
 {
-  PipelineLayout = pipelineLayout;
+  pipelineLayout = layout;
   return *this;
 }
 
-GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::DynamicState(vk::DynamicState dynamicState)
+bool operator==(const GraphicsPipelineDescriptor::ShaderDescriptor& left,
+                const GraphicsPipelineDescriptor::ShaderDescriptor& right)
 {
-  DynamicStates.push_back(dynamicState);
-  return *this;
+  return left.shaderStage == right.shaderStage && left.shaderModule == right.shaderModule;
+}
+
+bool operator==(const GraphicsPipelineDescriptor::VertexBindingDescriptor& left,
+                const GraphicsPipelineDescriptor::VertexBindingDescriptor& right)
+{
+  return left.stride == right.stride && left.binding == right.binding;
+}
+
+bool operator==(const GraphicsPipelineDescriptor::VertexAttributeDescriptor& left,
+                const GraphicsPipelineDescriptor::VertexAttributeDescriptor& right)
+{
+  return left.format == right.format && left.offset == right.offset &&
+         left.binding == right.binding && left.location == right.location;
 }
 
 bool operator==(const GraphicsPipelineDescriptor& left, const GraphicsPipelineDescriptor& right)
 {
-  return left.DynamicStates == right.DynamicStates && left.InputAssembly == right.InputAssembly &&
-         left.PipelineLayout == right.PipelineLayout &&
-         left.MultisampleInfo == right.MultisampleInfo &&
-         left.RasterizationInfo == right.RasterizationInfo &&
-         left.VertexBindingDescriptions == right.VertexBindingDescriptions &&
-         left.VertexAttributeDescriptions == right.VertexAttributeDescriptions &&
-         left.ShaderStages == right.ShaderStages;
+  return left.shaders == right.shaders && left.vertexAttributes == right.vertexAttributes &&
+         left.vertexBindings == right.vertexBindings &&
+         left.primitiveTopology == right.primitiveTopology &&
+         left.pipelineLayout == right.pipelineLayout;
 }
 
 SpecConstInfo::SpecConstInfo() {}

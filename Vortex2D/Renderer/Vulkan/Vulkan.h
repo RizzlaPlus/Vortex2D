@@ -91,6 +91,15 @@ inline vk::ShaderStageFlagBits ConvertShaderStage(ShaderStage shaderStage)
       return vk::ShaderStageFlagBits::eCompute;
   }
 }
+
+inline vk::PrimitiveTopology ConvertTopology(PrimitiveTopology topology)
+{
+  switch (topology)
+  {
+    case PrimitiveTopology::Triangle:
+      return vk::PrimitiveTopology::eTriangleList;
+  }
+}
 }  // namespace Renderer
 }  // namespace Vortex2D
 

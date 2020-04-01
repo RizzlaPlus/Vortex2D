@@ -434,12 +434,52 @@ vk::Pipeline Device::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& gr
     return *it->Pipeline;
   }
 
+  std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
+  for (auto& shaderStage : graphics.shaders)
+  {
+    auto shaderStageInfo = vk::PipelineShaderStageCreateInfo()
+                               .setModule(shaderStage.shaderModule)
+                               .setPName("main")
+                               .setStage(ConvertShaderStage(shaderStage.shaderStage));
+
+    shaderStages.push_back(shaderStageInfo);
+  }
+
+  std::vector<vk::VertexInputBindingDescription> vertexBindingDescriptions;
+  for (auto& vertexBinding : graphics.vertexBindings)
+  {
+    vertexBindingDescriptions.push_back(
+        {vertexBinding.binding, vertexBinding.stride, vk::VertexInputRate::eVertex});
+  }
+
+  std::vector<vk::VertexInputAttributeDescription> vertexAttributeDescriptions;
+  for (auto& vertexAttribute : graphics.vertexAttributes)
+  {
+    vertexAttributeDescriptions.push_back({vertexAttribute.location,
+                                           vertexAttribute.binding,
+                                           ConvertFormat(vertexAttribute.format),
+                                           vertexAttribute.offset});
+  }
+
+  auto inputAssembly = vk::PipelineInputAssemblyStateCreateInfo().setTopology(
+      ConvertTopology(graphics.primitiveTopology));
+
+  auto rasterizationInfo = vk::PipelineRasterizationStateCreateInfo()
+                               .setLineWidth(1.0f)
+                               .setCullMode(vk::CullModeFlagBits::eNone)
+                               .setFrontFace(vk::FrontFace::eCounterClockwise)
+                               .setPolygonMode(vk::PolygonMode::eFill);
+
+  auto multisampleInfo = vk::PipelineMultisampleStateCreateInfo()
+                             .setRasterizationSamples(vk::SampleCountFlagBits::e1)
+                             .setMinSampleShading(1.0f);
+
   auto vertexInputInfo =
       vk::PipelineVertexInputStateCreateInfo()
-          .setVertexBindingDescriptionCount((uint32_t)graphics.VertexBindingDescriptions.size())
-          .setPVertexBindingDescriptions(graphics.VertexBindingDescriptions.data())
-          .setVertexAttributeDescriptionCount((uint32_t)graphics.VertexAttributeDescriptions.size())
-          .setPVertexAttributeDescriptions(graphics.VertexAttributeDescriptions.data());
+          .setVertexBindingDescriptionCount((uint32_t)vertexBindingDescriptions.size())
+          .setPVertexBindingDescriptions(vertexBindingDescriptions.data())
+          .setVertexAttributeDescriptionCount((uint32_t)vertexAttributeDescriptions.size())
+          .setPVertexAttributeDescriptions(vertexAttributeDescriptions.data());
 
   auto viewPort = vk::Viewport(0,
                                0,
@@ -460,22 +500,17 @@ vk::Pipeline Device::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& gr
                        .setPAttachments(&renderState.BlendState.ColorBlend)
                        .setBlendConstants(renderState.BlendState.BlendConstants);
 
-  auto dynamicState = vk::PipelineDynamicStateCreateInfo()
-                          .setPDynamicStates(graphics.DynamicStates.data())
-                          .setDynamicStateCount((uint32_t)graphics.DynamicStates.size());
-
   auto pipelineInfo = vk::GraphicsPipelineCreateInfo()
-                          .setStageCount((uint32_t)graphics.ShaderStages.size())
-                          .setPStages(graphics.ShaderStages.data())
+                          .setStageCount((uint32_t)shaderStages.size())
+                          .setPStages(shaderStages.data())
                           .setPVertexInputState(&vertexInputInfo)
-                          .setPInputAssemblyState(&graphics.InputAssembly)
-                          .setPRasterizationState(&graphics.RasterizationInfo)
-                          .setPMultisampleState(&graphics.MultisampleInfo)
+                          .setPInputAssemblyState(&inputAssembly)
+                          .setPRasterizationState(&rasterizationInfo)
+                          .setPMultisampleState(&multisampleInfo)
                           .setPColorBlendState(&blendInfo)
-                          .setLayout(graphics.PipelineLayout)
+                          .setLayout(graphics.pipelineLayout)
                           .setRenderPass(renderState.RenderPass)
-                          .setPViewportState(&viewPortState)
-                          .setPDynamicState(&dynamicState);
+                          .setPViewportState(&viewPortState);
 
   GraphicsPipelineCache pipeline = {
       renderState, graphics, mDevice->createGraphicsPipelineUnique(*mPipelineCache, pipelineInfo)};

@@ -49,28 +49,48 @@ public:
    * @brief Sets the vertex binding
    * @param binding binding in the shader
    * @param stride stride in bytes
-   * @param inputRate inpute rate
    * @return *this
    */
-  VORTEX2D_API GraphicsPipelineDescriptor& VertexBinding(
-      uint32_t binding,
-      uint32_t stride,
-      vk::VertexInputRate inputRate = vk::VertexInputRate::eVertex);
+  VORTEX2D_API GraphicsPipelineDescriptor& VertexBinding(uint32_t binding, uint32_t stride);
 
-  VORTEX2D_API GraphicsPipelineDescriptor& Topology(vk::PrimitiveTopology topology);
+  VORTEX2D_API GraphicsPipelineDescriptor& Topology(PrimitiveTopology topology);
   VORTEX2D_API GraphicsPipelineDescriptor& Layout(vk::PipelineLayout pipelineLayout);
-  VORTEX2D_API GraphicsPipelineDescriptor& DynamicState(vk::DynamicState dynamicState);
 
-  vk::PipelineMultisampleStateCreateInfo MultisampleInfo;
-  vk::PipelineRasterizationStateCreateInfo RasterizationInfo;
-  vk::PipelineInputAssemblyStateCreateInfo InputAssembly;
-  std::vector<vk::DynamicState> DynamicStates;
-  std::vector<vk::PipelineShaderStageCreateInfo> ShaderStages;
-  std::vector<vk::VertexInputBindingDescription> VertexBindingDescriptions;
-  std::vector<vk::VertexInputAttributeDescription> VertexAttributeDescriptions;
-  vk::PipelineLayout PipelineLayout;
+  struct ShaderDescriptor
+  {
+    vk::ShaderModule shaderModule;
+    ShaderStage shaderStage;
+  };
+
+  std::vector<ShaderDescriptor> shaders;
+
+  struct VertexAttributeDescriptor
+  {
+    uint32_t location;
+    uint32_t binding;
+    Format format;
+    uint32_t offset;
+  };
+
+  std::vector<VertexAttributeDescriptor> vertexAttributes;
+
+  struct VertexBindingDescriptor
+  {
+    uint32_t binding;
+    uint32_t stride;
+  };
+
+  std::vector<VertexBindingDescriptor> vertexBindings;
+  PrimitiveTopology primitiveTopology = PrimitiveTopology::Triangle;
+  vk::PipelineLayout pipelineLayout;
 };
 
+bool operator==(const GraphicsPipelineDescriptor::ShaderDescriptor& left,
+                const GraphicsPipelineDescriptor::ShaderDescriptor& right);
+bool operator==(const GraphicsPipelineDescriptor::VertexBindingDescriptor& left,
+                const GraphicsPipelineDescriptor::VertexBindingDescriptor& right);
+bool operator==(const GraphicsPipelineDescriptor::VertexAttributeDescriptor& left,
+                const GraphicsPipelineDescriptor::VertexAttributeDescriptor& right);
 bool operator==(const GraphicsPipelineDescriptor& left, const GraphicsPipelineDescriptor& right);
 
 /**

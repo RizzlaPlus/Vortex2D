@@ -102,7 +102,7 @@ Polygon::Polygon(Renderer::Device& device,
 
   mPipeline =
       Renderer::GraphicsPipelineDescriptor()
-          .Topology(vk::PrimitiveTopology::eTriangleList)
+          .Topology(Renderer::PrimitiveTopology::Triangle)
           .Shader(mDevice.CreateShaderModule(SPIRV::Position_vert), Renderer::ShaderStage::Vertex)
           .Shader(mDevice.CreateShaderModule(SPIRV::PolygonDist_frag),
                   Renderer::ShaderStage::Fragment)
@@ -192,7 +192,7 @@ Circle::Circle(Renderer::Device& device, float radius, float extent)
 
   mPipeline =
       Renderer::GraphicsPipelineDescriptor()
-          .Topology(vk::PrimitiveTopology::eTriangleList)
+          .Topology(Renderer::PrimitiveTopology::Triangle)
           .Shader(mDevice.CreateShaderModule(SPIRV::Position_vert), Renderer::ShaderStage::Vertex)
           .Shader(mDevice.CreateShaderModule(SPIRV::CircleDist_frag),
                   Renderer::ShaderStage::Fragment)
