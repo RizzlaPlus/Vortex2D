@@ -30,8 +30,7 @@ public:
    * @param shaderStage shader state (vertex, fragment or compute)
    * @return *this
    */
-  VORTEX2D_API GraphicsPipelineDescriptor& Shader(vk::ShaderModule shader,
-                                                  vk::ShaderStageFlagBits shaderStage);
+  VORTEX2D_API GraphicsPipelineDescriptor& Shader(vk::ShaderModule shader, ShaderStage shaderStage);
 
   /**
    * @brief Sets the vertex attributes

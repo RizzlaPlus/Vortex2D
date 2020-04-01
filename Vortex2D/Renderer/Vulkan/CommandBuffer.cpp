@@ -83,12 +83,12 @@ void CommandEncoder::SetVertexBuffer(const GenericBuffer& buffer)
 }
 
 void CommandEncoder::PushConstants(vk::PipelineLayout layout,
-                                   vk::ShaderStageFlags stageFlags,
+                                   ShaderStage stageFlags,
                                    uint32_t offset,
                                    uint32_t size,
                                    const void* pValues)
 {
-  mCommandBuffer->pushConstants(layout, stageFlags, offset, size, pValues);
+  mCommandBuffer->pushConstants(layout, ConvertShaderStage(stageFlags), offset, size, pValues);
 }
 
 void CommandEncoder::Draw(std::uint32_t vertexCount)

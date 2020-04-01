@@ -23,7 +23,7 @@ struct ShaderLayout
 {
   VORTEX2D_API ShaderLayout(const Reflection& reflection);
 
-  vk::ShaderStageFlags shaderStage;
+  Renderer::ShaderStage shaderStage;
   DescriptorTypeBindings bindings;
   unsigned pushConstantSize;
 };

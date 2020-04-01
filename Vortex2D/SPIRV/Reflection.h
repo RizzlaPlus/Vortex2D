@@ -23,12 +23,12 @@ public:
   VORTEX2D_API DescriptorTypesMap GetDescriptorTypesMap() const;
   VORTEX2D_API unsigned GetPushConstantsSize() const;
 
-  VORTEX2D_API vk::ShaderStageFlags GetShaderStage() const;
+  VORTEX2D_API Renderer::ShaderStage GetShaderStage() const;
 
 private:
   DescriptorTypesMap mDescriptorTypes;
   unsigned mPushConstantSize;
-  vk::ShaderStageFlags mStageFlag;
+  Renderer::ShaderStage mStageFlag;
 };
 
 }  // namespace SPIRV

@@ -45,8 +45,8 @@ AbstractShape::AbstractShape(Device& device,
   vk::ShaderModule fragShader = mDevice.CreateShaderModule(fragName);
 
   mPipeline = GraphicsPipelineDescriptor()
-                  .Shader(vertexShader, vk::ShaderStageFlagBits::eVertex)
-                  .Shader(fragShader, vk::ShaderStageFlagBits::eFragment)
+                  .Shader(vertexShader, Renderer::ShaderStage::Vertex)
+                  .Shader(fragShader, Renderer::ShaderStage::Fragment)
                   .VertexAttribute(0, 0, Format::R32G32Sfloat, 0)
                   .VertexBinding(0, sizeof(glm::vec2))
                   .Layout(mPipelineLayout);
@@ -54,7 +54,7 @@ AbstractShape::AbstractShape(Device& device,
 
 AbstractShape::AbstractShape(AbstractShape&& other)
     : mDevice(other.mDevice)
-    , mMVPBuffer(std::move(other.mDevice))
+    , mMVPBuffer(std::move(other.mMVPBuffer))
     , mColourBuffer(std::move(other.mColourBuffer))
     , mVertexBuffer(std::move(other.mVertexBuffer))
     , mPipelineLayout(std::move(other.mPipelineLayout))
@@ -151,8 +151,8 @@ Ellipse::Ellipse(Device& device, const glm::vec2& radius)
   vk::ShaderModule fragShader = mDevice.CreateShaderModule(SPIRV::Ellipse_frag);
 
   mPipeline = GraphicsPipelineDescriptor()
-                  .Shader(vertexShader, vk::ShaderStageFlagBits::eVertex)
-                  .Shader(fragShader, vk::ShaderStageFlagBits::eFragment)
+                  .Shader(vertexShader, Renderer::ShaderStage::Vertex)
+                  .Shader(fragShader, Renderer::ShaderStage::Fragment)
                   .VertexAttribute(0, 0, Format::R32G32Sfloat, 0)
                   .VertexBinding(0, sizeof(glm::vec2))
                   .Layout(mPipelineLayout);

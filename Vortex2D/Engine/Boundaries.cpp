@@ -100,15 +100,15 @@ Polygon::Polygon(Renderer::Device& device,
   mBindGroup = mDevice.CreateBindGroup(
       bindGroupLayout, layout, {{mMVPBuffer}, {mMVBuffer}, {mPolygonVertexBuffer}});
 
-  mPipeline = Renderer::GraphicsPipelineDescriptor()
-                  .Topology(vk::PrimitiveTopology::eTriangleList)
-                  .Shader(mDevice.CreateShaderModule(SPIRV::Position_vert),
-                          vk::ShaderStageFlagBits::eVertex)
-                  .Shader(mDevice.CreateShaderModule(SPIRV::PolygonDist_frag),
-                          vk::ShaderStageFlagBits::eFragment)
-                  .VertexAttribute(0, 0, Renderer::Format::R32G32Sfloat, 0)
-                  .VertexBinding(0, sizeof(glm::vec2))
-                  .Layout(mPipelineLayout);
+  mPipeline =
+      Renderer::GraphicsPipelineDescriptor()
+          .Topology(vk::PrimitiveTopology::eTriangleList)
+          .Shader(mDevice.CreateShaderModule(SPIRV::Position_vert), Renderer::ShaderStage::Vertex)
+          .Shader(mDevice.CreateShaderModule(SPIRV::PolygonDist_frag),
+                  Renderer::ShaderStage::Fragment)
+          .VertexAttribute(0, 0, Renderer::Format::R32G32Sfloat, 0)
+          .VertexBinding(0, sizeof(glm::vec2))
+          .Layout(mPipelineLayout);
 }
 
 Polygon::~Polygon() {}
@@ -132,8 +132,8 @@ void Polygon::Draw(Renderer::CommandEncoder& command, const Renderer::RenderStat
   command.SetPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
   command.SetBindGroup(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mBindGroup);
   command.SetVertexBuffer(mVertexBuffer);
-  command.PushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, 4, &mSize);
-  command.PushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 4, 4, &mInv);
+  command.PushConstants(mPipelineLayout, Renderer::ShaderStage::Fragment, 0, 4, &mSize);
+  command.PushConstants(mPipelineLayout, Renderer::ShaderStage::Fragment, 4, 4, &mInv);
   command.Draw(6);
 }
 
@@ -190,15 +190,15 @@ Circle::Circle(Renderer::Device& device, float radius, float extent)
   auto bindGroupLayout = mDevice.CreateBindGroupLayout(layout);
   mBindGroup = mDevice.CreateBindGroup(bindGroupLayout, layout, {{mMVPBuffer}, {mMVBuffer}});
 
-  mPipeline = Renderer::GraphicsPipelineDescriptor()
-                  .Topology(vk::PrimitiveTopology::eTriangleList)
-                  .Shader(mDevice.CreateShaderModule(SPIRV::Position_vert),
-                          vk::ShaderStageFlagBits::eVertex)
-                  .Shader(mDevice.CreateShaderModule(SPIRV::CircleDist_frag),
-                          vk::ShaderStageFlagBits::eFragment)
-                  .VertexAttribute(0, 0, Renderer::Format::R32G32Sfloat, 0)
-                  .VertexBinding(0, sizeof(glm::vec2))
-                  .Layout(mPipelineLayout);
+  mPipeline =
+      Renderer::GraphicsPipelineDescriptor()
+          .Topology(vk::PrimitiveTopology::eTriangleList)
+          .Shader(mDevice.CreateShaderModule(SPIRV::Position_vert), Renderer::ShaderStage::Vertex)
+          .Shader(mDevice.CreateShaderModule(SPIRV::CircleDist_frag),
+                  Renderer::ShaderStage::Fragment)
+          .VertexAttribute(0, 0, Renderer::Format::R32G32Sfloat, 0)
+          .VertexBinding(0, sizeof(glm::vec2))
+          .Layout(mPipelineLayout);
 }
 
 Circle::~Circle() {}
@@ -222,7 +222,7 @@ void Circle::Draw(Renderer::CommandEncoder& command, const Renderer::RenderState
   command.SetPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
   command.SetBindGroup(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mBindGroup);
   command.SetVertexBuffer(mVertexBuffer);
-  command.PushConstants(mPipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, 4, &mSize);
+  command.PushConstants(mPipelineLayout, Renderer::ShaderStage::Fragment, 0, 4, &mSize);
   command.Draw(6);
 }
 

@@ -70,13 +70,13 @@ Reflection::Reflection(const Renderer::SpirvBinary& spirv) : mPushConstantSize(0
   switch (compiler.get_execution_model())
   {
     case spv::ExecutionModelVertex:
-      mStageFlag = vk::ShaderStageFlagBits::eVertex;
+      mStageFlag = Renderer::ShaderStage::Vertex;
       break;
     case spv::ExecutionModelFragment:
-      mStageFlag = vk::ShaderStageFlagBits::eFragment;
+      mStageFlag = Renderer::ShaderStage::Fragment;
       break;
     case spv::ExecutionModelGLCompute:
-      mStageFlag = vk::ShaderStageFlagBits::eCompute;
+      mStageFlag = Renderer::ShaderStage::Compute;
       break;
     default:
       throw std::runtime_error("unsupported execution model");
@@ -93,7 +93,7 @@ unsigned Reflection::GetPushConstantsSize() const
   return mPushConstantSize;
 }
 
-vk::ShaderStageFlags Reflection::GetShaderStage() const
+Renderer::ShaderStage Reflection::GetShaderStage() const
 {
   return mStageFlag;
 }

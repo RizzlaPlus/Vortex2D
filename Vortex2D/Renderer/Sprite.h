@@ -38,7 +38,7 @@ public:
   void PushConstant(Renderer::CommandEncoder& command, uint32_t offset, const T& data)
   {
     command.PushConstants(
-        mPipelineLayout, vk::ShaderStageFlagBits::eFragment, offset, sizeof(T), &data);
+        mPipelineLayout, Renderer::ShaderStage::Fragment, offset, sizeof(T), &data);
   }
 
   glm::vec4 Colour = {1.0f, 1.0f, 1.0f, 1.0f};

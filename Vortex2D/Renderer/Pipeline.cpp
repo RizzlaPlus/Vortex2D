@@ -29,10 +29,11 @@ GraphicsPipelineDescriptor::GraphicsPipelineDescriptor()
 }
 
 GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Shader(vk::ShaderModule shader,
-                                                               vk::ShaderStageFlagBits shaderStage)
+                                                               ShaderStage shaderStage)
 {
   auto shaderStageInfo =
-      vk::PipelineShaderStageCreateInfo().setModule(shader).setPName("main").setStage(shaderStage);
+      vk::PipelineShaderStageCreateInfo().setModule(shader).setPName("main").setStage(
+          ConvertShaderStage(shaderStage));
 
   ShaderStages.push_back(shaderStageInfo);
 

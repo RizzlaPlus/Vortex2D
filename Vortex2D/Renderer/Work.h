@@ -184,8 +184,7 @@ public:
     {
       if (offset + sizeof(Arg) <= mPushConstantSize)
       {
-        command.PushConstants(
-            mLayout, vk::ShaderStageFlagBits::eCompute, offset, sizeof(Arg), &arg);
+        command.PushConstants(mLayout, ShaderStage::Compute, offset, sizeof(Arg), &arg);
       }
     }
 
@@ -194,8 +193,7 @@ public:
     {
       if (offset + sizeof(Arg) <= mPushConstantSize)
       {
-        command.PushConstants(
-            mLayout, vk::ShaderStageFlagBits::eCompute, offset, sizeof(Arg), &arg);
+        command.PushConstants(mLayout, ShaderStage::Compute, offset, sizeof(Arg), &arg);
         PushConstantOffset(command, offset + sizeof(Arg), std::forward<Args>(args)...);
       }
     }

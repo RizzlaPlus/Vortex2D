@@ -43,7 +43,7 @@ public:
   VORTEX2D_API void SetVertexBuffer(const GenericBuffer& buffer);
 
   VORTEX2D_API void PushConstants(vk::PipelineLayout layout,
-                                  vk::ShaderStageFlags stageFlags,
+                                  ShaderStage stageFlags,
                                   uint32_t offset,
                                   uint32_t size,
                                   const void* pValues);

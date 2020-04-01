@@ -95,7 +95,7 @@ Work::Work(Device& device,
 {
   vk::ShaderModule shaderModule = mDevice.CreateShaderModule(spirv);
   SPIRV::Reflection reflection(spirv);
-  if (reflection.GetShaderStage() != vk::ShaderStageFlagBits::eCompute)
+  if (reflection.GetShaderStage() != Renderer::ShaderStage::Compute)
     throw std::runtime_error("only compute supported");
 
   mLayout = {reflection};

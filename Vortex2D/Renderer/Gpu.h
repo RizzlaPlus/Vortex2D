@@ -34,6 +34,13 @@ enum class Format
   R32G32B32A32Sfloat,
 };
 
+enum ShaderStage
+{
+  Vertex,
+  Fragment,
+  Compute,
+};
+
 }  // namespace Renderer
 }  // namespace Vortex2D
 

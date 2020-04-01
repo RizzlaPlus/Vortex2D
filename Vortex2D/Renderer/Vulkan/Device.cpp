@@ -339,8 +339,11 @@ BindGroupLayout Device::CreateBindGroupLayout(const SPIRV::ShaderLayouts& layout
     {
       for (auto& desciptorType : shaderLayout.bindings)
       {
-        descriptorSetLayoutBindings.push_back(
-            {desciptorType.first, desciptorType.second, 1, shaderLayout.shaderStage, nullptr});
+        descriptorSetLayoutBindings.push_back({desciptorType.first,
+                                               desciptorType.second,
+                                               1,
+                                               ConvertShaderStage(shaderLayout.shaderStage),
+                                               nullptr});
       }
     }
 
@@ -374,8 +377,9 @@ vk::PipelineLayout Device::CreatePipelineLayout(const SPIRV::ShaderLayouts& layo
     {
       if (shaderLayout.pushConstantSize > 0)
       {
-        pushConstantRanges.push_back(
-            {shaderLayout.shaderStage, totalPushConstantSize, shaderLayout.pushConstantSize});
+        pushConstantRanges.push_back({ConvertShaderStage(shaderLayout.shaderStage),
+                                      totalPushConstantSize,
+                                      shaderLayout.pushConstantSize});
         totalPushConstantSize += shaderLayout.pushConstantSize;
       }
     }
@@ -498,7 +502,7 @@ vk::Pipeline Device::CreateComputePipeline(vk::ShaderModule shader,
   auto stageInfo = vk::PipelineShaderStageCreateInfo()
                        .setModule(shader)
                        .setPName("main")
-                       .setStage(vk::ShaderStageFlagBits::eCompute)
+                       .setStage(ConvertShaderStage(Renderer::ShaderStage::Compute))
                        .setPSpecializationInfo(&specConstInfo.info);
 
   auto pipelineInfo = vk::ComputePipelineCreateInfo().setStage(stageInfo).setLayout(layout);

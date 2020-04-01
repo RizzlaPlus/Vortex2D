@@ -79,6 +79,18 @@ inline vk::Format ConvertFormat(Format format)
   }
 }
 
+inline vk::ShaderStageFlagBits ConvertShaderStage(ShaderStage shaderStage)
+{
+  switch (shaderStage)
+  {
+    case ShaderStage::Vertex:
+      return vk::ShaderStageFlagBits::eVertex;
+    case ShaderStage::Fragment:
+      return vk::ShaderStageFlagBits::eFragment;
+    case ShaderStage::Compute:
+      return vk::ShaderStageFlagBits::eCompute;
+  }
+}
 }  // namespace Renderer
 }  // namespace Vortex2D
 
