@@ -33,18 +33,18 @@ Extrapolation::Extrapolation(Renderer::Device& device,
     {
       mExtrapolateVelocityBound.Record(command);
       velocity.Output().Barrier(command,
-                                vk::ImageLayout::eGeneral,
-                                vk::AccessFlagBits::eShaderWrite,
-                                vk::ImageLayout::eGeneral,
-                                vk::AccessFlagBits::eShaderRead);
-      mValid.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+                                Renderer::ImageLayout::General,
+                                Renderer::Access::Write,
+                                Renderer::ImageLayout::General,
+                                Renderer::Access::Read);
+      mValid.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
       mExtrapolateVelocityBackBound.Record(command);
       velocity.Barrier(command,
-                       vk::ImageLayout::eGeneral,
-                       vk::AccessFlagBits::eShaderWrite,
-                       vk::ImageLayout::eGeneral,
-                       vk::AccessFlagBits::eShaderRead);
-      valid.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+                       Renderer::ImageLayout::General,
+                       Renderer::Access::Write,
+                       Renderer::ImageLayout::General,
+                       Renderer::Access::Read);
+      valid.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
     }
     command.DebugMarkerEnd();
   });

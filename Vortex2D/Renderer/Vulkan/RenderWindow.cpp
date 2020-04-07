@@ -94,7 +94,7 @@ RenderWindow::RenderWindow(Device& device, vk::SurfaceKHR surface, uint32_t widt
       TextureBarrier(image,
                      command.Handle(),
                      vk::ImageLayout::eUndefined,
-                     vk::AccessFlagBits{},
+                     vk::AccessFlags{},
                      vk::ImageLayout::eGeneral,
                      vk::AccessFlagBits::eTransferWrite);
 
@@ -111,7 +111,7 @@ RenderWindow::RenderWindow(Device& device, vk::SurfaceKHR surface, uint32_t widt
                      vk::ImageLayout::eGeneral,
                      vk::AccessFlagBits::eTransferWrite,
                      vk::ImageLayout::ePresentSrcKHR,
-                     vk::AccessFlagBits{});
+                     vk::AccessFlags{});
     });
   }
 

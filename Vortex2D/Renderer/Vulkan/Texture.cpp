@@ -169,11 +169,12 @@ struct Texture::Impl
     device.Execute([&](CommandEncoder& command) {
       if (memoryUsage != MemoryUsage::Cpu)
       {
-        Barrier(command,
-                imageLayout,
-                vk::AccessFlagBits{},
-                vk::ImageLayout::eGeneral,
-                vk::AccessFlagBits::eTransferWrite);
+        TextureBarrier(Handle(),
+                       command.Handle(),
+                       imageLayout,
+                       vk::AccessFlagBits{},
+                       vk::ImageLayout::eGeneral,
+                       vk::AccessFlagBits::eTransferWrite);
 
         auto clearValue = vk::ClearColorValue().setFloat32({{0.0f, 0.0f, 0.0f, 0.0f}});
 
@@ -183,19 +184,21 @@ struct Texture::Impl
             clearValue,
             vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
-        Barrier(command,
-                vk::ImageLayout::eGeneral,
-                vk::AccessFlagBits::eTransferWrite,
-                vk::ImageLayout::eGeneral,
-                vk::AccessFlagBits{});
+        TextureBarrier(Handle(),
+                       command.Handle(),
+                       vk::ImageLayout::eGeneral,
+                       vk::AccessFlagBits::eTransferWrite,
+                       vk::ImageLayout::eGeneral,
+                       vk::AccessFlagBits{});
       }
       else
       {
-        Barrier(command,
-                imageLayout,
-                vk::AccessFlagBits{},
-                vk::ImageLayout::eGeneral,
-                vk::AccessFlagBits{});
+        TextureBarrier(Handle(),
+                       command.Handle(),
+                       imageLayout,
+                       vk::AccessFlagBits{},
+                       vk::ImageLayout::eGeneral,
+                       vk::AccessFlagBits{});
       }
     });
   }
@@ -237,11 +240,12 @@ struct Texture::Impl
   void Clear(CommandEncoder& command, vk::ClearColorValue colour)
   {
     // TODO access flags wrong?
-    Barrier(command,
-            vk::ImageLayout::eGeneral,
-            vk::AccessFlagBits{},
-            vk::ImageLayout::eGeneral,
-            vk::AccessFlagBits::eTransferWrite);
+    TextureBarrier(Handle(),
+                   command.Handle(),
+                   vk::ImageLayout::eGeneral,
+                   vk::AccessFlagBits{},
+                   vk::ImageLayout::eGeneral,
+                   vk::AccessFlagBits::eTransferWrite);
 
     command.Handle().clearColorImage(
         mImage,
@@ -249,11 +253,12 @@ struct Texture::Impl
         colour,
         vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
-    Barrier(command,
-            vk::ImageLayout::eGeneral,
-            vk::AccessFlagBits::eTransferWrite,
-            vk::ImageLayout::eGeneral,
-            vk::AccessFlagBits{});
+    TextureBarrier(Handle(),
+                   command.Handle(),
+                   vk::ImageLayout::eGeneral,
+                   vk::AccessFlagBits::eTransferWrite,
+                   vk::ImageLayout::eGeneral,
+                   vk::AccessFlagBits{});
   }
 
   void CopyFrom(const void* data)
@@ -358,16 +363,18 @@ struct Texture::Impl
       throw std::runtime_error("Invalid source texture to copy");
     }
 
-    srcImage.Barrier(command,
-                     vk::ImageLayout::eGeneral,
-                     vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead,
-                     vk::ImageLayout::eTransferSrcOptimal,
-                     vk::AccessFlagBits::eTransferRead);
-    Barrier(command,
-            vk::ImageLayout::eGeneral,
-            vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead,
-            vk::ImageLayout::eTransferDstOptimal,
-            vk::AccessFlagBits::eTransferWrite);
+    TextureBarrier(srcImage.Handle(),
+                   command.Handle(),
+                   vk::ImageLayout::eGeneral,
+                   vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead,
+                   vk::ImageLayout::eTransferSrcOptimal,
+                   vk::AccessFlagBits::eTransferRead);
+    TextureBarrier(Handle(),
+                   command.Handle(),
+                   vk::ImageLayout::eGeneral,
+                   vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead,
+                   vk::ImageLayout::eTransferDstOptimal,
+                   vk::AccessFlagBits::eTransferWrite);
 
     auto region = vk::ImageCopy()
                       .setSrcSubresource({vk::ImageAspectFlagBits::eColor, 0, 0, 1})
@@ -380,28 +387,35 @@ struct Texture::Impl
                                vk::ImageLayout::eTransferDstOptimal,
                                region);
 
-    srcImage.Barrier(command,
-                     vk::ImageLayout::eTransferSrcOptimal,
-                     vk::AccessFlagBits::eTransferRead,
-                     vk::ImageLayout::eGeneral,
-                     vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead |
-                         vk::AccessFlagBits::eHostRead);
+    TextureBarrier(srcImage.Handle(),
+                   command.Handle(),
+                   vk::ImageLayout::eTransferSrcOptimal,
+                   vk::AccessFlagBits::eTransferRead,
+                   vk::ImageLayout::eGeneral,
+                   vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead |
+                       vk::AccessFlagBits::eHostRead);
 
-    Barrier(command,
-            vk::ImageLayout::eTransferDstOptimal,
-            vk::AccessFlagBits::eTransferWrite,
-            vk::ImageLayout::eGeneral,
-            vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead |
-                vk::AccessFlagBits::eHostRead);
+    TextureBarrier(Handle(),
+                   command.Handle(),
+                   vk::ImageLayout::eTransferDstOptimal,
+                   vk::AccessFlagBits::eTransferWrite,
+                   vk::ImageLayout::eGeneral,
+                   vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead |
+                       vk::AccessFlagBits::eHostRead);
   }
 
   void Barrier(CommandEncoder& command,
-               vk::ImageLayout oldLayout,
-               vk::AccessFlags srcMask,
-               vk::ImageLayout newLayout,
-               vk::AccessFlags dstMask)
+               ImageLayout oldLayout,
+               Access srcMask,
+               ImageLayout newLayout,
+               Access dstMask)
   {
-    TextureBarrier(mImage, command.Handle(), oldLayout, srcMask, newLayout, dstMask);
+    TextureBarrier(mImage,
+                   command.Handle(),
+                   ConvertImageLayout(oldLayout),
+                   ConvertAccess(srcMask),
+                   ConvertImageLayout(newLayout),
+                   ConvertAccess(dstMask));
   }
 
   vk::ImageView GetView() const { return *mImageView; }
@@ -444,10 +458,10 @@ void Texture::CopyFrom(CommandEncoder& command, Texture& srcImage)
 }
 
 void Texture::Barrier(CommandEncoder& command,
-                      vk::ImageLayout oldLayout,
-                      vk::AccessFlags oldAccess,
-                      vk::ImageLayout newLayout,
-                      vk::AccessFlags newAccess)
+                      ImageLayout oldLayout,
+                      Access oldAccess,
+                      ImageLayout newLayout,
+                      Access newAccess)
 {
   mImpl->Barrier(command, oldLayout, oldAccess, newLayout, newAccess);
 }

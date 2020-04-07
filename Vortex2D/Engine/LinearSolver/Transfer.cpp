@@ -62,7 +62,7 @@ void Transfer::Prolongate(Renderer::CommandEncoder& command, std::size_t level)
 
   mProlongateBound[level].Record(command);
   mProlongateBuffer[level]->Barrier(
-      command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+      command, Renderer::Access::Write, Renderer::Access::Read);
 }
 
 void Transfer::Restrict(Renderer::CommandEncoder& command, std::size_t level)
@@ -71,7 +71,7 @@ void Transfer::Restrict(Renderer::CommandEncoder& command, std::size_t level)
 
   mRestrictBound[level].Record(command);
   mRestrictBuffer[level]->Barrier(
-      command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+      command, Renderer::Access::Write, Renderer::Access::Read);
 }
 
 }  // namespace Fluid

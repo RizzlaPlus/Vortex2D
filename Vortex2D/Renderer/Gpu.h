@@ -55,6 +55,31 @@ enum class BufferUsage
   Index
 };
 
+enum class Access
+{
+  None,
+  Write,
+  Read,
+};
+
+enum class ImageLayout
+{
+  General,
+};
+
+namespace Handle
+{
+typedef struct Buffer_T* Buffer;
+typedef struct ImageView_T* ImageView;
+typedef struct Image_T* Image;
+typedef struct Sampler_T* Sampler;
+typedef struct PipelineLayout_T* PipelineLayout;
+typedef struct CommandBuffer_T* CommandBuffer;
+typedef struct Framebuffer_T* Framebuffer;
+typedef struct RenderPass_T* RenderPass;
+
+}  // namespace Handle
+
 }  // namespace Renderer
 }  // namespace Vortex2D
 

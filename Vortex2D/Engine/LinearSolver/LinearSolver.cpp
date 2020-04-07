@@ -130,10 +130,10 @@ void LinearSolver::Error::Bind(Renderer::GenericBuffer& d,
 
   mErrorCmd.Record([&](Renderer::CommandEncoder& command) {
     mResidualBound.Record(command);
-    mResidual.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    mResidual.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
 
     mReduceMaxBound.Record(command);
-    mError.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    mError.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
 
     mLocalError.CopyFrom(command, mError);
   });

@@ -8,6 +8,9 @@
 
 #include <Vortex2D/Renderer/Gpu.h>
 
+#include <memory>
+#include <vector>
+
 #include <glm/mat2x2.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>

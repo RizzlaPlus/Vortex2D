@@ -37,10 +37,10 @@ Pressure::Pressure(Renderer::Device& device,
     mBuildMatrixBound.PushConstant(command, dt);
     mBuildMatrixBound.Record(command);
     data.Diagonal.Barrier(
-        command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
-    data.Lower.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+        command, Renderer::Access::Write, Renderer::Access::Read);
+    data.Lower.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
     mBuildDivBound.Record(command);
-    data.B.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    data.B.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
     command.DebugMarkerEnd();
   });
 

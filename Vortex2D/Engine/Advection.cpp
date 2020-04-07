@@ -58,10 +58,10 @@ void Advection::AdvectBind(Density& density)
     command.DebugMarkerBegin("Density advect", {0.86f, 0.14f, 0.52f, 1.0f});
     mAdvectBound.Record(command);
     density.mFieldBack.Barrier(command,
-                               vk::ImageLayout::eGeneral,
-                               vk::AccessFlagBits::eShaderWrite,
-                               vk::ImageLayout::eGeneral,
-                               vk::AccessFlagBits::eShaderRead);
+                               Renderer::ImageLayout::General,
+                               Renderer::Access::Write,
+                               Renderer::ImageLayout::General,
+                               Renderer::Access::Read);
     density.CopyFrom(command, density.mFieldBack);
     command.DebugMarkerEnd();
   });
@@ -86,7 +86,7 @@ void Advection::AdvectParticleBind(
     command.DebugMarkerBegin("Particle advect", {0.09f, 0.17f, 0.36f, 1.0f});
     mAdvectParticlesBound.PushConstant(command, mDt);
     mAdvectParticlesBound.RecordIndirect(command, dispatchParams);
-    particles.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    particles.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
     command.DebugMarkerEnd();
   });
 }

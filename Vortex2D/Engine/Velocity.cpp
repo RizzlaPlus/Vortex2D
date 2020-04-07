@@ -28,10 +28,10 @@ Velocity::Velocity(Renderer::Device& device, const glm::ivec2& size)
     command.DebugMarkerBegin("Velocity diff", {0.32f, 0.60f, 0.67f, 1.0f});
     mVelocityDiffBound.Record(command);
     mOutputVelocity.Barrier(command,
-                            vk::ImageLayout::eGeneral,
-                            vk::AccessFlagBits::eShaderWrite,
-                            vk::ImageLayout::eGeneral,
-                            vk::AccessFlagBits::eShaderRead);
+                            Renderer::ImageLayout::General,
+                            Renderer::Access::Write,
+                            Renderer::ImageLayout::General,
+                            Renderer::Access::Read);
     mDVelocity.CopyFrom(command, mOutputVelocity);
     command.DebugMarkerEnd();
   });

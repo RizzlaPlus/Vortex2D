@@ -56,10 +56,10 @@ void Jacobi::Record(Renderer::CommandEncoder& command, int iterations)
     mJacobiFrontBound.PushConstant(command, mW);
     mJacobiFrontBound.Record(command);
     mBackPressure.Barrier(
-        command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+        command, Renderer::Access::Write, Renderer::Access::Read);
     mJacobiBackBound.PushConstant(command, mW);
     mJacobiBackBound.Record(command);
-    mPressure->Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    mPressure->Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
   }
 }
 

@@ -264,11 +264,8 @@ TEST(ComputeTests, FloatImage)
 
   device->Execute([&](CommandEncoder& command) {
     boundWork.Record(command);
-    texture.Barrier(command,
-                    vk::ImageLayout::eGeneral,
-                    vk::AccessFlagBits::eShaderWrite,
-                    vk::ImageLayout::eGeneral,
-                    vk::AccessFlagBits::eShaderRead);
+    texture.Barrier(
+        command, ImageLayout::General, Access::Write, ImageLayout::General, Access::Read);
     localTexture.CopyFrom(command, texture);
   });
 

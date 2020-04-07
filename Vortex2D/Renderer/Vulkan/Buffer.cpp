@@ -13,6 +13,13 @@ namespace Vortex2D
 {
 namespace Renderer
 {
+void TextureBarrier(vk::Image image,
+                    vk::CommandBuffer commandBuffer,
+                    vk::ImageLayout oldLayout,
+                    vk::AccessFlags srcMask,
+                    vk::ImageLayout newLayout,
+                    vk::AccessFlags dstMask);
+
 void BufferBarrier(vk::Buffer buffer,
                    vk::CommandBuffer command,
                    vk::AccessFlags oldAccess,
@@ -117,15 +124,27 @@ struct GenericBuffer::Impl
     }
 
     // TODO improve barriers
-    srcBuffer.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eTransferRead);
-    Barrier(command, vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eTransferWrite);
+    BufferBarrier(srcBuffer.Handle(),
+                  command.Handle(),
+                  vk::AccessFlagBits::eShaderWrite,
+                  vk::AccessFlagBits::eTransferRead);
+    BufferBarrier(Handle(),
+                  command.Handle(),
+                  vk::AccessFlagBits::eShaderRead,
+                  vk::AccessFlagBits::eTransferWrite);
 
     auto region = vk::BufferCopy().setSize(mSize);
 
     command.Handle().copyBuffer(srcBuffer.Handle(), mBuffer, region);
 
-    Barrier(command, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead);
-    srcBuffer.Barrier(command, vk::AccessFlagBits::eTransferRead, vk::AccessFlagBits::eShaderRead);
+    BufferBarrier(Handle(),
+                  command.Handle(),
+                  vk::AccessFlagBits::eTransferWrite,
+                  vk::AccessFlagBits::eShaderRead);
+    BufferBarrier(srcBuffer.Handle(),
+                  command.Handle(),
+                  vk::AccessFlagBits::eTransferRead,
+                  vk::AccessFlagBits::eShaderRead);
   }
 
   void CopyFrom(Renderer::CommandEncoder& command, Texture& srcTexture)
@@ -137,11 +156,12 @@ struct GenericBuffer::Impl
       throw std::runtime_error("Cannot copy texture of different sizes");
     }
 
-    srcTexture.Barrier(command,
-                       vk::ImageLayout::eGeneral,
-                       vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eColorAttachmentWrite,
-                       vk::ImageLayout::eTransferSrcOptimal,
-                       vk::AccessFlagBits::eTransferRead);
+    TextureBarrier(srcTexture.Handle(),
+                   command.Handle(),
+                   vk::ImageLayout::eGeneral,
+                   vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eColorAttachmentWrite,
+                   vk::ImageLayout::eTransferSrcOptimal,
+                   vk::AccessFlagBits::eTransferRead);
 
     auto info = vk::BufferImageCopy()
                     .setImageSubresource({vk::ImageAspectFlagBits::eColor, 0, 0, 1})
@@ -150,25 +170,35 @@ struct GenericBuffer::Impl
     command.Handle().copyImageToBuffer(
         srcTexture.Handle(), vk::ImageLayout::eTransferSrcOptimal, mBuffer, info);
 
-    srcTexture.Barrier(command,
-                       vk::ImageLayout::eTransferSrcOptimal,
-                       vk::AccessFlagBits::eTransferRead,
-                       vk::ImageLayout::eGeneral,
-                       vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead);
+    TextureBarrier(srcTexture.Handle(),
+                   command.Handle(),
+                   vk::ImageLayout::eTransferSrcOptimal,
+                   vk::AccessFlagBits::eTransferRead,
+                   vk::ImageLayout::eGeneral,
+                   vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead);
 
-    Barrier(command, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead);
+    BufferBarrier(Handle(),
+                  command.Handle(),
+                  vk::AccessFlagBits::eTransferWrite,
+                  vk::AccessFlagBits::eShaderRead);
   }
 
-  void Barrier(CommandEncoder& command, vk::AccessFlags oldAccess, vk::AccessFlags newAccess)
+  void Barrier(CommandEncoder& command, Access oldAccess, Access newAccess)
   {
-    BufferBarrier(mBuffer, command.Handle(), oldAccess, newAccess);
+    BufferBarrier(mBuffer, command.Handle(), ConvertAccess(oldAccess), ConvertAccess(newAccess));
   }
 
   void Clear(Renderer::CommandEncoder& command)
   {
-    Barrier(command, vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eTransferWrite);
+    BufferBarrier(Handle(),
+                  command.Handle(),
+                  vk::AccessFlagBits::eShaderRead,
+                  vk::AccessFlagBits::eTransferWrite);
     command.Handle().fillBuffer(mBuffer, 0, mSize, 0);
-    Barrier(command, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead);
+    BufferBarrier(Handle(),
+                  command.Handle(),
+                  vk::AccessFlagBits::eTransferWrite,
+                  vk::AccessFlagBits::eShaderRead);
   }
 
   void CopyFrom(uint32_t offset, const void* data, uint32_t size)
@@ -257,9 +287,7 @@ void GenericBuffer::Resize(std::uint64_t size)
   mImpl->Resize(size);
 }
 
-void GenericBuffer::Barrier(CommandEncoder& command,
-                            vk::AccessFlags oldAccess,
-                            vk::AccessFlags newAccess)
+void GenericBuffer::Barrier(CommandEncoder& command, Access oldAccess, Access newAccess)
 {
   mImpl->Barrier(command, oldAccess, newAccess);
 }

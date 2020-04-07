@@ -40,17 +40,17 @@ LevelSet::LevelSet(Renderer::Device& device, const glm::ivec2& size, int reiniti
       mRedistanceFront.PushConstant(command, 0.1f);
       mRedistanceFront.Record(command);
       mLevelSetBack.Barrier(command,
-                            vk::ImageLayout::eGeneral,
-                            vk::AccessFlagBits::eShaderWrite,
-                            vk::ImageLayout::eGeneral,
-                            vk::AccessFlagBits::eShaderRead);
+                            Renderer::ImageLayout::General,
+                            Renderer::Access::Write,
+                            Renderer::ImageLayout::General,
+                            Renderer::Access::Read);
       mRedistanceBack.PushConstant(command, 0.1f);
       mRedistanceBack.Record(command);
       Barrier(command,
-              vk::ImageLayout::eGeneral,
-              vk::AccessFlagBits::eShaderWrite,
-              vk::ImageLayout::eGeneral,
-              vk::AccessFlagBits::eShaderRead);
+              Renderer::ImageLayout::General,
+              Renderer::Access::Write,
+              Renderer::ImageLayout::General,
+              Renderer::Access::Read);
     }
 
     command.DebugMarkerEnd();
@@ -60,10 +60,10 @@ LevelSet::LevelSet(Renderer::Device& device, const glm::ivec2& size, int reiniti
     command.DebugMarkerBegin("Shrink Wrap", {0.36f, 0.71f, 0.38f, 1.0f});
     mShrinkWrapBound.Record(command);
     mLevelSetBack.Barrier(command,
-                          vk::ImageLayout::eGeneral,
-                          vk::AccessFlagBits::eShaderWrite,
-                          vk::ImageLayout::eGeneral,
-                          vk::AccessFlagBits::eShaderRead);
+                          Renderer::ImageLayout::General,
+                          Renderer::Access::Write,
+                          Renderer::ImageLayout::General,
+                          Renderer::Access::Read);
     CopyFrom(command, mLevelSetBack);
     command.DebugMarkerEnd();
   });
@@ -95,10 +95,10 @@ void LevelSet::ExtrapolateBind(Renderer::Texture& solidPhi)
     command.DebugMarkerBegin("Extrapolate phi", {0.53f, 0.09f, 0.16f, 1.0f});
     mExtrapolateBound.Record(command);
     Barrier(command,
-            vk::ImageLayout::eGeneral,
-            vk::AccessFlagBits::eShaderWrite,
-            vk::ImageLayout::eGeneral,
-            vk::AccessFlagBits::eShaderRead);
+            Renderer::ImageLayout::General,
+            Renderer::Access::Write,
+            Renderer::ImageLayout::General,
+            Renderer::Access::Read);
     command.DebugMarkerEnd();
   });
 }

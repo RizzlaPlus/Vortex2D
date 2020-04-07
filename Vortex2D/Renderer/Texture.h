@@ -111,10 +111,10 @@ public:
    * @param dstMask new access
    */
   VORTEX2D_API void Barrier(CommandEncoder& command,
-                            vk::ImageLayout oldLayout,
-                            vk::AccessFlags oldAccess,
-                            vk::ImageLayout newLayout,
-                            vk::AccessFlags newAccess);
+                            ImageLayout oldLayout,
+                            Access oldAccess,
+                            ImageLayout newLayout,
+                            Access newAccess);
 
   VORTEX2D_API vk::ImageView GetView() const;
   VORTEX2D_API uint32_t GetWidth() const;

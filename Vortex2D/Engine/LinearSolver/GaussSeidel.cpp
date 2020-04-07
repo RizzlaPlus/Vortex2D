@@ -102,10 +102,10 @@ void GaussSeidel::Record(Renderer::CommandEncoder& command, int iterations)
   {
     mGaussSeidelBound.PushConstant(command, mW, 1);
     mGaussSeidelBound.Record(command);
-    mPressure->Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    mPressure->Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
     mGaussSeidelBound.PushConstant(command, mW, 0);
     mGaussSeidelBound.Record(command);
-    mPressure->Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    mPressure->Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
   }
 }
 
@@ -138,7 +138,7 @@ void LocalGaussSeidel::Bind(Renderer::GenericBuffer& d,
 void LocalGaussSeidel::Record(Renderer::CommandEncoder& command)
 {
   mLocalGaussSeidelBound.Record(command);
-  mPressure->Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+  mPressure->Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
 }
 
 }  // namespace Fluid

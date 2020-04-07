@@ -537,7 +537,7 @@ vk::Pipeline Device::CreateComputePipeline(vk::ShaderModule shader,
   auto stageInfo = vk::PipelineShaderStageCreateInfo()
                        .setModule(shader)
                        .setPName("main")
-                       .setStage(ConvertShaderStage(Renderer::ShaderStage::Compute))
+                       .setStage(vk::ShaderStageFlagBits::eCompute)
                        .setPSpecializationInfo(&specConstInfo.info);
 
   auto pipelineInfo = vk::ComputePipelineCreateInfo().setStage(stageInfo).setLayout(layout);

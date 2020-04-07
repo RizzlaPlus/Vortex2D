@@ -81,14 +81,14 @@ void ConjugateGradient::Bind(Renderer::GenericBuffer& d,
     // z = M^-1 r
     z.Clear(command);
     mPreconditioner.Record(command);
-    z.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    z.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
 
     // s = z
     s.CopyFrom(command, z);
 
     // rho = zTr
     multiplyZBound.Record(command);
-    inner.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    inner.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
     reduceSumRhoBound.Record(command);
     z.Clear(command);
 
@@ -100,24 +100,24 @@ void ConjugateGradient::Bind(Renderer::GenericBuffer& d,
 
     // z = As
     matrixMultiplyBound.Record(command);
-    z.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    z.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
 
     // sigma = zTs
     multiplySBound.Record(command);
-    inner.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    inner.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
     reduceSumSigmaBound.Record(command);
 
     // alpha = rho / sigma
     divideRhoBound.Record(command);
-    alpha.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    alpha.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
 
     // p = p + alpha * s
     multiplyAddPBound.Record(command);
-    pressure.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    pressure.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
 
     // r = r - alpha * z
     multiplySubRBound.Record(command);
-    r.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    r.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
 
     // calculate max error
     reduceMaxBound.Record(command);
@@ -125,21 +125,21 @@ void ConjugateGradient::Bind(Renderer::GenericBuffer& d,
     // z = M^-1 r
     z.Clear(command);
     mPreconditioner.Record(command);
-    z.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    z.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
 
     // rho_new = zTr
     multiplyZBound.Record(command);
-    inner.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    inner.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
     reduceSumRhoNewBound.Record(command);
 
     // beta = rho_new / rho
     divideRhoNewBound.Record(command);
-    beta.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    beta.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
 
     // s = z + beta * s
     multiplyAddZBound.Record(command);
     z.Clear(command);
-    s.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+    s.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
 
     // rho = rho_new
     rho.CopyFrom(command, rho_new);

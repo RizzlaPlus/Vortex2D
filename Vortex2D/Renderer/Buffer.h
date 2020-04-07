@@ -67,9 +67,7 @@ public:
    * @param oldAccess old access
    * @param newAccess new access
    */
-  VORTEX2D_API void Barrier(CommandEncoder& command,
-                            vk::AccessFlags oldAccess,
-                            vk::AccessFlags newAccess);
+  VORTEX2D_API void Barrier(CommandEncoder& command, Access oldAccess, Access newAccess);
 
   /**
    * @brief Clear the buffer with 0

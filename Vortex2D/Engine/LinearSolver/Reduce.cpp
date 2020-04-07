@@ -69,7 +69,7 @@ Reduce::Bound Reduce::Bind(Renderer::GenericBuffer& input, Renderer::GenericBuff
 
     auto* buffer = buffers[i + 1];
     bufferBarriers.emplace_back([=](Renderer::CommandEncoder& command) {
-      buffer->Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+      buffer->Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
     });
   }
 

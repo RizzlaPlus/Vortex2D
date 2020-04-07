@@ -128,6 +128,28 @@ inline vk::BufferUsageFlags ConvertBufferUsage(BufferUsage bufferUsage)
   return bufferUsageFlags | vk::BufferUsageFlagBits::eTransferDst |
          vk::BufferUsageFlagBits::eTransferSrc;
 }
+
+inline vk::ImageLayout ConvertImageLayout(ImageLayout layout)
+{
+  switch (layout)
+  {
+    case ImageLayout::General:
+      return vk::ImageLayout::eGeneral;
+  }
+}
+
+inline vk::AccessFlags ConvertAccess(Access access)
+{
+  switch (access)
+  {
+    case Access::None:
+      return {};
+    case Access::Read:
+      return vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead;
+    case Access::Write:
+      return vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eColorAttachmentWrite;
+  }
+}
 }  // namespace Renderer
 }  // namespace Vortex2D
 

@@ -65,9 +65,9 @@ void PrefixScan::BindRecursive(std::vector<Renderer::CommandBuffer::CommandFn>& 
     bound.emplace_back(mPreScanStoreSumWork.Bind(computeSize, {input, output, partialSums}));
 
     bufferBarriers.emplace_back([&](Renderer::CommandEncoder& command) {
-      output.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+      output.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
       partialSums.Barrier(
-          command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+          command, Renderer::Access::Write, Renderer::Access::Read);
     });
 
     BindRecursive(bufferBarriers,
@@ -80,7 +80,7 @@ void PrefixScan::BindRecursive(std::vector<Renderer::CommandBuffer::CommandFn>& 
 
     bound.emplace_back(mAddWork.Bind(computeSize, {partialSums, output}));
     bufferBarriers.emplace_back([&](Renderer::CommandEncoder& command) {
-      output.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+      output.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
     });
   }
   else
@@ -88,9 +88,9 @@ void PrefixScan::BindRecursive(std::vector<Renderer::CommandBuffer::CommandFn>& 
     bound.emplace_back(mPreScanWork.Bind(computeSize, {input, output, dispatchParams}));
 
     bufferBarriers.emplace_back([&](Renderer::CommandEncoder& command) {
-      output.Barrier(command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+      output.Barrier(command, Renderer::Access::Write, Renderer::Access::Read);
       dispatchParams.Barrier(
-          command, vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead);
+          command, Renderer::Access::Write, Renderer::Access::Read);
     });
   }
 }
