@@ -38,7 +38,7 @@ Reduce::Reduce(Renderer::Device& device,
   while (computeSize.WorkSize.x > 1)
   {
     mBuffers.emplace_back(device,
-                          vk::BufferUsageFlagBits::eStorageBuffer,
+                          Renderer::BufferUsage::Storage,
                           Renderer::MemoryUsage::Gpu,
                           typeSize * computeSize.WorkSize.x);
 

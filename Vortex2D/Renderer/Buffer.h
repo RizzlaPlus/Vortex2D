@@ -23,7 +23,7 @@ class GenericBuffer
 {
 public:
   VORTEX2D_API GenericBuffer(Device& device,
-                             vk::BufferUsageFlags usageFlags,
+                             BufferUsage usageFlags,
                              MemoryUsage memoryUsage,
                              std::uint64_t deviceSize);
 
@@ -106,7 +106,7 @@ class VertexBuffer : public GenericBuffer
 {
 public:
   VertexBuffer(Device& device, std::size_t size, MemoryUsage memoryUsage = MemoryUsage::Gpu)
-      : GenericBuffer(device, vk::BufferUsageFlagBits::eVertexBuffer, memoryUsage, sizeof(T) * size)
+      : GenericBuffer(device, BufferUsage::Vertex, memoryUsage, sizeof(T) * size)
   {
   }
 };
@@ -119,7 +119,7 @@ class UniformBuffer : public GenericBuffer
 {
 public:
   UniformBuffer(Device& device, MemoryUsage memoryUsage = MemoryUsage::Gpu)
-      : GenericBuffer(device, vk::BufferUsageFlagBits::eUniformBuffer, memoryUsage, sizeof(T))
+      : GenericBuffer(device, BufferUsage::Uniform, memoryUsage, sizeof(T))
   {
   }
 };
@@ -132,10 +132,7 @@ class Buffer : public GenericBuffer
 {
 public:
   Buffer(Device& device, std::size_t size = 1, MemoryUsage memoryUsage = MemoryUsage::Gpu)
-      : GenericBuffer(device,
-                      vk::BufferUsageFlagBits::eStorageBuffer,
-                      memoryUsage,
-                      sizeof(T) * size)
+      : GenericBuffer(device, BufferUsage::Storage, memoryUsage, sizeof(T) * size)
   {
   }
 };
@@ -148,11 +145,7 @@ class IndirectBuffer : public GenericBuffer
 {
 public:
   IndirectBuffer(Device& device, MemoryUsage memoryUsage = MemoryUsage::Gpu)
-      : GenericBuffer(
-            device,
-            vk::BufferUsageFlagBits::eIndirectBuffer | vk::BufferUsageFlagBits::eStorageBuffer,
-            memoryUsage,
-            sizeof(T))
+      : GenericBuffer(device, BufferUsage::Indirect, memoryUsage, sizeof(T))
   {
   }
 };
@@ -165,7 +158,7 @@ class IndexBuffer : public GenericBuffer
 {
 public:
   IndexBuffer(Device& device, std::size_t size, MemoryUsage memoryUsage = MemoryUsage::Gpu)
-      : GenericBuffer(device, vk::BufferUsageFlagBits::eIndexBuffer, memoryUsage, sizeof(T) * size)
+      : GenericBuffer(device, BufferUsage::Indirect, memoryUsage, sizeof(T) * size)
   {
     static_assert(std::is_same<uint16_t, T>::value || std::is_same<uint32_t, T>::value,
                   "IndexBuffer needs to be uint16_t or uint32_t");

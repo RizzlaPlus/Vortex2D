@@ -34,16 +34,25 @@ enum class Format
   R32G32B32A32Sfloat,
 };
 
-enum ShaderStage
+enum class ShaderStage
 {
   Vertex,
   Fragment,
   Compute,
 };
 
-enum PrimitiveTopology
+enum class PrimitiveTopology
 {
   Triangle,
+};
+
+enum class BufferUsage
+{
+  Vertex,
+  Uniform,
+  Storage,
+  Indirect,
+  Index
 };
 
 }  // namespace Renderer

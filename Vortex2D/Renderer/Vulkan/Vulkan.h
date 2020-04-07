@@ -100,6 +100,34 @@ inline vk::PrimitiveTopology ConvertTopology(PrimitiveTopology topology)
       return vk::PrimitiveTopology::eTriangleList;
   }
 }
+
+inline vk::BufferUsageFlags ConvertBufferUsage(BufferUsage bufferUsage)
+{
+  vk::BufferUsageFlags bufferUsageFlags;
+  switch (bufferUsage)
+  {
+    case BufferUsage::Indirect:
+      bufferUsageFlags =
+          vk::BufferUsageFlagBits::eIndirectBuffer | vk::BufferUsageFlagBits::eStorageBuffer;
+      break;
+    case BufferUsage::Vertex:
+      bufferUsageFlags =
+          vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eVertexBuffer;
+      break;
+    case BufferUsage::Uniform:
+      bufferUsageFlags = vk::BufferUsageFlagBits::eUniformBuffer;
+      break;
+    case BufferUsage::Storage:
+      bufferUsageFlags = vk::BufferUsageFlagBits::eStorageBuffer;
+      break;
+    case BufferUsage::Index:
+      bufferUsageFlags = vk::BufferUsageFlagBits::eIndexBuffer;
+      break;
+  }
+
+  return bufferUsageFlags | vk::BufferUsageFlagBits::eTransferDst |
+         vk::BufferUsageFlagBits::eTransferSrc;
+}
 }  // namespace Renderer
 }  // namespace Vortex2D
 

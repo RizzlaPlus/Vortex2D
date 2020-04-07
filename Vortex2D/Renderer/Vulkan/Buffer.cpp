@@ -44,14 +44,10 @@ struct GenericBuffer::Impl
   VmaAllocation mAllocation;
   VmaAllocationInfo mAllocationInfo;
 
-  Impl(Device& device,
-       vk::BufferUsageFlags usageFlags,
-       MemoryUsage memoryUsage,
-       std::uint64_t deviceSize)
+  Impl(Device& device, BufferUsage usageFlags, MemoryUsage memoryUsage, std::uint64_t deviceSize)
       : mDevice(device)
       , mSize(deviceSize)
-      , mUsageFlags(usageFlags | vk::BufferUsageFlagBits::eTransferDst |
-                    vk::BufferUsageFlagBits::eTransferSrc)
+      , mUsageFlags(ConvertBufferUsage(usageFlags))
       , mMemoryUsage(memoryUsage)
   {
     Create();
@@ -225,7 +221,7 @@ struct GenericBuffer::Impl
 };
 
 GenericBuffer::GenericBuffer(Device& device,
-                             vk::BufferUsageFlags usageFlags,
+                             BufferUsage usageFlags,
                              MemoryUsage memoryUsage,
                              std::uint64_t deviceSize)
     : mImpl(std::make_unique<GenericBuffer::Impl>(device, usageFlags, memoryUsage, deviceSize))
