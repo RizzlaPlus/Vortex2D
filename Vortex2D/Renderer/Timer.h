@@ -20,6 +20,7 @@ class Timer
 {
 public:
   VORTEX2D_API Timer(Device& device);
+  VORTEX2D_API ~Timer();
 
   /**
    * @brief Start the timer after the current last command buffer
@@ -57,10 +58,8 @@ public:
   VORTEX2D_API uint64_t GetElapsedNs();
 
 private:
-  Device& mDevice;
-  CommandBuffer mStart;
-  CommandBuffer mStop;
-  vk::UniqueQueryPool mPool;
+  struct Impl;
+  std::unique_ptr<Impl> mImpl;
 };
 
 }  // namespace Renderer

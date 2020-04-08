@@ -37,177 +37,210 @@ struct SwapChainSupportDetails
   bool IsValid() const { return !formats.empty() && !presentModes.empty(); }
 };
 
-RenderWindow::RenderWindow(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
-    : RenderTarget(width, height), mDevice(device), mIndex(0), mFrameIndex(0)
+struct RenderWindow::Impl
 {
-  // get swap chain support details
-  SwapChainSupportDetails details(device.GetPhysicalDevice(), surface);
-  if (!details.IsValid())
+  Impl(RenderWindow& self, Device& device, vk::SurfaceKHR surface)
+      : mSelf(self), mDevice(device), mIndex(0), mFrameIndex(0)
   {
-    throw std::runtime_error("Swap chain support invalid");
+    // get swap chain support details
+    SwapChainSupportDetails details(device.GetPhysicalDevice(), surface);
+    if (!details.IsValid())
+    {
+      throw std::runtime_error("Swap chain support invalid");
+    }
+
+    // TODO verify this value is valid
+    uint32_t numFramebuffers = details.capabilities.minImageCount + 1;
+
+    // TODO choose given the details
+    auto format = Format::B8G8R8A8Unorm;
+
+    // TODO find if better mode is available
+    auto mode = vk::PresentModeKHR::eFifo;
+
+    // create swap chain
+    auto swapChainInfo = vk::SwapchainCreateInfoKHR()
+                             .setSurface(surface)
+                             .setImageFormat(ConvertFormat(format))
+                             .setImageColorSpace(vk::ColorSpaceKHR::eSrgbNonlinear)
+                             .setMinImageCount(numFramebuffers)
+                             .setImageExtent({mSelf.Width, mSelf.Height})
+                             .setImageArrayLayers(1)
+                             .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment |
+                                            vk::ImageUsageFlagBits::eTransferDst)
+                             .setImageSharingMode(vk::SharingMode::eExclusive)
+                             .setPreTransform(details.capabilities.currentTransform)
+                             .setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)
+                             .setPresentMode(mode)
+                             .setClipped(true);
+
+    mSwapChain = device.Handle().createSwapchainKHRUnique(swapChainInfo);
+
+    // create swap chain image views
+    std::vector<vk::Image> swapChainImages = device.Handle().getSwapchainImagesKHR(*mSwapChain);
+    for (const auto& image : swapChainImages)
+    {
+      auto imageViewInfo = vk::ImageViewCreateInfo()
+                               .setImage(image)
+                               .setViewType(vk::ImageViewType::e2D)
+                               .setFormat(ConvertFormat(format))
+                               .setComponents({vk::ComponentSwizzle::eIdentity,
+                                               vk::ComponentSwizzle::eIdentity,
+                                               vk::ComponentSwizzle::eIdentity,
+                                               vk::ComponentSwizzle::eIdentity})
+                               .setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
+
+      mSwapChainImageViews.push_back(device.Handle().createImageViewUnique(imageViewInfo));
+
+      mDevice.Execute([&](CommandEncoder& command) {
+        TextureBarrier(image,
+                       command.Handle(),
+                       vk::ImageLayout::eUndefined,
+                       vk::AccessFlags{},
+                       vk::ImageLayout::eGeneral,
+                       vk::AccessFlagBits::eTransferWrite);
+
+        auto clearValue = vk::ClearColorValue().setFloat32({{0.0f, 0.0f, 0.0f, 0.0f}});
+
+        command.Handle().clearColorImage(
+            image,
+            vk::ImageLayout::eGeneral,
+            clearValue,
+            vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
+
+        TextureBarrier(image,
+                       command.Handle(),
+                       vk::ImageLayout::eGeneral,
+                       vk::AccessFlagBits::eTransferWrite,
+                       vk::ImageLayout::ePresentSrcKHR,
+                       vk::AccessFlags{});
+      });
+    }
+
+    // Create render pass
+    mSelf.RenderPass =
+        RenderpassBuilder()
+            .Attachement(format)
+            .AttachementLoadOp(vk::AttachmentLoadOp::eLoad)
+            .AttachementStoreOp(vk::AttachmentStoreOp::eStore)
+            .AttachementInitialLayout(vk::ImageLayout::ePresentSrcKHR)
+            .AttachementFinalLayout(vk::ImageLayout::ePresentSrcKHR)
+            .Subpass(vk::PipelineBindPoint::eGraphics)
+            .SubpassColorAttachment(vk::ImageLayout::eColorAttachmentOptimal, 0)
+            .Dependency(VK_SUBPASS_EXTERNAL, 0)
+            .DependencySrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+            .DependencyDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+            .DependencyDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
+            .Create(device.Handle());
+
+    // Create framebuffers
+    for (const auto& imageView : mSwapChainImageViews)
+    {
+      vk::ImageView attachments[] = {*imageView};
+      auto framebufferInfo = vk::FramebufferCreateInfo()
+                                 .setRenderPass(*mSelf.RenderPass)
+                                 .setAttachmentCount(1)
+                                 .setPAttachments(attachments)
+                                 .setWidth(mSelf.Width)
+                                 .setHeight(mSelf.Height)
+                                 .setLayers(1);
+
+      mFrameBuffers.push_back(device.Handle().createFramebufferUnique(framebufferInfo));
+
+      // Create semaphores
+      mImageAvailableSemaphores.push_back(device.Handle().createSemaphoreUnique({}));
+      mRenderFinishedSemaphores.push_back(device.Handle().createSemaphoreUnique({}));
+    }
   }
 
-  // TODO verify this value is valid
-  uint32_t numFramebuffers = details.capabilities.minImageCount + 1;
+  ~Impl() {}
 
-  // TODO choose given the details
-  auto format = Format::B8G8R8A8Unorm;
-
-  // TODO find if better mode is available
-  auto mode = vk::PresentModeKHR::eFifo;
-
-  // create swap chain
-  auto swapChainInfo = vk::SwapchainCreateInfoKHR()
-                           .setSurface(surface)
-                           .setImageFormat(ConvertFormat(format))
-                           .setImageColorSpace(vk::ColorSpaceKHR::eSrgbNonlinear)
-                           .setMinImageCount(numFramebuffers)
-                           .setImageExtent({Width, Height})
-                           .setImageArrayLayers(1)
-                           .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment |
-                                          vk::ImageUsageFlagBits::eTransferDst)
-                           .setImageSharingMode(vk::SharingMode::eExclusive)
-                           .setPreTransform(details.capabilities.currentTransform)
-                           .setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)
-                           .setPresentMode(mode)
-                           .setClipped(true);
-
-  mSwapChain = device.Handle().createSwapchainKHRUnique(swapChainInfo);
-
-  // create swap chain image views
-  std::vector<vk::Image> swapChainImages = device.Handle().getSwapchainImagesKHR(*mSwapChain);
-  for (const auto& image : swapChainImages)
+  RenderCommand Record(RenderTarget::DrawableList drawables, ColorBlendState blendState)
   {
-    auto imageViewInfo = vk::ImageViewCreateInfo()
-                             .setImage(image)
-                             .setViewType(vk::ImageViewType::e2D)
-                             .setFormat(ConvertFormat(format))
-                             .setComponents({vk::ComponentSwizzle::eIdentity,
-                                             vk::ComponentSwizzle::eIdentity,
-                                             vk::ComponentSwizzle::eIdentity,
-                                             vk::ComponentSwizzle::eIdentity})
-                             .setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
-
-    mSwapChainImageViews.push_back(device.Handle().createImageViewUnique(imageViewInfo));
-
-    mDevice.Execute([&](CommandEncoder& command) {
-      TextureBarrier(image,
-                     command.Handle(),
-                     vk::ImageLayout::eUndefined,
-                     vk::AccessFlags{},
-                     vk::ImageLayout::eGeneral,
-                     vk::AccessFlagBits::eTransferWrite);
-
-      auto clearValue = vk::ClearColorValue().setFloat32({{0.0f, 0.0f, 0.0f, 0.0f}});
-
-      command.Handle().clearColorImage(
-          image,
-          vk::ImageLayout::eGeneral,
-          clearValue,
-          vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
-
-      TextureBarrier(image,
-                     command.Handle(),
-                     vk::ImageLayout::eGeneral,
-                     vk::AccessFlagBits::eTransferWrite,
-                     vk::ImageLayout::ePresentSrcKHR,
-                     vk::AccessFlags{});
-    });
+    RenderState state(mSelf, blendState);
+    return RenderCommand(mDevice, mSelf, state, mFrameBuffers, mIndex, drawables);
   }
 
-  // Create render pass
-  RenderPass = RenderpassBuilder()
-                   .Attachement(format)
-                   .AttachementLoadOp(vk::AttachmentLoadOp::eLoad)
-                   .AttachementStoreOp(vk::AttachmentStoreOp::eStore)
-                   .AttachementInitialLayout(vk::ImageLayout::ePresentSrcKHR)
-                   .AttachementFinalLayout(vk::ImageLayout::ePresentSrcKHR)
-                   .Subpass(vk::PipelineBindPoint::eGraphics)
-                   .SubpassColorAttachment(vk::ImageLayout::eColorAttachmentOptimal, 0)
-                   .Dependency(VK_SUBPASS_EXTERNAL, 0)
-                   .DependencySrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-                   .DependencyDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-                   .DependencyDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-                   .Create(device.Handle());
+  void Submit(RenderCommand& renderCommand) { mRenderCommands.emplace_back(renderCommand); }
 
-  // Create framebuffers
-  for (const auto& imageView : mSwapChainImageViews)
+  void Display()
   {
-    vk::ImageView attachments[] = {*imageView};
-    auto framebufferInfo = vk::FramebufferCreateInfo()
-                               .setRenderPass(*RenderPass)
-                               .setAttachmentCount(1)
-                               .setPAttachments(attachments)
-                               .setWidth(Width)
-                               .setHeight(Height)
-                               .setLayers(1);
+    if (mRenderCommands.empty())
+      return;  // nothing to draw
 
-    mFrameBuffers.push_back(device.Handle().createFramebufferUnique(framebufferInfo));
+    auto result = mDevice.Handle().acquireNextImageKHR(
+        *mSwapChain, UINT64_MAX, *mImageAvailableSemaphores[mFrameIndex], nullptr);
+    if (result.result == vk::Result::eSuccess)
+    {
+      mIndex = result.value;
+    }
+    else
+    {
+      throw std::runtime_error("Acquire error " + vk::to_string(result.result));
+    }
 
-    // Create semaphores
-    mImageAvailableSemaphores.push_back(device.Handle().createSemaphoreUnique({}));
-    mRenderFinishedSemaphores.push_back(device.Handle().createSemaphoreUnique({}));
+    if (mRenderCommands.size() == 1)
+    {
+      mRenderCommands[0].get().Render({*mImageAvailableSemaphores[mFrameIndex]},
+                                      {*mRenderFinishedSemaphores[mFrameIndex]});
+    }
+    else
+    {
+      mRenderCommands.front().get().Render({*mImageAvailableSemaphores[mFrameIndex]});
+      for (std::size_t i = 1; i < mRenderCommands.size() - 1; i++)
+      {
+        mRenderCommands[i].get().Render();
+      }
+      mRenderCommands.back().get().Render({}, {*mRenderFinishedSemaphores[mFrameIndex]});
+    }
+
+    vk::SwapchainKHR swapChain[] = {*mSwapChain};
+    vk::Semaphore waitSemaphores[] = {*mRenderFinishedSemaphores[mFrameIndex]};
+
+    auto presentInfo = vk::PresentInfoKHR()
+                           .setSwapchainCount(1)
+                           .setPSwapchains(swapChain)
+                           .setPImageIndices(&mIndex)
+                           .setPWaitSemaphores(waitSemaphores)
+                           .setWaitSemaphoreCount(1);
+
+    mDevice.Queue().presentKHR(presentInfo);
+    mRenderCommands.clear();
+
+    mFrameIndex = (mFrameIndex + 1) % mFrameBuffers.size();
   }
+
+  RenderWindow& mSelf;
+  Device& mDevice;
+  vk::UniqueSwapchainKHR mSwapChain;
+  std::vector<vk::UniqueImageView> mSwapChainImageViews;
+  std::vector<vk::UniqueFramebuffer> mFrameBuffers;
+  std::vector<vk::UniqueSemaphore> mImageAvailableSemaphores;
+  std::vector<vk::UniqueSemaphore> mRenderFinishedSemaphores;
+  std::vector<std::reference_wrapper<RenderCommand>> mRenderCommands;
+  uint32_t mIndex;
+  uint32_t mFrameIndex;
+};
+
+RenderWindow::RenderWindow(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
+    : RenderTarget(width, height), mImpl(std::make_unique<Impl>(*this, device, surface))
+{
 }
 
 RenderWindow::~RenderWindow() {}
 
 RenderCommand RenderWindow::Record(DrawableList drawables, ColorBlendState blendState)
 {
-  RenderState state(*this, blendState);
-  return RenderCommand(mDevice, *this, state, mFrameBuffers, mIndex, drawables);
+  return mImpl->Record(drawables, blendState);
 }
-
 void RenderWindow::Submit(RenderCommand& renderCommand)
 {
-  mRenderCommands.emplace_back(renderCommand);
+  mImpl->Submit(renderCommand);
 }
 
 void RenderWindow::Display()
 {
-  if (mRenderCommands.empty())
-    return;  // nothing to draw
-
-  auto result = mDevice.Handle().acquireNextImageKHR(
-      *mSwapChain, UINT64_MAX, *mImageAvailableSemaphores[mFrameIndex], nullptr);
-  if (result.result == vk::Result::eSuccess)
-  {
-    mIndex = result.value;
-  }
-  else
-  {
-    throw std::runtime_error("Acquire error " + vk::to_string(result.result));
-  }
-
-  if (mRenderCommands.size() == 1)
-  {
-    mRenderCommands[0].get().Render({*mImageAvailableSemaphores[mFrameIndex]},
-                                    {*mRenderFinishedSemaphores[mFrameIndex]});
-  }
-  else
-  {
-    mRenderCommands.front().get().Render({*mImageAvailableSemaphores[mFrameIndex]});
-    for (std::size_t i = 1; i < mRenderCommands.size() - 1; i++)
-    {
-      mRenderCommands[i].get().Render();
-    }
-    mRenderCommands.back().get().Render({}, {*mRenderFinishedSemaphores[mFrameIndex]});
-  }
-
-  vk::SwapchainKHR swapChain[] = {*mSwapChain};
-  vk::Semaphore waitSemaphores[] = {*mRenderFinishedSemaphores[mFrameIndex]};
-
-  auto presentInfo = vk::PresentInfoKHR()
-                         .setSwapchainCount(1)
-                         .setPSwapchains(swapChain)
-                         .setPImageIndices(&mIndex)
-                         .setPWaitSemaphores(waitSemaphores)
-                         .setWaitSemaphoreCount(1);
-
-  mDevice.Queue().presentKHR(presentInfo);
-  mRenderCommands.clear();
-
-  mFrameIndex = (mFrameIndex + 1) % mFrameBuffers.size();
+  mImpl->Display();
 }
 
 }  // namespace Renderer
