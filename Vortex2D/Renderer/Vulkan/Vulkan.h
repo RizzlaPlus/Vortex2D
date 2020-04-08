@@ -150,6 +150,17 @@ inline vk::AccessFlags ConvertAccess(Access access)
       return vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eColorAttachmentWrite;
   }
 }
+
+inline vk::PipelineBindPoint ConvertPipelineBindPoint(PipelineBindPoint bindPoint)
+{
+  switch (bindPoint)
+  {
+    case PipelineBindPoint::Compute:
+      return vk::PipelineBindPoint::eCompute;
+    case PipelineBindPoint::Graphics:
+      return vk::PipelineBindPoint::eGraphics;
+  }
+}
 }  // namespace Renderer
 }  // namespace Vortex2D
 

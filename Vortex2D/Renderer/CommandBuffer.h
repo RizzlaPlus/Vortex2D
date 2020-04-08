@@ -33,9 +33,9 @@ public:
   void EndRenderPass();
   void End();
 
-  VORTEX2D_API void SetPipeline(vk::PipelineBindPoint pipelineBindPoint, vk::Pipeline pipeline);
+  VORTEX2D_API void SetPipeline(PipelineBindPoint pipelineBindPoint, vk::Pipeline pipeline);
 
-  VORTEX2D_API void SetBindGroup(vk::PipelineBindPoint pipelineBindPoint,
+  VORTEX2D_API void SetBindGroup(PipelineBindPoint pipelineBindPoint,
                                  vk::PipelineLayout layout,
                                  BindGroup& bindGroup);
 

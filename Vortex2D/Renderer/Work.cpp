@@ -169,8 +169,8 @@ void Work::Bound::Record(CommandEncoder& command)
     PushConstantOffset(command, 4, mComputeSize.DomainSize.y);
   }
 
-  command.SetBindGroup(vk::PipelineBindPoint::eCompute, mLayout, mBindGroup);
-  command.SetPipeline(vk::PipelineBindPoint::eCompute, mPipeline);
+  command.SetBindGroup(PipelineBindPoint::Compute, mLayout, mBindGroup);
+  command.SetPipeline(PipelineBindPoint::Compute, mPipeline);
 
   command.Dispatch(mComputeSize.WorkSize.x, mComputeSize.WorkSize.y, 1);
 }
@@ -184,8 +184,8 @@ void Work::Bound::RecordIndirect(CommandEncoder& command,
     PushConstantOffset(command, 4, mComputeSize.DomainSize.y);
   }
 
-  command.SetBindGroup(vk::PipelineBindPoint::eCompute, mLayout, mBindGroup);
-  command.SetPipeline(vk::PipelineBindPoint::eCompute, mPipeline);
+  command.SetBindGroup(PipelineBindPoint::Compute, mLayout, mBindGroup);
+  command.SetPipeline(PipelineBindPoint::Compute, mPipeline);
   command.DispatchIndirect(dispatchParams);
 }
 

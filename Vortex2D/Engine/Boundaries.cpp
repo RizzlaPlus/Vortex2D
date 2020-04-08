@@ -129,8 +129,8 @@ void Polygon::Draw(Renderer::CommandEncoder& command, const Renderer::RenderStat
 {
   auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
 
-  command.SetPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-  command.SetBindGroup(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mBindGroup);
+  command.SetPipeline(Renderer::PipelineBindPoint::Graphics, pipeline);
+  command.SetBindGroup(Renderer::PipelineBindPoint::Graphics, mPipelineLayout, mBindGroup);
   command.SetVertexBuffer(mVertexBuffer);
   command.PushConstants(mPipelineLayout, Renderer::ShaderStage::Fragment, 0, 4, &mSize);
   command.PushConstants(mPipelineLayout, Renderer::ShaderStage::Fragment, 4, 4, &mInv);
@@ -219,8 +219,8 @@ void Circle::Draw(Renderer::CommandEncoder& command, const Renderer::RenderState
 {
   auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
 
-  command.SetPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-  command.SetBindGroup(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mBindGroup);
+  command.SetPipeline(Renderer::PipelineBindPoint::Graphics, pipeline);
+  command.SetBindGroup(Renderer::PipelineBindPoint::Graphics, mPipelineLayout, mBindGroup);
   command.SetVertexBuffer(mVertexBuffer);
   command.PushConstants(mPipelineLayout, Renderer::ShaderStage::Fragment, 0, 4, &mSize);
   command.Draw(6);

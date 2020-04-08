@@ -85,8 +85,8 @@ void AbstractSprite::Draw(CommandEncoder& command, const RenderState& renderStat
 {
   auto pipeline = mDevice.CreateGraphicsPipeline(mPipeline, renderState);
 
-  command.SetPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-  command.SetBindGroup(vk::PipelineBindPoint::eGraphics, mPipelineLayout, mBindGroup);
+  command.SetPipeline(PipelineBindPoint::Graphics, pipeline);
+  command.SetBindGroup(PipelineBindPoint::Graphics, mPipelineLayout, mBindGroup);
   command.SetVertexBuffer(mVertexBuffer);
   command.Draw(6);
 }

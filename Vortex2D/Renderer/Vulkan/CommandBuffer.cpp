@@ -47,17 +47,17 @@ struct CommandEncoder::Impl
 
   void End() { mCommandBuffer->end(); }
 
-  void SetPipeline(vk::PipelineBindPoint pipelineBindPoint, vk::Pipeline pipeline)
+  void SetPipeline(PipelineBindPoint pipelineBindPoint, vk::Pipeline pipeline)
   {
-    mCommandBuffer->bindPipeline(pipelineBindPoint, pipeline);
+    mCommandBuffer->bindPipeline(ConvertPipelineBindPoint(pipelineBindPoint), pipeline);
   }
 
-  void SetBindGroup(vk::PipelineBindPoint pipelineBindPoint,
+  void SetBindGroup(PipelineBindPoint pipelineBindPoint,
                     vk::PipelineLayout layout,
                     BindGroup& bindGroup)
   {
     mCommandBuffer->bindDescriptorSets(
-        pipelineBindPoint, layout, 0, {*bindGroup.descriptorSet}, {});
+        ConvertPipelineBindPoint(pipelineBindPoint), layout, 0, {*bindGroup.descriptorSet}, {});
   }
 
   void SetVertexBuffer(const GenericBuffer& buffer)
@@ -143,12 +143,12 @@ void CommandEncoder::End()
   mImpl->End();
 }
 
-void CommandEncoder::SetPipeline(vk::PipelineBindPoint pipelineBindPoint, vk::Pipeline pipeline)
+void CommandEncoder::SetPipeline(PipelineBindPoint pipelineBindPoint, vk::Pipeline pipeline)
 {
   mImpl->SetPipeline(pipelineBindPoint, pipeline);
 }
 
-void CommandEncoder::SetBindGroup(vk::PipelineBindPoint pipelineBindPoint,
+void CommandEncoder::SetBindGroup(PipelineBindPoint pipelineBindPoint,
                                   vk::PipelineLayout layout,
                                   BindGroup& bindGroup)
 {

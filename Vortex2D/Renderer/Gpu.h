@@ -67,6 +67,12 @@ enum class ImageLayout
   General,
 };
 
+enum class PipelineBindPoint
+{
+  Graphics,
+  Compute
+};
+
 namespace Handle
 {
 typedef struct Buffer_T* Buffer;

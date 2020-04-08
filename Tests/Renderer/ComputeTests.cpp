@@ -101,8 +101,8 @@ TEST(ComputeTests, BufferCompute)
   auto pipeline = device->CreateComputePipeline(shader, pipelineLayout);
 
   device->Execute([&](CommandEncoder& command) {
-    command.SetPipeline(vk::PipelineBindPoint::eCompute, pipeline);
-    command.SetBindGroup(vk::PipelineBindPoint::eCompute, pipelineLayout, bindGroup);
+    command.SetPipeline(PipelineBindPoint::Compute, pipeline);
+    command.SetBindGroup(PipelineBindPoint::Compute, pipelineLayout, bindGroup);
     command.Dispatch(1, 1, 1);
   });
 
@@ -143,8 +143,8 @@ TEST(ComputeTests, ImageCompute)
 
   device->Execute([&](CommandEncoder& command) {
     inTexture.CopyFrom(command, stagingTexture);
-    command.SetPipeline(vk::PipelineBindPoint::eCompute, pipeline);
-    command.SetBindGroup(vk::PipelineBindPoint::eCompute, pipelineLayout, bindGroup);
+    command.SetPipeline(PipelineBindPoint::Compute, pipeline);
+    command.SetBindGroup(PipelineBindPoint::Compute, pipelineLayout, bindGroup);
     command.Dispatch(16, 16, 1);
     stagingTexture.CopyFrom(command, outTexture);
   });
