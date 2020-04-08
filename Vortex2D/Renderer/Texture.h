@@ -41,10 +41,15 @@ public:
           AddressMode adressMode = AddressMode::Repeat,
           Filter filter = Filter::Nearest);
 
+  Sampler(Sampler&& other);
+
+  VORTEX2D_API ~Sampler();
+
   vk::Sampler Handle();
 
 private:
-  vk::UniqueSampler mSampler;
+  struct Impl;
+  std::unique_ptr<Impl> mImpl;
 };
 
 /**

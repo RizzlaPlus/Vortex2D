@@ -80,21 +80,37 @@ vk::Filter ConvertFilter(Sampler::Filter filter)
   }
 }
 
-Sampler::Sampler(Device& device, AddressMode addressMode, Filter filter)
+struct Sampler::Impl
 {
-  auto samplerInfo = vk::SamplerCreateInfo()
-                         .setMaxAnisotropy(1.0f)
-                         .setMagFilter(ConvertFilter(filter))
-                         .setMinFilter(ConvertFilter(filter))
-                         .setAddressModeU(ConvertAddressMode(addressMode))
-                         .setAddressModeV(ConvertAddressMode(addressMode));
+  Impl(Device& device, AddressMode addressMode, Filter filter)
+  {
+    auto samplerInfo = vk::SamplerCreateInfo()
+                           .setMaxAnisotropy(1.0f)
+                           .setMagFilter(ConvertFilter(filter))
+                           .setMinFilter(ConvertFilter(filter))
+                           .setAddressModeU(ConvertAddressMode(addressMode))
+                           .setAddressModeV(ConvertAddressMode(addressMode));
 
-  mSampler = device.Handle().createSamplerUnique(samplerInfo);
+    mSampler = device.Handle().createSamplerUnique(samplerInfo);
+  }
+
+  vk::Sampler Handle() { return *mSampler; }
+
+  vk::UniqueSampler mSampler;
+};
+
+Sampler::Sampler(Device& device, AddressMode addressMode, Filter filter)
+    : mImpl(std::make_unique<Impl>(device, addressMode, filter))
+{
 }
+
+Sampler::Sampler(Sampler&& other) : mImpl(std::move(other.mImpl)) {}
+
+Sampler::~Sampler() {}
 
 vk::Sampler Sampler::Handle()
 {
-  return *mSampler;
+  return mImpl->Handle();
 }
 
 struct Texture::Impl

@@ -25,9 +25,8 @@ class CommandEncoder
 {
 public:
   CommandEncoder(Device& device, vk::UniqueCommandBuffer commandBuffer);
-
   CommandEncoder(CommandEncoder&&);
-  CommandEncoder& operator=(CommandEncoder&&);
+  ~CommandEncoder();
 
   void Begin();
   void BeginRenderPass(const RenderTarget& renderTarget, vk::Framebuffer framebuffer);
@@ -60,8 +59,8 @@ public:
   vk::CommandBuffer Handle();
 
 private:
-  Device* mDevice;
-  vk::UniqueCommandBuffer mCommandBuffer;
+  struct Impl;
+  std::unique_ptr<Impl> mImpl;
 };
 
 /**
@@ -82,7 +81,8 @@ public:
   VORTEX2D_API explicit CommandBuffer(Device& device, bool synchronise = true);
 
   VORTEX2D_API CommandBuffer(CommandBuffer&&);
-  VORTEX2D_API CommandBuffer& operator=(CommandBuffer&&);
+
+  VORTEX2D_API ~CommandBuffer();
 
   /**
    * @brief Record some commands. The commads are recorded in the lambda which
@@ -130,11 +130,8 @@ public:
   VORTEX2D_API explicit operator bool() const;
 
 private:
-  Device& mDevice;
-  bool mSynchronise;
-  bool mRecorded;
-  CommandEncoder mCommandEncoder;
-  vk::UniqueFence mFence;
+  struct Impl;
+  std::unique_ptr<Impl> mImpl;
 };
 
 /**
@@ -151,6 +148,19 @@ public:
   VORTEX2D_API RenderCommand(RenderCommand&&);
   VORTEX2D_API RenderCommand& operator=(RenderCommand&&);
 
+  VORTEX2D_API RenderCommand(Device& device,
+                             RenderTarget& renderTarget,
+                             const RenderState& renderState,
+                             const vk::UniqueFramebuffer& frameBuffer,
+                             RenderTarget::DrawableList drawables);
+
+  VORTEX2D_API RenderCommand(Device& device,
+                             RenderTarget& renderTarget,
+                             const RenderState& renderState,
+                             const std::vector<vk::UniqueFramebuffer>& frameBuffers,
+                             const uint32_t& index,
+                             RenderTarget::DrawableList drawables);
+
   /**
    * @brief Submit the render command with a transform matrix
    * @param view a transform matrix
@@ -163,37 +173,17 @@ public:
    */
   VORTEX2D_API void Wait();
 
+  VORTEX2D_API void Render(const std::initializer_list<vk::Semaphore>& waitSemaphores = {},
+                           const std::initializer_list<vk::Semaphore>& signalSemaphores = {});
+
   /**
    * @brief explicit conversion operator to bool, indicates if the command was
    * properly recorded and can be sumitted.
    */
   VORTEX2D_API explicit operator bool() const;
 
-  friend class RenderTexture;
-  friend class RenderWindow;
-
-private:
-  RenderCommand(Device& device,
-                RenderTarget& renderTarget,
-                const RenderState& renderState,
-                const vk::UniqueFramebuffer& frameBuffer,
-                RenderTarget::DrawableList drawables);
-
-  RenderCommand(Device& device,
-                RenderTarget& renderTarget,
-                const RenderState& renderState,
-                const std::vector<vk::UniqueFramebuffer>& frameBuffers,
-                const uint32_t& index,
-                RenderTarget::DrawableList drawables);
-
-  void Render(const std::initializer_list<vk::Semaphore>& waitSemaphores = {},
-              const std::initializer_list<vk::Semaphore>& signalSemaphores = {});
-
-  RenderTarget* mRenderTarget;
-  std::vector<CommandBuffer> mCmds;
-  const uint32_t* mIndex;
-  std::vector<std::reference_wrapper<Drawable>> mDrawables;
-  glm::mat4 mView;
+  struct Impl;
+  std::unique_ptr<Impl> mImpl;
 };
 
 }  // namespace Renderer
