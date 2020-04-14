@@ -36,8 +36,8 @@ public:
   VORTEX2D_API void Submit(RenderCommand& renderCommand) override;
 
 private:
-  Device& mDevice;
-  vk::UniqueFramebuffer mFramebuffer;
+  struct Impl;
+  std::unique_ptr<Impl> mImpl;
 };
 
 }  // namespace Renderer
