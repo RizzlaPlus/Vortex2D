@@ -51,8 +51,6 @@ public:
 
   void WaitIdle() override;
 
-  vk::Device Handle() const override;
-
   void Execute(CommandBuffer::CommandFn commandFn) const override;
 
   vk::ShaderModule CreateShaderModule(const SpirvBinary& spirv) override;
@@ -77,9 +75,11 @@ public:
   // Vulkan specific functions
   VmaAllocator Allocator() const;
 
-  const DynamicDispatcher& Loader() const;
+  VORTEX2D_API vk::Device Handle() const;
 
-  vk::Queue Queue() const;
+  VORTEX2D_API const DynamicDispatcher& Loader() const;
+
+  VORTEX2D_API vk::Queue Queue() const;
 
   VORTEX2D_API vk::PhysicalDevice GetPhysicalDevice() const;
 

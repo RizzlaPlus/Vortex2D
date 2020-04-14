@@ -34,8 +34,6 @@ public:
 
   VORTEX2D_API virtual bool HasTimer() const = 0;
 
-  VORTEX2D_API virtual vk::Device Handle() const = 0;
-
   VORTEX2D_API virtual void Execute(CommandBuffer::CommandFn commandFn) const = 0;
 
   VORTEX2D_API virtual vk::ShaderModule CreateShaderModule(const SpirvBinary& spirv) = 0;

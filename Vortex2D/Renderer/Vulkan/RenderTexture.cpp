@@ -5,10 +5,11 @@
 
 #include <Vortex2D/Renderer/RenderTexture.h>
 
-#include <Vortex2D/Renderer/Vulkan/RenderPass.h>
-
 #include <Vortex2D/Renderer/CommandBuffer.h>
 #include <Vortex2D/Renderer/Drawable.h>
+
+#include "Device.h"
+#include "RenderPass.h"
 
 namespace Vortex2D
 {
@@ -16,7 +17,8 @@ namespace Renderer
 {
 struct RenderTexture::Impl
 {
-  Impl(RenderTexture& self, Device& device, Format format) : mSelf(self), mDevice(device)
+  Impl(RenderTexture& self, Device& device, Format format)
+      : mSelf(self), mDevice(static_cast<VulkanDevice&>(device))
   {
     // Create render pass
     mSelf.RenderPass =
@@ -34,7 +36,7 @@ struct RenderTexture::Impl
             .DependencyDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
             .DependencySrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead)
             .DependencyDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-            .Create(device.Handle());
+            .Create(mDevice.Handle());
 
     // Create framebuffer
     vk::ImageView attachments[] = {mSelf.GetView()};
@@ -47,7 +49,7 @@ struct RenderTexture::Impl
                                .setPAttachments(attachments)
                                .setLayers(1);
 
-    mFramebuffer = device.Handle().createFramebufferUnique(framebufferInfo);
+    mFramebuffer = mDevice.Handle().createFramebufferUnique(framebufferInfo);
   }
 
   RenderCommand Record(DrawableList drawables, ColorBlendState blendState)
@@ -59,7 +61,7 @@ struct RenderTexture::Impl
   void Submit(RenderCommand& renderCommand) { renderCommand.Render(); }
 
   RenderTexture& mSelf;
-  Device& mDevice;
+  VulkanDevice& mDevice;
   vk::UniqueFramebuffer mFramebuffer;
 };
 

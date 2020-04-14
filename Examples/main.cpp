@@ -106,7 +106,7 @@ public:
 
   ~App()
   {
-    device.Handle().waitIdle();
+    device.WaitIdle();
     glfwDestroyWindow(glfwWindow);
   }
 
@@ -115,7 +115,7 @@ public:
     if (action != GLFW_PRESS)
       return;
 
-    device.Handle().waitIdle();
+    device.WaitIdle();
 
     switch (key)
     {

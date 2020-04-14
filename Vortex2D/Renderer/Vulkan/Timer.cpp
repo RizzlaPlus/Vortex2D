@@ -36,7 +36,7 @@ struct Timer::Impl
     auto queryPoolInfo =
         vk::QueryPoolCreateInfo().setQueryType(vk::QueryType::eTimestamp).setQueryCount(2);
 
-    mPool = device.Handle().createQueryPoolUnique(queryPoolInfo);
+    mPool = mDevice.Handle().createQueryPoolUnique(queryPoolInfo);
 
     mStart.Record([&](CommandEncoder& command) {
       command.Handle().resetQueryPool(*mPool, 0, 2);

@@ -76,10 +76,10 @@ struct RenderWindow::Impl
                              .setPresentMode(mode)
                              .setClipped(true);
 
-    mSwapChain = device.Handle().createSwapchainKHRUnique(swapChainInfo);
+    mSwapChain = mDevice.Handle().createSwapchainKHRUnique(swapChainInfo);
 
     // create swap chain image views
-    std::vector<vk::Image> swapChainImages = device.Handle().getSwapchainImagesKHR(*mSwapChain);
+    std::vector<vk::Image> swapChainImages = mDevice.Handle().getSwapchainImagesKHR(*mSwapChain);
     for (const auto& image : swapChainImages)
     {
       auto imageViewInfo = vk::ImageViewCreateInfo()
@@ -92,7 +92,7 @@ struct RenderWindow::Impl
                                                vk::ComponentSwizzle::eIdentity})
                                .setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
-      mSwapChainImageViews.push_back(device.Handle().createImageViewUnique(imageViewInfo));
+      mSwapChainImageViews.push_back(mDevice.Handle().createImageViewUnique(imageViewInfo));
 
       mDevice.Execute([&](CommandEncoder& command) {
         TextureBarrier(image,
@@ -133,7 +133,7 @@ struct RenderWindow::Impl
             .DependencySrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
             .DependencyDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
             .DependencyDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-            .Create(device.Handle());
+            .Create(mDevice.Handle());
 
     // Create framebuffers
     for (const auto& imageView : mSwapChainImageViews)
@@ -147,11 +147,11 @@ struct RenderWindow::Impl
                                  .setHeight(mSelf.Height)
                                  .setLayers(1);
 
-      mFrameBuffers.push_back(device.Handle().createFramebufferUnique(framebufferInfo));
+      mFrameBuffers.push_back(mDevice.Handle().createFramebufferUnique(framebufferInfo));
 
       // Create semaphores
-      mImageAvailableSemaphores.push_back(device.Handle().createSemaphoreUnique({}));
-      mRenderFinishedSemaphores.push_back(device.Handle().createSemaphoreUnique({}));
+      mImageAvailableSemaphores.push_back(mDevice.Handle().createSemaphoreUnique({}));
+      mRenderFinishedSemaphores.push_back(mDevice.Handle().createSemaphoreUnique({}));
     }
   }
 

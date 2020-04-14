@@ -92,7 +92,7 @@ struct Sampler::Impl
                            .setAddressModeU(ConvertAddressMode(addressMode))
                            .setAddressModeV(ConvertAddressMode(addressMode));
 
-    mSampler = device.Handle().createSamplerUnique(samplerInfo);
+    mSampler = static_cast<VulkanDevice&>(device).Handle().createSamplerUnique(samplerInfo);
   }
 
   vk::Sampler Handle() { return *mSampler; }
@@ -178,7 +178,7 @@ struct Texture::Impl
                                                vk::ComponentSwizzle::eIdentity})
                                .setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
-      mImageView = device.Handle().createImageViewUnique(imageViewInfo);
+      mImageView = mDevice.Handle().createImageViewUnique(imageViewInfo);
     }
 
     // Transition to eGeneral and clear texture

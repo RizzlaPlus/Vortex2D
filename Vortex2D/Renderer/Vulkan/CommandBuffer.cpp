@@ -212,7 +212,7 @@ struct CommandBuffer::Impl
       , mSynchronise(synchronise)
       , mRecorded(false)
       , mCommandEncoder(device.CreateCommandEncoder())
-      , mFence(device.Handle().createFenceUnique({vk::FenceCreateFlagBits::eSignaled}))
+      , mFence(mDevice.Handle().createFenceUnique({vk::FenceCreateFlagBits::eSignaled}))
   {
   }
 
