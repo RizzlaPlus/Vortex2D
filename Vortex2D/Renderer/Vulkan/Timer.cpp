@@ -8,6 +8,8 @@
 #include <Vortex2D/Renderer/CommandBuffer.h>
 #include <Vortex2D/Renderer/Device.h>
 
+#include "Device.h"
+
 namespace Vortex2D
 {
 namespace Renderer
@@ -29,7 +31,7 @@ uint64_t GetMask(uint32_t validBits)
 
 struct Timer::Impl
 {
-  Impl(Device& device) : mDevice(device), mStart(device), mStop(device)
+  Impl(Device& device) : mDevice(static_cast<VulkanDevice&>(device)), mStart(device), mStop(device)
   {
     auto queryPoolInfo =
         vk::QueryPoolCreateInfo().setQueryType(vk::QueryType::eTimestamp).setQueryCount(2);
@@ -98,7 +100,7 @@ struct Timer::Impl
     }
   }
 
-  Device& mDevice;
+  VulkanDevice& mDevice;
   CommandBuffer mStart;
   CommandBuffer mStop;
   vk::UniqueQueryPool mPool;

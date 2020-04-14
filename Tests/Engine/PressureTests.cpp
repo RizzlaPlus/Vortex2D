@@ -90,7 +90,7 @@ TEST(PressureTest, LinearEquationSetup_Simple)
   Pressure pressure(*device, 0.01f, size, data, velocity, solidPhi, liquidPhi, valid);
 
   pressure.BuildLinearEquation();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   CheckDiagonal(size, data.Diagonal, sim, 1e-3f);  // FIXME can we reduce error tolerance?
   CheckWeights(size, data.Lower, sim, 1e-3f);      // FIXME can we reduce error tolerance?
@@ -121,7 +121,7 @@ TEST(PressureTest, LinearEquationSetup_Complex)
   Pressure pressure(*device, 0.01f, size, data, velocity, solidPhi, liquidPhi, valid);
 
   pressure.BuildLinearEquation();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   CheckDiagonal(size, data.Diagonal, sim, 1e-3f);  // FIXME can we reduce error tolerance?
   CheckWeights(size, data.Lower, sim, 1e-3f);      // FIXME can we reduce error tolerance?
@@ -148,7 +148,7 @@ TEST(PressureTest, ZeroDivs)
   Pressure pressure(*device, 0.01f, size, data, velocity, solidPhi, liquidPhi, valid);
 
   pressure.BuildLinearEquation();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   std::vector<float> divOutputData(size.x * size.y);
   CopyTo(data.B, divOutputData);
@@ -193,7 +193,7 @@ TEST(PressureTest, Project_Simple)
   Pressure pressure(*device, 0.01f, size, data, velocity, solidPhi, liquidPhi, valid);
 
   pressure.ApplyPressure();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   CheckVelocity(*device, size, velocity, sim);
   CheckValid(size, sim, valid);
@@ -231,7 +231,7 @@ TEST(PressureTest, Project_Complex)
   Pressure pressure(*device, 0.01f, size, data, velocity, solidPhi, liquidPhi, valid);
 
   pressure.ApplyPressure();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   CheckVelocity(*device, size, velocity, sim);
   CheckValid(size, sim, valid);

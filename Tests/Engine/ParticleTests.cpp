@@ -147,7 +147,7 @@ TEST(ParticleTests, ParticleCounting)
       *device, size, particles, Velocity::InterpolationMode::Cubic, {numParticles});
 
   particleCount.Scan();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   ASSERT_EQ(numParticles, particleCount.GetTotalCount());
 }
@@ -170,7 +170,7 @@ TEST(ParticleTests, ParticleCounting_OffBounds)
       *device, size, particles, Velocity::InterpolationMode::Cubic, {numParticles});
 
   particleCount.Scan();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   ASSERT_EQ(0, particleCount.GetTotalCount());
 }
@@ -193,7 +193,7 @@ TEST(ParticleTests, ParticleDelete)
 
   // Count particles
   particleCount.Scan();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   // Delete some particles
   IntRectangle rect(*device, {10, 10});
@@ -204,7 +204,7 @@ TEST(ParticleTests, ParticleDelete)
 
   // Now scan and copy them
   particleCount.Scan();
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   ASSERT_EQ(2, particleCount.GetTotalCount());
 
@@ -238,7 +238,7 @@ TEST(ParticleTests, ParticleClamp)
       *device, size, particles, Velocity::InterpolationMode::Cubic, {numParticles});
 
   particleCount.Scan();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   ASSERT_EQ(8, particleCount.GetTotalCount());
 }
@@ -259,7 +259,7 @@ TEST(ParticleTests, ParticleSpawn)
 
   // Now scan and spawn them
   particleCount.Scan();
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   int particleNum = particleCount.GetTotalCount();
   ASSERT_EQ(4, particleNum);
@@ -306,7 +306,7 @@ TEST(ParticleTests, ParticleAddDelete)
 
   // Now scan and spawn them
   particleCount.Scan();
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   // Remove some particles
   IntRectangle rectRemove(*device, {1, 4});
@@ -317,7 +317,7 @@ TEST(ParticleTests, ParticleAddDelete)
 
   // Scan again
   particleCount.Scan();
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   // Read particles
   std::vector<Particle> outParticlesData(size.x * size.y * 8);
@@ -392,13 +392,13 @@ TEST(ParticleTests, Phi)
       *device, size, particles, Velocity::InterpolationMode::Cubic, {(int)sim.particles.size()});
 
   particleCount.Scan();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   LevelSet phi(*device, size);
 
   particleCount.LevelSetBind(phi);
   particleCount.Phi();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, phi); });
@@ -445,7 +445,7 @@ TEST(ParticleTests, FromGrid_PIC)
                               alpha);
 
   particleCount.Scan();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   ASSERT_EQ(sim.particles.size(), particleCount.GetTotalCount());
 
@@ -457,7 +457,7 @@ TEST(ParticleTests, FromGrid_PIC)
 
   particleCount.VelocitiesBind(velocity, valid);
   particleCount.TransferFromGrid();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   // Verify particle velocities
 
@@ -526,7 +526,7 @@ TEST(ParticleTests, FromGrid_FLIP)
                               alpha);
 
   particleCount.Scan();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   ASSERT_EQ(sim.particles.size(), particleCount.GetTotalCount());
 
@@ -540,7 +540,7 @@ TEST(ParticleTests, FromGrid_FLIP)
 
   velocity.VelocityDiff();
   particleCount.TransferFromGrid();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   // Verify particle velocities
 
@@ -612,7 +612,7 @@ TEST(ParticleTests, ToGrid)
                               alpha);
 
   particleCount.Scan();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   ASSERT_EQ(sim.particles.size(), particleCount.GetTotalCount());
 
@@ -622,7 +622,7 @@ TEST(ParticleTests, ToGrid)
 
   particleCount.VelocitiesBind(velocity, valid);
   particleCount.TransferToGrid();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   // TODO check valid
 

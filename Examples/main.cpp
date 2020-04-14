@@ -1,3 +1,4 @@
+#include <Vortex2D/Renderer/Vulkan/Device.h>
 #include <Vortex2D/Vortex2D.h>
 
 #include <GLFW/glfw3.h>
@@ -180,7 +181,7 @@ public:
   GLFWwindow* glfwWindow;
   Vortex2D::Renderer::Instance instance;
   vk::UniqueSurfaceKHR surface;
-  Vortex2D::Renderer::Device device;
+  Vortex2D::Renderer::VulkanDevice device;
   Renderer::RenderWindow window;
   Renderer::Clear clear = {{0.1f, 0.1f, 0.1f, 1.0f}};
   std::unique_ptr<Runner> example;

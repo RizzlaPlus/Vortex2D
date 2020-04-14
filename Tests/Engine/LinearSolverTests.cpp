@@ -230,7 +230,7 @@ TEST(LinearSolverTests, Simple_SOR)
   solver.Bind(data.Diagonal, data.Lower, data.B, data.X);
   solver.Solve(params);
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   CheckPressure(size, sim.pressure, data.X, 1e-4f);
 
@@ -262,7 +262,7 @@ TEST(LinearSolverTests, Complex_SOR)
   solver.Bind(data.Diagonal, data.Lower, data.B, data.X);
   solver.Solve(params);
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   CheckPressure(size, sim.pressure, data.X, 1e-4f);
 
@@ -293,7 +293,7 @@ TEST(LinearSolverTests, LocalGaussSeidel)
   solver.Bind(data.Diagonal, data.Lower, data.B, data.X);
   device->Execute([&](CommandEncoder& command) { solver.Record(command); });
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   CheckPressure(size, sim.pressure, data.X, 1e-3f);
 }
@@ -325,7 +325,7 @@ TEST(LinearSolverTests, Diagonal_Simple_PCG)
   solver.Bind(data.Diagonal, data.Lower, data.B, data.X);
   solver.Solve(params);
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   CheckPressure(size, sim.pressure, data.X, 1e-5f);
 
@@ -361,7 +361,7 @@ TEST(LinearSolverTests, GaussSeidel_Simple_PCG)
   solver.Bind(data.Diagonal, data.Lower, data.B, data.X);
   solver.Solve(params);
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   CheckPressure(size, sim.pressure, data.X, 1e-4f);
 
@@ -395,7 +395,7 @@ TEST(LinearSolverTests, IncompletePoisson_Simple_PCG)
   solver.Bind(data.Diagonal, data.Lower, data.B, data.X);
   solver.Solve(params);
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   CheckPressure(size, sim.pressure, data.X, 1e-5f);
 
@@ -416,7 +416,7 @@ TEST(LinearSolverTests, Zero_PCG)
   solver.Bind(data.Diagonal, data.Lower, data.B, data.X);
   solver.Solve(params);
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   ASSERT_EQ(0, params.OutIterations);
 
@@ -472,7 +472,7 @@ TEST(LinearSolverTests, Multigrid_Simple_PCG)
   preconditioner.BuildHierarchies();
   solver.Solve(params);
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   CheckPressure(size, sim.pressure, data.X, 1e-5f);
 
@@ -518,7 +518,7 @@ TEST(LinearSolverTests, Multigrid_Simple)
 
   solver.Solve(params);
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   // Very bad error due to multigrid optimized as preconditioner and not solver
   CheckPressure(size, sim.pressure, data.X, 1e-1f);

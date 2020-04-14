@@ -134,7 +134,7 @@ TEST(RenderingTest, BlendAdd)
   texture.Record({rectangle}, blendState).Submit();
   texture.Record({rectangle}, blendState).Submit();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   device->Execute([&](CommandEncoder& command) { localTexture.CopyFrom(command, texture); });
 
@@ -217,7 +217,7 @@ TEST(RenderingTest, Sprite)
   Sprite sprite(*device, texture);
 
   output.Record({sprite}).Submit();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   device->Execute([&](CommandEncoder& command) { localTexture.CopyFrom(command, output); });
 

@@ -34,7 +34,7 @@ TEST(AdvectionTests, AdvectVelocity_Simple)
   Advection advection(*device, size, 0.01f, velocity, Velocity::InterpolationMode::Cubic);
   advection.AdvectVelocity();
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   CheckVelocity(*device, size, velocity, sim, 1e-5f);
 }
@@ -60,7 +60,7 @@ TEST(AdvectionTests, AdvectVelocity_Complex)
   Advection advection(*device, size, 0.01f, velocity, Velocity::InterpolationMode::Cubic);
   advection.AdvectVelocity();
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   CheckVelocity(*device, size, velocity, sim, 1e-5f);
 }
@@ -95,7 +95,7 @@ TEST(AdvectionTests, Advect)
   advection.AdvectBind(field);
   advection.Advect();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   device->Execute([&](CommandEncoder& command) { fieldInput.CopyFrom(command, field); });
 
@@ -148,7 +148,7 @@ TEST(AdvectionTests, ParticleAdvect)
   Advection advection(*device, size, 0.01f, velocity, Velocity::InterpolationMode::Cubic);
   advection.AdvectParticleBind(particles, solidPhi, dispatchParams);
   advection.AdvectParticles();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   // test
   sim.advect_particles(0.01f);
@@ -211,7 +211,7 @@ TEST(AdvectionTests, ParticleProject)
   Advection advection(*device, size, 0.01f, velocity, Velocity::InterpolationMode::Cubic);
   advection.AdvectParticleBind(particles, solidPhi, dispatchParams);
   advection.AdvectParticles();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   // test
   sim.advect_particles(0.01f);

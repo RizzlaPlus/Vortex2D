@@ -112,7 +112,7 @@ TEST(BoundariesTests, Square)
   Clear clear({100.0f, 0.0f, 0.0f, 0.0f});
 
   levelSet.Record({clear, square}).Submit();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
@@ -140,7 +140,7 @@ TEST(BoundariesTests, InverseSquare)
   Clear clear({100.0f, 0.0f, 0.0f, 0.0f});
 
   levelSet.Record({clear, square}).Submit();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
@@ -164,7 +164,7 @@ TEST(BoundariesTests, Circle)
   Clear clear({100.0f, 0.0f, 0.0f, 0.0f});
 
   levelSet.Record({clear, circle}).Submit();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
@@ -200,7 +200,7 @@ TEST(BoundariesTests, Intersection)
   Clear clear({100.0f, 0.0f, 0.0f, 0.0f});
 
   levelSet.Record({clear, square1, square2}, UnionBlend).Submit();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
@@ -244,7 +244,7 @@ TEST(BoundariesTest, DistanceField)
       *device, size.x, size.y, Format::R8G8B8A8Unorm, MemoryUsage::Cpu);
 
   output.Record({distance}).Submit();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   device->Execute([&](CommandEncoder& command) { localOutput.CopyFrom(command, output); });
 

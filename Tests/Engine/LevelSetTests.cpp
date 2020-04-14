@@ -68,7 +68,7 @@ TEST(LevelSetTests, SimpleCircle)
   levelSet.Record({clear, circle}).Submit();
   levelSet.Reinitialise();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
@@ -103,7 +103,7 @@ TEST(LevelSetTests, ComplexCircles)
   levelSet.Record({clear, circle0, circle1, circle2, circle3}).Submit();
   levelSet.Reinitialise();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
@@ -132,7 +132,7 @@ TEST(LevelSetTests, Extrapolate)
 
   liquidPhi.Extrapolate();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   device->Execute([&](CommandEncoder& command) { localLiquidPhi.CopyFrom(command, liquidPhi); });
 

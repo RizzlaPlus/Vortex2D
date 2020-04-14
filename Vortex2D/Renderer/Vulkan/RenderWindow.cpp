@@ -10,6 +10,8 @@
 #include <Vortex2D/Renderer/CommandBuffer.h>
 #include <Vortex2D/Renderer/Drawable.h>
 
+#include "Device.h"
+
 namespace Vortex2D
 {
 namespace Renderer
@@ -40,10 +42,10 @@ struct SwapChainSupportDetails
 struct RenderWindow::Impl
 {
   Impl(RenderWindow& self, Device& device, vk::SurfaceKHR surface)
-      : mSelf(self), mDevice(device), mIndex(0), mFrameIndex(0)
+      : mSelf(self), mDevice(static_cast<VulkanDevice&>(device)), mIndex(0), mFrameIndex(0)
   {
     // get swap chain support details
-    SwapChainSupportDetails details(device.GetPhysicalDevice(), surface);
+    SwapChainSupportDetails details(mDevice.GetPhysicalDevice(), surface);
     if (!details.IsValid())
     {
       throw std::runtime_error("Swap chain support invalid");
@@ -211,7 +213,7 @@ struct RenderWindow::Impl
   }
 
   RenderWindow& mSelf;
-  Device& mDevice;
+  VulkanDevice& mDevice;
   vk::UniqueSwapchainKHR mSwapChain;
   std::vector<vk::UniqueImageView> mSwapChainImageViews;
   std::vector<vk::UniqueFramebuffer> mFrameBuffers;

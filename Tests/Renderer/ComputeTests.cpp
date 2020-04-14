@@ -357,8 +357,7 @@ TEST(ComputeTests, Checkerboard)
 
 TEST(ComputeTests, Timer)
 {
-  auto properties = device->GetPhysicalDevice().getProperties();
-  if (!properties.limits.timestampComputeAndGraphics)
+  if (!device->HasTimer())
   {
     return;
   }

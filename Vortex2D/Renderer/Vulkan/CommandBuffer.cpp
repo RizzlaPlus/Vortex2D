@@ -5,9 +5,10 @@
 
 #include <Vortex2D/Renderer/CommandBuffer.h>
 
-#include <Vortex2D/Renderer/Device.h>
 #include <Vortex2D/Renderer/Drawable.h>
 #include <Vortex2D/Renderer/RenderTarget.h>
+
+#include "Device.h"
 
 namespace Vortex2D
 {
@@ -21,7 +22,7 @@ const uint32_t zero = 0;
 struct CommandEncoder::Impl
 {
   Impl(Device& device, vk::UniqueCommandBuffer commandBuffer)
-      : mDevice(device), mCommandBuffer(std::move(commandBuffer))
+      : mDevice(static_cast<VulkanDevice&>(device)), mCommandBuffer(std::move(commandBuffer))
   {
   }
 
@@ -110,7 +111,7 @@ struct CommandEncoder::Impl
 
   vk::CommandBuffer Handle() { return *mCommandBuffer; }
 
-  Device& mDevice;
+  VulkanDevice& mDevice;
   vk::UniqueCommandBuffer mCommandBuffer;
 };
 
@@ -207,7 +208,7 @@ vk::CommandBuffer CommandEncoder::Handle()
 struct CommandBuffer::Impl
 {
   Impl(Device& device, bool synchronise)
-      : mDevice(device)
+      : mDevice(static_cast<VulkanDevice&>(device))
       , mSynchronise(synchronise)
       , mRecorded(false)
       , mCommandEncoder(device.CreateCommandEncoder())
@@ -289,7 +290,7 @@ struct CommandBuffer::Impl
 
   bool IsValid() const { return mRecorded; }
 
-  Device& mDevice;
+  VulkanDevice& mDevice;
   bool mSynchronise;
   bool mRecorded;
   CommandEncoder mCommandEncoder;

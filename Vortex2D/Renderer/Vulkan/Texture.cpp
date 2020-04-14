@@ -4,8 +4,9 @@
 //
 
 #include <Vortex2D/Renderer/CommandBuffer.h>
-#include <Vortex2D/Renderer/Device.h>
 #include <Vortex2D/Renderer/Texture.h>
+
+#include "Device.h"
 
 namespace Vortex2D
 {
@@ -115,7 +116,7 @@ vk::Sampler Sampler::Handle()
 
 struct Texture::Impl
 {
-  Device& mDevice;
+  VulkanDevice& mDevice;
   uint32_t mWidth;
   uint32_t mHeight;
   Format mFormat;
@@ -125,7 +126,7 @@ struct Texture::Impl
   vk::UniqueImageView mImageView;
 
   Impl(Device& device, uint32_t width, uint32_t height, Format format, MemoryUsage memoryUsage)
-      : mDevice(device), mWidth(width), mHeight(height), mFormat(format)
+      : mDevice(static_cast<VulkanDevice&>(device)), mWidth(width), mHeight(height), mFormat(format)
   {
     vk::ImageUsageFlags usageFlags =
         vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst;
@@ -155,7 +156,7 @@ struct Texture::Impl
     VkImageCreateInfo vkImageInfo = imageInfo;
     VmaAllocationCreateInfo allocInfo = {};
     allocInfo.usage = ConvertMemoryUsage(memoryUsage);
-    if (vmaCreateImage(device.Allocator(),
+    if (vmaCreateImage(mDevice.Allocator(),
                        &vkImageInfo,
                        &allocInfo,
                        &mImage,

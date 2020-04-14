@@ -71,7 +71,7 @@ TEST(ExtrapolateTest, Extrapolate)
   Extrapolation extrapolation(*device, size, valid, velocity, 10);
   extrapolation.Extrapolate();
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   CheckVelocity(*device, size, velocity, sim);
   CheckValid(size, sim, valid);
@@ -108,7 +108,7 @@ TEST(ExtrapolateTest, Constrain)
   extrapolation.ConstrainBind(solidPhi);
   extrapolation.ConstrainVelocity();
 
-  device->Queue().waitIdle();
+  device->WaitIdle();
 
   CheckVelocity(*device, size, velocity, sim, 1e-3f);  // FIXME reduce error tolerance
 }

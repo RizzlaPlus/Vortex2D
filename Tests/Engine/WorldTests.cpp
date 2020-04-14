@@ -59,7 +59,7 @@ float PressureRigidbody_VelocityTest(float scale)
   auto params = Fluid::IterativeParams(1e-5f);
   world.Step(params);
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   auto forces = rigidbody.GetForces();
   float force = forces.velocity.x / (mass * scale);
@@ -70,7 +70,7 @@ float PressureRigidbody_VelocityTest(float scale)
   EXPECT_NEAR(forces.angular_velocity / (inertia * std::pow(scale, 4.0f)), 0.0f, 0.1f);
   EXPECT_NEAR(forces.velocity.y / (mass * scale), 0.0f, 0.1f);
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   return force;
 }
@@ -139,7 +139,7 @@ float PressureRigidbody_RotationTest(float scale)
   auto params = Fluid::IterativeParams(1e-5f);
   world.Step(params);
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   auto forces = rigidbody.GetForces();
   float force = forces.angular_velocity / (inertia * std::pow(scale, 4.0f));
@@ -150,7 +150,7 @@ float PressureRigidbody_RotationTest(float scale)
   EXPECT_NEAR(forces.velocity.x / (mass * scale), 0.0f, 0.1f);
   EXPECT_NEAR(forces.velocity.y / (mass * scale), 0.0f, 0.1f);
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   return force;
 }
@@ -194,7 +194,7 @@ TEST(WorldTests, Velocity)
   auto params = Fluid::IterativeParams(1e-5f);
   world.Step(params);
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   float value = 10.0f / size.x;
   std::vector<glm::vec2> velocityData(size.x * size.y, {-value, -value});

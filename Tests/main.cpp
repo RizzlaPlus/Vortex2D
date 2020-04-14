@@ -1,4 +1,4 @@
-#include <Vortex2D/Renderer/Device.h>
+#include <Vortex2D/Renderer/Vulkan/Device.h>
 #include <Vortex2D/Renderer/Vulkan/Instance.h>
 #include <gtest/gtest.h>
 
@@ -6,7 +6,7 @@ Vortex2D::Renderer::Device* device;
 
 TEST(Vulkan, Init)
 {
-  auto physicalDevice = device->GetPhysicalDevice();
+  auto physicalDevice = static_cast<Vortex2D::Renderer::VulkanDevice*>(device)->GetPhysicalDevice();
   auto properties = physicalDevice.getProperties();
   std::cout << "Device name: " << properties.deviceName << std::endl;
 
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 #endif
 
   Vortex2D::Renderer::Instance instance("Tests", {}, debug);
-  Vortex2D::Renderer::Device device_(instance);
+  Vortex2D::Renderer::VulkanDevice device_(instance);
 
   device = &device_;
 

@@ -6,8 +6,9 @@
 #include <Vortex2D/Renderer/Buffer.h>
 
 #include <Vortex2D/Renderer/CommandBuffer.h>
-#include <Vortex2D/Renderer/Device.h>
 #include <Vortex2D/Renderer/Texture.h>
+
+#include "Device.h"
 
 namespace Vortex2D
 {
@@ -43,7 +44,7 @@ void BufferBarrier(vk::Buffer buffer,
 
 struct GenericBuffer::Impl
 {
-  Device& mDevice;
+  VulkanDevice& mDevice;
   std::uint64_t mSize;
   vk::BufferUsageFlags mUsageFlags;
   MemoryUsage mMemoryUsage;
@@ -52,7 +53,7 @@ struct GenericBuffer::Impl
   VmaAllocationInfo mAllocationInfo;
 
   Impl(Device& device, BufferUsage usageFlags, MemoryUsage memoryUsage, std::uint64_t deviceSize)
-      : mDevice(device)
+      : mDevice(static_cast<VulkanDevice&>(device))
       , mSize(deviceSize)
       , mUsageFlags(ConvertBufferUsage(usageFlags))
       , mMemoryUsage(memoryUsage)

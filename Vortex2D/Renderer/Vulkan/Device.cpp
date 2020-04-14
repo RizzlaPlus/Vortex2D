@@ -3,11 +3,10 @@
 //  Vortex2D
 //
 
-#include <Vortex2D/Renderer/Device.h>
-
 #include <fstream>
 #include <iostream>
 
+#include "Device.h"
 #include "Instance.h"
 #include "Vulkan.h"
 
@@ -160,17 +159,20 @@ void DynamicDispatcher::vkCmdDebugMarkerEndEXT(VkCommandBuffer commandBuffer) co
   }
 }
 
-Device::Device(const Instance& instance, bool validation)
-    : Device(instance, ComputeFamilyIndex(instance.GetPhysicalDevice()), false, validation)
+VulkanDevice::VulkanDevice(const Instance& instance, bool validation)
+    : VulkanDevice(instance, ComputeFamilyIndex(instance.GetPhysicalDevice()), false, validation)
 {
 }
 
-Device::Device(const Instance& instance, vk::SurfaceKHR surface, bool validation)
-    : Device(instance, ComputeFamilyIndex(instance.GetPhysicalDevice(), surface), true, validation)
+VulkanDevice::VulkanDevice(const Instance& instance, vk::SurfaceKHR surface, bool validation)
+    : VulkanDevice(instance,
+                   ComputeFamilyIndex(instance.GetPhysicalDevice(), surface),
+                   true,
+                   validation)
 {
 }
 
-Device::Device(const Instance& instance, int familyIndex, bool surface, bool validation)
+VulkanDevice::VulkanDevice(const Instance& instance, int familyIndex, bool surface, bool validation)
     : mPhysicalDevice(instance.GetPhysicalDevice()), mFamilyIndex(familyIndex)
 {
   float queuePriority = 1.0f;
@@ -249,12 +251,23 @@ Device::Device(const Instance& instance, int familyIndex, bool surface, bool val
   mCommandBuffer = std::make_unique<CommandBuffer>(*this, true);
 }
 
-Device::~Device()
+VulkanDevice::~VulkanDevice()
 {
   vmaDestroyAllocator(mAllocator);
 }
 
-void Device::CreateDescriptorPool(int size)
+bool VulkanDevice::HasTimer() const
+{
+  auto properties = mPhysicalDevice.getProperties();
+  return properties.limits.timestampComputeAndGraphics;
+}
+
+void VulkanDevice::WaitIdle()
+{
+  mDevice->waitIdle();
+}
+
+void VulkanDevice::CreateDescriptorPool(int size)
 {
   // create descriptor pool
   std::vector<vk::DescriptorPoolSize> poolSizes;
@@ -271,42 +284,42 @@ void Device::CreateDescriptorPool(int size)
   mDescriptorPool = mDevice->createDescriptorPoolUnique(descriptorPoolInfo);
 }
 
-vk::Device Device::Handle() const
+vk::Device VulkanDevice::Handle() const
 {
   return *mDevice;
 }
 
-vk::Queue Device::Queue() const
+vk::Queue VulkanDevice::Queue() const
 {
   return mQueue;
 }
 
-const DynamicDispatcher& Device::Loader() const
+const DynamicDispatcher& VulkanDevice::Loader() const
 {
   return mLoader;
 }
 
-vk::PhysicalDevice Device::GetPhysicalDevice() const
+vk::PhysicalDevice VulkanDevice::GetPhysicalDevice() const
 {
   return mPhysicalDevice;
 }
 
-int Device::GetFamilyIndex() const
+int VulkanDevice::GetFamilyIndex() const
 {
   return mFamilyIndex;
 }
 
-void Device::Execute(CommandBuffer::CommandFn commandFn) const
+void VulkanDevice::Execute(CommandBuffer::CommandFn commandFn) const
 {
   (*mCommandBuffer).Record(commandFn).Submit().Wait();
 }
 
-VmaAllocator Device::Allocator() const
+VmaAllocator VulkanDevice::Allocator() const
 {
   return mAllocator;
 }
 
-vk::ShaderModule Device::CreateShaderModule(const SpirvBinary& spirv)
+vk::ShaderModule VulkanDevice::CreateShaderModule(const SpirvBinary& spirv)
 {
   auto it = mShaders.find(spirv.data());
   if (it != mShaders.end())
@@ -325,7 +338,7 @@ vk::ShaderModule Device::CreateShaderModule(const SpirvBinary& spirv)
   return shader;
 }
 
-BindGroupLayout Device::CreateBindGroupLayout(const SPIRV::ShaderLayouts& layout)
+BindGroupLayout VulkanDevice::CreateBindGroupLayout(const SPIRV::ShaderLayouts& layout)
 {
   auto it = std::find_if(
       mDescriptorSetLayouts.begin(),
@@ -360,7 +373,7 @@ BindGroupLayout Device::CreateBindGroupLayout(const SPIRV::ShaderLayouts& layout
   return {*std::get<1>(*it)};
 }
 
-vk::PipelineLayout Device::CreatePipelineLayout(const SPIRV::ShaderLayouts& layout)
+vk::PipelineLayout VulkanDevice::CreatePipelineLayout(const SPIRV::ShaderLayouts& layout)
 {
   auto it = std::find_if(
       mPipelineLayouts.begin(), mPipelineLayouts.end(), [&](const auto& pipelineLayout) {
@@ -400,9 +413,9 @@ vk::PipelineLayout Device::CreatePipelineLayout(const SPIRV::ShaderLayouts& layo
   return *std::get<1>(*it);
 }
 
-BindGroup Device::CreateBindGroup(const BindGroupLayout& bindGroupLayout,
-                                  const SPIRV::ShaderLayouts& layout,
-                                  const std::vector<BindingInput>& bindingInputs)
+BindGroup VulkanDevice::CreateBindGroup(const BindGroupLayout& bindGroupLayout,
+                                        const SPIRV::ShaderLayouts& layout,
+                                        const std::vector<BindingInput>& bindingInputs)
 {
   vk::DescriptorSetLayout descriptorSetlayouts[] = {bindGroupLayout.descriptorSetLayout};
 
@@ -420,8 +433,8 @@ BindGroup Device::CreateBindGroup(const BindGroupLayout& bindGroupLayout,
   return bindGroup;
 }
 
-vk::Pipeline Device::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& graphics,
-                                            const RenderState& renderState)
+vk::Pipeline VulkanDevice::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& graphics,
+                                                  const RenderState& renderState)
 {
   auto it = std::find_if(mGraphicsPipelines.begin(),
                          mGraphicsPipelines.end(),
@@ -518,9 +531,9 @@ vk::Pipeline Device::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& gr
   return *mGraphicsPipelines.back().Pipeline;
 }
 
-vk::Pipeline Device::CreateComputePipeline(vk::ShaderModule shader,
-                                           vk::PipelineLayout layout,
-                                           SpecConstInfo specConstInfo)
+vk::Pipeline VulkanDevice::CreateComputePipeline(vk::ShaderModule shader,
+                                                 vk::PipelineLayout layout,
+                                                 SpecConstInfo specConstInfo)
 {
   auto it = std::find_if(mComputePipelines.begin(),
                          mComputePipelines.end(),
@@ -550,7 +563,7 @@ vk::Pipeline Device::CreateComputePipeline(vk::ShaderModule shader,
   return *mComputePipelines.back().Pipeline;
 }
 
-CommandEncoder Device::CreateCommandEncoder()
+CommandEncoder VulkanDevice::CreateCommandEncoder()
 {
   auto commandBufferInfo = vk::CommandBufferAllocateInfo()
                                .setCommandBufferCount(1)

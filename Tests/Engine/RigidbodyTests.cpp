@@ -117,7 +117,7 @@ TEST(RigidbodyTests, Phi)
 
   rigidBody.RenderPhi();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
   device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, solidPhi); });
@@ -173,7 +173,7 @@ TEST(RigidbodyTests, Div)
   rigidBody.BindDiv(data.B, data.Diagonal);
   pressure.BuildLinearEquation();
   rigidBody.Div();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   CheckDiv(size, data.B, sim);
 }
@@ -232,7 +232,7 @@ TEST(RigidbodyTests, VelocityDiv)
   pressure.BuildLinearEquation();
   rigidBody.Div();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   CheckDiv(size, data.B, sim);
 }
@@ -290,7 +290,7 @@ TEST(RigidbodyTests, RotationDiv)
   pressure.BuildLinearEquation();
   rigidBody.Div();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
   CheckDiv(size, data.B, sim, 1e-5f);
 }
 
@@ -349,7 +349,7 @@ TEST(RigidbodyTests, VelocityRotationDiv)
   pressure.BuildLinearEquation();
   rigidBody.Div();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
   CheckDiv(size, data.B, sim, 1e-5f);
 }
 
@@ -448,7 +448,7 @@ TEST(RigidbodyTests, Force)
 
   rigidBody.BindForce(diagonal, pressure);
   rigidBody.Force();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   float new_angular_momentum;
   Vec2f new_vel;
@@ -536,7 +536,7 @@ TEST(RigidbodyTests, Pressure)
 
   // multiply matrix
   rigidBody.Pressure();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   std::vector<double> outputData(size.x * size.y);
   std::vector<double> inputData2(size.x * size.y, 0.1);
@@ -609,7 +609,7 @@ TEST(RigidbodyTests, PressureVelocity)
   // solve
   solver.Solve(params, {&rigidBody});
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   std::cout << "Solved in " << params.OutIterations << " iterations. Error " << params.OutError
             << std::endl;
@@ -682,7 +682,7 @@ TEST(RigidbodyTests, PressureRotation)
   // solve
   solver.Solve(params, {&rigidBody});
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   std::cout << "Solved in " << params.OutIterations << " iterations. Error " << params.OutError
             << std::endl;
@@ -744,7 +744,7 @@ TEST(RigidbodyTests, VelocityConstrain)
   rigidBody.BindVelocityConstrain(velocity);
   rigidBody.VelocityConstrain();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   CheckVelocity(*device, size, velocity, sim, 1e-3f);
 }
@@ -804,7 +804,7 @@ TEST(RigidbodyTests, RotationConstrain)
   rigidBody.BindVelocityConstrain(velocity);
   rigidBody.VelocityConstrain();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
   CheckVelocity(*device, size, velocity, sim, 1e-3f);
 }
