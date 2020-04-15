@@ -54,7 +54,7 @@ private:
   Renderer::UniformBuffer<glm::mat4> mMVPBuffer;
   Renderer::UniformBuffer<glm::mat4> mMVBuffer;
   Renderer::VertexBuffer<glm::vec2> mVertexBuffer;
-  vk::PipelineLayout mPipelineLayout;
+  Renderer::Handle::PipelineLayout mPipelineLayout;
   Renderer::BindGroup mBindGroup;
   Renderer::GraphicsPipelineDescriptor mPipeline;
   Renderer::Buffer<glm::vec2> mPolygonVertexBuffer;
@@ -115,7 +115,7 @@ private:
   Renderer::UniformBuffer<glm::mat4> mMVPBuffer;
   Renderer::UniformBuffer<glm::mat4> mMVBuffer;
   Renderer::VertexBuffer<glm::vec2> mVertexBuffer;
-  vk::PipelineLayout mPipelineLayout;
+  Renderer::Handle::PipelineLayout mPipelineLayout;
   Renderer::BindGroup mBindGroup;
   Renderer::GraphicsPipelineDescriptor mPipeline;
 };

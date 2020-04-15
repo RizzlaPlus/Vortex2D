@@ -144,16 +144,16 @@ void CommandEncoder::End()
   mImpl->End();
 }
 
-void CommandEncoder::SetPipeline(PipelineBindPoint pipelineBindPoint, vk::Pipeline pipeline)
+void CommandEncoder::SetPipeline(PipelineBindPoint pipelineBindPoint, Handle::Pipeline pipeline)
 {
-  mImpl->SetPipeline(pipelineBindPoint, pipeline);
+  mImpl->SetPipeline(pipelineBindPoint, reinterpret_cast<VkPipeline>(pipeline));
 }
 
 void CommandEncoder::SetBindGroup(PipelineBindPoint pipelineBindPoint,
-                                  vk::PipelineLayout layout,
+                                  Handle::PipelineLayout layout,
                                   BindGroup& bindGroup)
 {
-  mImpl->SetBindGroup(pipelineBindPoint, layout, bindGroup);
+  mImpl->SetBindGroup(pipelineBindPoint, reinterpret_cast<VkPipelineLayout>(layout), bindGroup);
 }
 
 void CommandEncoder::SetVertexBuffer(const GenericBuffer& buffer)
@@ -161,13 +161,14 @@ void CommandEncoder::SetVertexBuffer(const GenericBuffer& buffer)
   mImpl->SetVertexBuffer(buffer);
 }
 
-void CommandEncoder::PushConstants(vk::PipelineLayout layout,
+void CommandEncoder::PushConstants(Handle::PipelineLayout layout,
                                    ShaderStage stageFlags,
                                    uint32_t offset,
                                    uint32_t size,
                                    const void* pValues)
 {
-  mImpl->PushConstants(layout, stageFlags, offset, size, pValues);
+  mImpl->PushConstants(
+      reinterpret_cast<VkPipelineLayout>(layout), stageFlags, offset, size, pValues);
 }
 
 void CommandEncoder::Draw(std::uint32_t vertexCount)

@@ -33,15 +33,15 @@ public:
   void EndRenderPass();
   void End();
 
-  VORTEX2D_API void SetPipeline(PipelineBindPoint pipelineBindPoint, vk::Pipeline pipeline);
+  VORTEX2D_API void SetPipeline(PipelineBindPoint pipelineBindPoint, Handle::Pipeline pipeline);
 
   VORTEX2D_API void SetBindGroup(PipelineBindPoint pipelineBindPoint,
-                                 vk::PipelineLayout layout,
+                                 Handle::PipelineLayout layout,
                                  BindGroup& bindGroup);
 
   VORTEX2D_API void SetVertexBuffer(const GenericBuffer& buffer);
 
-  VORTEX2D_API void PushConstants(vk::PipelineLayout layout,
+  VORTEX2D_API void PushConstants(Handle::PipelineLayout layout,
                                   ShaderStage stageFlags,
                                   uint32_t offset,
                                   uint32_t size,

@@ -54,7 +54,7 @@ protected:
   UniformBuffer<glm::mat4> mMVPBuffer;
   UniformBuffer<glm::vec4> mColourBuffer;
   VertexBuffer<glm::vec2> mVertexBuffer;
-  vk::PipelineLayout mPipelineLayout;
+  Handle::PipelineLayout mPipelineLayout;
   BindGroup mBindGroup;
   GraphicsPipelineDescriptor mPipeline;
   uint32_t mNumVertices;
@@ -110,7 +110,7 @@ private:
   UniformBuffer<glm::vec4> mColourBuffer;
   VertexBuffer<glm::vec2> mVertexBuffer;
   UniformBuffer<Size> mSizeBuffer;
-  vk::PipelineLayout mPipelineLayout;
+  Handle::PipelineLayout mPipelineLayout;
   BindGroup mBindGroup;
   GraphicsPipelineDescriptor mPipeline;
 };

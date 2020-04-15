@@ -418,16 +418,16 @@ TEST(ComputeTests, Cache)
 
   ShaderLayouts layout1 = {reflection1};
 
-  vk::PipelineLayout pipelineLayout1 = device->CreatePipelineLayout(layout1);
-  vk::Pipeline pipeline1 = device->CreateComputePipeline(shader1, pipelineLayout1);
+  Handle::PipelineLayout pipelineLayout1 = device->CreatePipelineLayout(layout1);
+  Handle::Pipeline pipeline1 = device->CreateComputePipeline(shader1, pipelineLayout1);
 
   auto shader2 = device->CreateShaderModule(Image_comp);
   Reflection reflection2(Image_comp);
 
   ShaderLayouts layout2 = {reflection2};
-  vk::PipelineLayout pipelineLayout2 = device->CreatePipelineLayout(layout2);
+  Handle::PipelineLayout pipelineLayout2 = device->CreatePipelineLayout(layout2);
 
-  vk::Pipeline pipeline2 = device->CreateComputePipeline(shader2, pipelineLayout2);
+  Handle::Pipeline pipeline2 = device->CreateComputePipeline(shader2, pipelineLayout2);
 
   EXPECT_NE(shader1, shader2);
   EXPECT_NE(pipelineLayout1, pipelineLayout2);

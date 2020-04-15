@@ -25,7 +25,7 @@ class Device
 {
 public:
   VORTEX2D_API Device() = default;
-  VORTEX2D_API ~Device() = default;
+  VORTEX2D_API virtual ~Device() = default;
 
   Device(Device&&) = delete;
   Device& operator=(Device&&) = delete;
@@ -36,7 +36,7 @@ public:
 
   VORTEX2D_API virtual void Execute(CommandBuffer::CommandFn commandFn) const = 0;
 
-  VORTEX2D_API virtual vk::ShaderModule CreateShaderModule(const SpirvBinary& spirv) = 0;
+  VORTEX2D_API virtual Handle::ShaderModule CreateShaderModule(const SpirvBinary& spirv) = 0;
 
   /**
    * @brief Create, cache and return a descriptor layout given the pipeline
@@ -44,7 +44,7 @@ public:
    * @param layout pipeline layout
    * @return cached descriptor set layout
    */
-  VORTEX2D_API virtual BindGroupLayout CreateBindGroupLayout(
+  VORTEX2D_API virtual Handle::BindGroupLayout CreateBindGroupLayout(
       const SPIRV::ShaderLayouts& layout) = 0;
 
   /**
@@ -52,11 +52,11 @@ public:
    * @param layout pipeline layout
    * @return vulkan pipeline layout
    */
-  VORTEX2D_API virtual vk::PipelineLayout CreatePipelineLayout(
+  VORTEX2D_API virtual Handle::PipelineLayout CreatePipelineLayout(
       const SPIRV::ShaderLayouts& layout) = 0;
 
   VORTEX2D_API virtual BindGroup CreateBindGroup(
-      const BindGroupLayout& bindGroupLayout,
+      const Handle::BindGroupLayout& bindGroupLayout,
       const SPIRV::ShaderLayouts& layout,
       const std::vector<BindingInput>& bindingInputs) = 0;
 
@@ -66,7 +66,7 @@ public:
    * @param renderState
    * @return
    */
-  VORTEX2D_API virtual vk::Pipeline CreateGraphicsPipeline(
+  VORTEX2D_API virtual Handle::Pipeline CreateGraphicsPipeline(
       const GraphicsPipelineDescriptor& builder,
       const RenderState& renderState) = 0;
 
@@ -76,9 +76,9 @@ public:
    * @param layout
    * @param specConstInfo
    */
-  VORTEX2D_API virtual vk::Pipeline CreateComputePipeline(vk::ShaderModule shader,
-                                                          vk::PipelineLayout layout,
-                                                          SpecConstInfo specConstInfo = {}) = 0;
+  VORTEX2D_API virtual Handle::Pipeline CreateComputePipeline(Handle::ShaderModule shader,
+                                                              Handle::PipelineLayout layout,
+                                                              SpecConstInfo specConstInfo = {}) = 0;
 
   VORTEX2D_API virtual CommandEncoder CreateCommandEncoder() = 0;
 };

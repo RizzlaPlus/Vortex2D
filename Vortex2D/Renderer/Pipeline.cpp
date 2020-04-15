@@ -13,7 +13,7 @@ namespace Renderer
 {
 GraphicsPipelineDescriptor::GraphicsPipelineDescriptor() {}
 
-GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Shader(vk::ShaderModule shader,
+GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Shader(Handle::ShaderModule shader,
                                                                ShaderStage shaderStage)
 {
   shaders.push_back({shader, shaderStage});
@@ -42,7 +42,7 @@ GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Topology(PrimitiveTopolo
   return *this;
 }
 
-GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Layout(vk::PipelineLayout layout)
+GraphicsPipelineDescriptor& GraphicsPipelineDescriptor::Layout(Handle::PipelineLayout layout)
 {
   pipelineLayout = layout;
   return *this;

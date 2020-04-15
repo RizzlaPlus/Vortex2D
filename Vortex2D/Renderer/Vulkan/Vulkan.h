@@ -161,6 +161,26 @@ inline vk::PipelineBindPoint ConvertPipelineBindPoint(PipelineBindPoint bindPoin
       return vk::PipelineBindPoint::eGraphics;
   }
 }
+
+namespace Handle
+{
+struct PipelineLayout_T
+{
+};
+
+struct BindGroupLayout_T
+{
+};
+
+struct ShaderModule_T
+{
+};
+
+struct Pipeline_T
+{
+};
+
+}  // namespace Handle
 }  // namespace Renderer
 }  // namespace Vortex2D
 

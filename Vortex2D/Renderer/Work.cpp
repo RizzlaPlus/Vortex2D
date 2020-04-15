@@ -93,7 +93,7 @@ Work::Work(Device& device,
            const SpecConstInfo& additionalSpecConstInfo)
     : mComputeSize(computeSize), mDevice(device)
 {
-  vk::ShaderModule shaderModule = mDevice.CreateShaderModule(spirv);
+  Handle::ShaderModule shaderModule = mDevice.CreateShaderModule(spirv);
   SPIRV::Reflection reflection(spirv);
   if (reflection.GetShaderStage() != Renderer::ShaderStage::Compute)
     throw std::runtime_error("only compute supported");
@@ -150,8 +150,8 @@ Work::Bound::Bound() : mComputeSize(ComputeSize::Default2D()), mLayout(nullptr),
 
 Work::Bound::Bound(const ComputeSize& computeSize,
                    uint32_t pushConstantSize,
-                   vk::PipelineLayout layout,
-                   vk::Pipeline pipeline,
+                   Handle::PipelineLayout layout,
+                   Handle::Pipeline pipeline,
                    BindGroup bindGroup)
     : mComputeSize(computeSize)
     , mPushConstantSize(pushConstantSize)

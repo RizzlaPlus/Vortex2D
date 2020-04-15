@@ -75,15 +75,11 @@ enum class PipelineBindPoint
 
 namespace Handle
 {
-typedef struct Buffer_T* Buffer;
-typedef struct ImageView_T* ImageView;
-typedef struct Image_T* Image;
-typedef struct Sampler_T* Sampler;
+// FIXME doesn't work for 32 bit
 typedef struct PipelineLayout_T* PipelineLayout;
-typedef struct CommandBuffer_T* CommandBuffer;
-typedef struct Framebuffer_T* Framebuffer;
-typedef struct RenderPass_T* RenderPass;
-
+typedef struct BindGroupLayout_T* BindGroupLayout;
+typedef struct Pipeline_T* Pipeline;
+typedef struct ShaderModule_T* ShaderModule;
 }  // namespace Handle
 
 }  // namespace Renderer

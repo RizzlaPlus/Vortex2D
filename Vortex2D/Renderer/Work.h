@@ -175,8 +175,8 @@ public:
   private:
     Bound(const ComputeSize& computeSize,
           uint32_t pushConstantSize,
-          vk::PipelineLayout layout,
-          vk::Pipeline pipeline,
+          Handle::PipelineLayout layout,
+          Handle::Pipeline pipeline,
           BindGroup bindGroup);
 
     template <typename Arg>
@@ -200,8 +200,8 @@ public:
 
     ComputeSize mComputeSize;
     uint32_t mPushConstantSize;
-    vk::PipelineLayout mLayout;
-    vk::Pipeline mPipeline;
+    Handle::PipelineLayout mLayout;
+    Handle::Pipeline mPipeline;
     BindGroup mBindGroup;
   };
 
@@ -225,7 +225,7 @@ private:
   ComputeSize mComputeSize;
   Device& mDevice;
   SPIRV::ShaderLayouts mLayout;
-  vk::Pipeline mPipeline;
+  Handle::Pipeline mPipeline;
 };
 
 }  // namespace Renderer

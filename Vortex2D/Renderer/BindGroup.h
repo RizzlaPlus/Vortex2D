@@ -18,11 +18,6 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-struct BindGroupLayout
-{
-  vk::DescriptorSetLayout descriptorSetLayout;
-};
-
 struct BindGroup
 {
   vk::UniqueDescriptorSet descriptorSet;

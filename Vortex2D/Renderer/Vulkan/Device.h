@@ -53,22 +53,22 @@ public:
 
   void Execute(CommandBuffer::CommandFn commandFn) const override;
 
-  vk::ShaderModule CreateShaderModule(const SpirvBinary& spirv) override;
+  Handle::ShaderModule CreateShaderModule(const SpirvBinary& spirv) override;
 
-  BindGroupLayout CreateBindGroupLayout(const SPIRV::ShaderLayouts& layout) override;
+  Handle::BindGroupLayout CreateBindGroupLayout(const SPIRV::ShaderLayouts& layout) override;
 
-  vk::PipelineLayout CreatePipelineLayout(const SPIRV::ShaderLayouts& layout) override;
+  Handle::PipelineLayout CreatePipelineLayout(const SPIRV::ShaderLayouts& layout) override;
 
-  BindGroup CreateBindGroup(const BindGroupLayout& bindGroupLayout,
+  BindGroup CreateBindGroup(const Handle::BindGroupLayout& bindGroupLayout,
                             const SPIRV::ShaderLayouts& layout,
                             const std::vector<BindingInput>& bindingInputs) override;
 
-  vk::Pipeline CreateGraphicsPipeline(const GraphicsPipelineDescriptor& builder,
-                                      const RenderState& renderState) override;
+  Handle::Pipeline CreateGraphicsPipeline(const GraphicsPipelineDescriptor& builder,
+                                          const RenderState& renderState) override;
 
-  vk::Pipeline CreateComputePipeline(vk::ShaderModule shader,
-                                     vk::PipelineLayout layout,
-                                     SpecConstInfo specConstInfo = {}) override;
+  Handle::Pipeline CreateComputePipeline(Handle::ShaderModule shader,
+                                         Handle::PipelineLayout layout,
+                                         SpecConstInfo specConstInfo = {}) override;
 
   CommandEncoder CreateCommandEncoder() override;
 

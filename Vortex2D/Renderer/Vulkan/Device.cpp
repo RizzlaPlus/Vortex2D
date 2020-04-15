@@ -319,12 +319,13 @@ VmaAllocator VulkanDevice::Allocator() const
   return mAllocator;
 }
 
-vk::ShaderModule VulkanDevice::CreateShaderModule(const SpirvBinary& spirv)
+Handle::ShaderModule VulkanDevice::CreateShaderModule(const SpirvBinary& spirv)
 {
   auto it = mShaders.find(spirv.data());
   if (it != mShaders.end())
   {
-    return *it->second;
+    VkShaderModule handle = *it->second;
+    return reinterpret_cast<Handle::ShaderModule>(handle);
   }
 
   if (spirv.size() == 0)
@@ -333,12 +334,13 @@ vk::ShaderModule VulkanDevice::CreateShaderModule(const SpirvBinary& spirv)
   auto shaderInfo = vk::ShaderModuleCreateInfo().setCodeSize(spirv.size()).setPCode(spirv.data());
 
   auto shaderModule = mDevice->createShaderModuleUnique(shaderInfo);
-  auto shader = *shaderModule;
-  mShaders[spirv.data()] = std::move(shaderModule);
-  return shader;
+  auto& shader = mShaders[spirv.data()] = std::move(shaderModule);
+
+  VkShaderModule handle = *shader;
+  return reinterpret_cast<Handle::ShaderModule>(handle);
 }
 
-BindGroupLayout VulkanDevice::CreateBindGroupLayout(const SPIRV::ShaderLayouts& layout)
+Handle::BindGroupLayout VulkanDevice::CreateBindGroupLayout(const SPIRV::ShaderLayouts& layout)
 {
   auto it = std::find_if(
       mDescriptorSetLayouts.begin(),
@@ -367,13 +369,15 @@ BindGroupLayout VulkanDevice::CreateBindGroupLayout(const SPIRV::ShaderLayouts& 
 
     auto descriptorSetLayout = mDevice->createDescriptorSetLayoutUnique(descriptorSetLayoutInfo);
     mDescriptorSetLayouts.emplace_back(layout, std::move(descriptorSetLayout));
-    return {*std::get<1>(mDescriptorSetLayouts.back())};
+    VkDescriptorSetLayout handle = *std::get<1>(mDescriptorSetLayouts.back());
+    return reinterpret_cast<Handle::BindGroupLayout>(handle);
   }
 
-  return {*std::get<1>(*it)};
+  VkDescriptorSetLayout handle = *std::get<1>(*it);
+  return reinterpret_cast<Handle::BindGroupLayout>(handle);
 }
 
-vk::PipelineLayout VulkanDevice::CreatePipelineLayout(const SPIRV::ShaderLayouts& layout)
+Handle::PipelineLayout VulkanDevice::CreatePipelineLayout(const SPIRV::ShaderLayouts& layout)
 {
   auto it = std::find_if(
       mPipelineLayouts.begin(), mPipelineLayouts.end(), [&](const auto& pipelineLayout) {
@@ -383,7 +387,8 @@ vk::PipelineLayout VulkanDevice::CreatePipelineLayout(const SPIRV::ShaderLayouts
   if (it == mPipelineLayouts.end())
   {
     auto bindGroupLayout = CreateBindGroupLayout(layout);
-    vk::DescriptorSetLayout descriptorSetlayouts[] = {bindGroupLayout.descriptorSetLayout};
+    vk::DescriptorSetLayout descriptorSetlayouts[] = {
+        reinterpret_cast<VkDescriptorSetLayout>(bindGroupLayout)};
     std::vector<vk::PushConstantRange> pushConstantRanges;
     uint32_t totalPushConstantSize = 0;
     for (auto& shaderLayout : layout)
@@ -407,17 +412,20 @@ vk::PipelineLayout VulkanDevice::CreatePipelineLayout(const SPIRV::ShaderLayouts
     }
 
     mPipelineLayouts.emplace_back(layout, mDevice->createPipelineLayoutUnique(pipelineLayoutInfo));
-    return *std::get<1>(mPipelineLayouts.back());
+    VkPipelineLayout handle = *std::get<1>(mPipelineLayouts.back());
+    return reinterpret_cast<Handle::PipelineLayout>(handle);
   }
 
-  return *std::get<1>(*it);
+  VkPipelineLayout handle = *std::get<1>(*it);
+  return reinterpret_cast<Handle::PipelineLayout>(handle);
 }
 
-BindGroup VulkanDevice::CreateBindGroup(const BindGroupLayout& bindGroupLayout,
+BindGroup VulkanDevice::CreateBindGroup(const Handle::BindGroupLayout& bindGroupLayout,
                                         const SPIRV::ShaderLayouts& layout,
                                         const std::vector<BindingInput>& bindingInputs)
 {
-  vk::DescriptorSetLayout descriptorSetlayouts[] = {bindGroupLayout.descriptorSetLayout};
+  vk::DescriptorSetLayout descriptorSetlayouts[] = {
+      reinterpret_cast<VkDescriptorSetLayout>(bindGroupLayout)};
 
   auto descriptorSetInfo = vk::DescriptorSetAllocateInfo()
                                .setDescriptorPool(*mDescriptorPool)
@@ -433,8 +441,8 @@ BindGroup VulkanDevice::CreateBindGroup(const BindGroupLayout& bindGroupLayout,
   return bindGroup;
 }
 
-vk::Pipeline VulkanDevice::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& graphics,
-                                                  const RenderState& renderState)
+Handle::Pipeline VulkanDevice::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& graphics,
+                                                      const RenderState& renderState)
 {
   auto it = std::find_if(mGraphicsPipelines.begin(),
                          mGraphicsPipelines.end(),
@@ -444,16 +452,18 @@ vk::Pipeline VulkanDevice::CreateGraphicsPipeline(const GraphicsPipelineDescript
 
   if (it != mGraphicsPipelines.end())
   {
-    return *it->Pipeline;
+    VkPipeline handle = *it->Pipeline;
+    return reinterpret_cast<Handle::Pipeline>(handle);
   }
 
   std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
   for (auto& shaderStage : graphics.shaders)
   {
-    auto shaderStageInfo = vk::PipelineShaderStageCreateInfo()
-                               .setModule(shaderStage.shaderModule)
-                               .setPName("main")
-                               .setStage(ConvertShaderStage(shaderStage.shaderStage));
+    auto shaderStageInfo =
+        vk::PipelineShaderStageCreateInfo()
+            .setModule(reinterpret_cast<VkShaderModule>(shaderStage.shaderModule))
+            .setPName("main")
+            .setStage(ConvertShaderStage(shaderStage.shaderStage));
 
     shaderStages.push_back(shaderStageInfo);
   }
@@ -521,46 +531,58 @@ vk::Pipeline VulkanDevice::CreateGraphicsPipeline(const GraphicsPipelineDescript
                           .setPRasterizationState(&rasterizationInfo)
                           .setPMultisampleState(&multisampleInfo)
                           .setPColorBlendState(&blendInfo)
-                          .setLayout(graphics.pipelineLayout)
+                          .setLayout(reinterpret_cast<VkPipelineLayout>(graphics.pipelineLayout))
                           .setRenderPass(renderState.RenderPass)
                           .setPViewportState(&viewPortState);
 
   GraphicsPipelineCache pipeline = {
-      renderState, graphics, mDevice->createGraphicsPipelineUnique(*mPipelineCache, pipelineInfo)};
+      renderState,
+      graphics,
+      {mDevice->createGraphicsPipelineUnique(*mPipelineCache, pipelineInfo)}};
   mGraphicsPipelines.push_back(std::move(pipeline));
-  return *mGraphicsPipelines.back().Pipeline;
+
+  VkPipeline handle = *mGraphicsPipelines.back().Pipeline;
+  return reinterpret_cast<Handle::Pipeline>(handle);
 }
 
-vk::Pipeline VulkanDevice::CreateComputePipeline(vk::ShaderModule shader,
-                                                 vk::PipelineLayout layout,
-                                                 SpecConstInfo specConstInfo)
+Handle::Pipeline VulkanDevice::CreateComputePipeline(Handle::ShaderModule shader,
+                                                     Handle::PipelineLayout layout,
+                                                     SpecConstInfo specConstInfo)
 {
+  vk::ShaderModule shaderModule = reinterpret_cast<VkShaderModule>(shader);
+  vk::PipelineLayout pipelineLayout = reinterpret_cast<VkPipelineLayout>(layout);
+
   auto it = std::find_if(mComputePipelines.begin(),
                          mComputePipelines.end(),
                          [&](const ComputePipelineCache& pipeline) {
-                           return pipeline.Shader == shader && pipeline.Layout == layout &&
+                           return pipeline.Shader == shaderModule &&
+                                  pipeline.Layout == pipelineLayout &&
                                   pipeline.SpecConst == specConstInfo;
                          });
 
   if (it != mComputePipelines.end())
   {
-    return *it->Pipeline;
+    VkPipeline handle = *it->Pipeline;
+    return reinterpret_cast<Handle::Pipeline>(handle);
   }
 
   auto stageInfo = vk::PipelineShaderStageCreateInfo()
-                       .setModule(shader)
+                       .setModule(shaderModule)
                        .setPName("main")
                        .setStage(vk::ShaderStageFlagBits::eCompute)
                        .setPSpecializationInfo(&specConstInfo.info);
 
-  auto pipelineInfo = vk::ComputePipelineCreateInfo().setStage(stageInfo).setLayout(layout);
+  auto pipelineInfo = vk::ComputePipelineCreateInfo().setStage(stageInfo).setLayout(
+      reinterpret_cast<VkPipelineLayout>(layout));
 
   mComputePipelines.push_back(
-      {shader,
-       layout,
+      {shaderModule,
+       pipelineLayout,
        specConstInfo,
        mDevice->createComputePipelineUnique(*mPipelineCache, pipelineInfo)});
-  return *mComputePipelines.back().Pipeline;
+
+  VkPipeline handle = *mComputePipelines.back().Pipeline;
+  return reinterpret_cast<Handle::Pipeline>(handle);
 }
 
 CommandEncoder VulkanDevice::CreateCommandEncoder()

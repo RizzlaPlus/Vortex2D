@@ -30,7 +30,7 @@ public:
    * @param shaderStage shader state (vertex, fragment or compute)
    * @return *this
    */
-  VORTEX2D_API GraphicsPipelineDescriptor& Shader(vk::ShaderModule shader, ShaderStage shaderStage);
+  VORTEX2D_API GraphicsPipelineDescriptor& Shader(Handle::ShaderModule shader, ShaderStage shaderStage);
 
   /**
    * @brief Sets the vertex attributes
@@ -54,11 +54,11 @@ public:
   VORTEX2D_API GraphicsPipelineDescriptor& VertexBinding(uint32_t binding, uint32_t stride);
 
   VORTEX2D_API GraphicsPipelineDescriptor& Topology(PrimitiveTopology topology);
-  VORTEX2D_API GraphicsPipelineDescriptor& Layout(vk::PipelineLayout pipelineLayout);
+  VORTEX2D_API GraphicsPipelineDescriptor& Layout(Handle::PipelineLayout pipelineLayout);
 
   struct ShaderDescriptor
   {
-    vk::ShaderModule shaderModule;
+    Handle::ShaderModule shaderModule;
     ShaderStage shaderStage;
   };
 
@@ -82,7 +82,7 @@ public:
 
   std::vector<VertexBindingDescriptor> vertexBindings;
   PrimitiveTopology primitiveTopology = PrimitiveTopology::Triangle;
-  vk::PipelineLayout pipelineLayout;
+  Handle::PipelineLayout pipelineLayout;
 };
 
 bool operator==(const GraphicsPipelineDescriptor::ShaderDescriptor& left,
