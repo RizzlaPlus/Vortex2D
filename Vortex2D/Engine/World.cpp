@@ -101,12 +101,10 @@ void World::Step(LinearSolver::Parameters& params)
 Renderer::RenderCommand World::RecordVelocity(Renderer::RenderTarget::DrawableList drawables,
                                               VelocityOp op)
 {
-  Renderer::ColorBlendState blendState;
-  blendState.ColorBlend.setBlendEnable(true)
-      .setColorBlendOp(vk::BlendOp::eAdd)
-      .setSrcColorBlendFactor(vk::BlendFactor::eConstantColor)
-      .setDstColorBlendFactor(op == VelocityOp::Add ? vk::BlendFactor::eOne
-                                                    : vk::BlendFactor::eZero);
+  Renderer::ColorBlendState blendState(
+      Renderer::BlendFactor::ConstantColor,
+      op == VelocityOp::Add ? Renderer::BlendFactor::One : Renderer::BlendFactor::Zero,
+      Renderer::BlendOp::Add);
 
   float scale = 1.0f / mSize.x;
   blendState.BlendConstants = {scale, scale, scale, scale};

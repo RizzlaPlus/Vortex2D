@@ -518,9 +518,21 @@ Handle::Pipeline VulkanDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc
                            .setViewportCount(1)
                            .setPViewports(&viewPort);
 
+  auto colorBlendAttachement =
+      vk::PipelineColorBlendAttachmentState()
+          .setBlendEnable(renderState.BlendState.Enabled)
+          .setSrcColorBlendFactor(ConvertBlendFactor(renderState.BlendState.Src))
+          .setDstColorBlendFactor(ConvertBlendFactor(renderState.BlendState.Dst))
+          .setColorBlendOp(ConvertBlendOp(renderState.BlendState.ColorBlend))
+          .setSrcAlphaBlendFactor(ConvertBlendFactor(renderState.BlendState.SrcAlpha))
+          .setDstAlphaBlendFactor(ConvertBlendFactor(renderState.BlendState.DstAlpha))
+          .setAlphaBlendOp(ConvertBlendOp(renderState.BlendState.AlphaBlend))
+          .setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+                             vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA);
+
   auto blendInfo = vk::PipelineColorBlendStateCreateInfo()
                        .setAttachmentCount(1)
-                       .setPAttachments(&renderState.BlendState.ColorBlend)
+                       .setPAttachments(&colorBlendAttachement)
                        .setBlendConstants(renderState.BlendState.BlendConstants);
 
   auto pipelineInfo = vk::GraphicsPipelineCreateInfo()

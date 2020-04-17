@@ -226,27 +226,13 @@ void Circle::Draw(Renderer::CommandEncoder& command, const Renderer::RenderState
   command.Draw(6);
 }
 
-Renderer::ColorBlendState IntersectionBlend = [] {
-  Renderer::ColorBlendState blendState;
-  blendState.ColorBlend.setBlendEnable(true)
-      .setColorBlendOp(vk::BlendOp::eMax)
-      .setSrcColorBlendFactor(vk::BlendFactor::eOne)
-      .setDstColorBlendFactor(vk::BlendFactor::eOne)
-      .setColorWriteMask(vk::ColorComponentFlagBits::eR);
+Renderer::ColorBlendState IntersectionBlend = Renderer::ColorBlendState(Renderer::BlendFactor::One,
+                                                                        Renderer::BlendFactor::One,
+                                                                        Renderer::BlendOp::Max);
 
-  return blendState;
-}();
-
-Renderer::ColorBlendState UnionBlend = [] {
-  Renderer::ColorBlendState blendState;
-  blendState.ColorBlend.setBlendEnable(true)
-      .setColorBlendOp(vk::BlendOp::eMin)
-      .setSrcColorBlendFactor(vk::BlendFactor::eOne)
-      .setDstColorBlendFactor(vk::BlendFactor::eOne)
-      .setColorWriteMask(vk::ColorComponentFlagBits::eR);
-
-  return blendState;
-}();
+Renderer::ColorBlendState UnionBlend = Renderer::ColorBlendState(Renderer::BlendFactor::One,
+                                                                 Renderer::BlendFactor::One,
+                                                                 Renderer::BlendOp::Min);
 
 Vortex2D::Renderer::Clear BoundariesClear = Vortex2D::Renderer::Clear({10000.0f, 0.0f, 0.0f, 0.0f});
 

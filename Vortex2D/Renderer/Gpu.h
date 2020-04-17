@@ -73,6 +73,22 @@ enum class PipelineBindPoint
   Compute
 };
 
+enum class BlendFactor
+{
+  Zero,
+  One,
+  ConstantColor,
+  SrcAlpha,
+  OneMinusSrcAlpha,
+};
+
+enum class BlendOp
+{
+  Add,
+  Max,
+  Min
+};
+
 namespace Handle
 {
 // FIXME doesn't work for 32 bit

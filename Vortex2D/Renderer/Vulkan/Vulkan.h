@@ -162,6 +162,36 @@ inline vk::PipelineBindPoint ConvertPipelineBindPoint(PipelineBindPoint bindPoin
   }
 }
 
+inline vk::BlendFactor ConvertBlendFactor(BlendFactor factor)
+{
+  switch (factor)
+  {
+    case BlendFactor::One:
+      return vk::BlendFactor::eOne;
+    case BlendFactor::Zero:
+      return vk::BlendFactor::eZero;
+    case BlendFactor::SrcAlpha:
+      return vk::BlendFactor::eSrcAlpha;
+    case BlendFactor::OneMinusSrcAlpha:
+      return vk::BlendFactor::eOneMinusSrcAlpha;
+    case BlendFactor::ConstantColor:
+      return vk::BlendFactor::eConstantColor;
+  }
+}
+
+inline vk::BlendOp ConvertBlendOp(BlendOp blendOp)
+{
+  switch (blendOp)
+  {
+    case BlendOp::Add:
+      return vk::BlendOp::eAdd;
+    case BlendOp::Max:
+      return vk::BlendOp::eMax;
+    case BlendOp::Min:
+      return vk::BlendOp::eMin;
+  }
+}
+
 namespace Handle
 {
 struct PipelineLayout_T

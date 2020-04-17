@@ -21,7 +21,25 @@ struct ColorBlendState
 {
   VORTEX2D_API ColorBlendState();
 
-  vk::PipelineColorBlendAttachmentState ColorBlend;
+  VORTEX2D_API ColorBlendState(BlendFactor src, BlendFactor dst, BlendOp colorBlend);
+
+  VORTEX2D_API ColorBlendState(BlendFactor src,
+                               BlendFactor dst,
+                               BlendOp colorBlend,
+                               BlendFactor srcAlpha,
+                               BlendFactor dstAlpha,
+                               BlendOp alphaBlend);
+
+  bool Enabled;
+
+  BlendFactor Src;
+  BlendFactor Dst;
+  BlendOp ColorBlend;
+
+  BlendFactor SrcAlpha;
+  BlendFactor DstAlpha;
+  BlendOp AlphaBlend;
+
   std::array<float, 4> BlendConstants;
 };
 
