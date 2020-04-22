@@ -97,7 +97,7 @@ public:
     };
     glfwSetKeyCallback(glfwWindow, func);
 
-    window.View = glm::scale(glm::vec3{windowScale, windowScale, 1.0f});
+    window.SetView(glm::scale(glm::vec3{windowScale, windowScale, 1.0f}));
 
     // Set default scene
     example.reset(new WaterExample(device, size, delta));

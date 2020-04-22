@@ -15,6 +15,7 @@ set(LIB_VULKAN_SOURCES
     "Renderer/Vulkan/Timer.cpp"
     "Renderer/Vulkan/RenderTexture.cpp"
     "Renderer/Vulkan/RenderWindow.cpp"
+    "Renderer/Vulkan/RenderTarget.cpp"
     "Renderer/Vulkan/vk_mem_alloc.h")
 
 set(LIB_SOURCES
@@ -42,7 +43,6 @@ set(LIB_SOURCES
     "Renderer/BindGroup.cpp"
     "Renderer/Pipeline.cpp"
     "Renderer/RenderState.cpp"
-    "Renderer/RenderTarget.cpp"
     "Renderer/Shapes.cpp"
     "Renderer/Sprite.cpp"
     "Renderer/Transformable.cpp"

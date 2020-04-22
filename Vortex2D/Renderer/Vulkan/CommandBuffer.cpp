@@ -36,10 +36,11 @@ struct CommandEncoder::Impl
 
   void BeginRenderPass(const RenderTarget& renderTarget, vk::Framebuffer framebuffer)
   {
-    auto renderPassBegin = vk::RenderPassBeginInfo()
-                               .setFramebuffer(framebuffer)
-                               .setRenderPass(*renderTarget.RenderPass)
-                               .setRenderArea({{0, 0}, {renderTarget.Width, renderTarget.Height}});
+    auto renderPassBegin =
+        vk::RenderPassBeginInfo()
+            .setFramebuffer(framebuffer)
+            .setRenderPass(reinterpret_cast<VkRenderPass>(renderTarget.GetRenderPass()))
+            .setRenderArea({{0, 0}, {renderTarget.GetWidth(), renderTarget.GetHeight()}});
 
     mCommandBuffer->beginRenderPass(renderPassBegin, vk::SubpassContents::eInline);
   }
@@ -446,7 +447,7 @@ struct RenderCommand::Impl
     for (auto& drawable : mDrawables)
     {
       assert(mRenderTarget);
-      drawable.get().Update(mRenderTarget->Orth, mRenderTarget->View * mView);
+      drawable.get().Update(mRenderTarget->GetOrth(), mRenderTarget->GetView() * mView);
     }
 
     mCmds[*mIndex].Wait();

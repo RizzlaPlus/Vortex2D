@@ -23,6 +23,30 @@ void TextureBarrier(vk::Image image,
                     vk::ImageLayout newLayout,
                     vk::AccessFlags dstMask);
 
+namespace
+{
+Handle::RenderPass MakeRenderPass(VulkanDevice& device, Format format)
+{
+  // Create render pass
+  VkRenderPass renderPass =
+      RenderpassBuilder()
+          .Attachement(format)
+          .AttachementLoadOp(vk::AttachmentLoadOp::eLoad)
+          .AttachementStoreOp(vk::AttachmentStoreOp::eStore)
+          .AttachementInitialLayout(vk::ImageLayout::ePresentSrcKHR)
+          .AttachementFinalLayout(vk::ImageLayout::ePresentSrcKHR)
+          .Subpass(vk::PipelineBindPoint::eGraphics)
+          .SubpassColorAttachment(vk::ImageLayout::eColorAttachmentOptimal, 0)
+          .Dependency(VK_SUBPASS_EXTERNAL, 0)
+          .DependencySrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+          .DependencyDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+          .DependencyDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
+          .Create(device.Handle());
+
+  return reinterpret_cast<Handle::RenderPass>(renderPass);
+}
+}  // namespace
+
 struct SwapChainSupportDetails
 {
   SwapChainSupportDetails(vk::PhysicalDevice device, vk::SurfaceKHR surface)
@@ -66,7 +90,7 @@ struct RenderWindow::Impl
                              .setImageFormat(ConvertFormat(format))
                              .setImageColorSpace(vk::ColorSpaceKHR::eSrgbNonlinear)
                              .setMinImageCount(numFramebuffers)
-                             .setImageExtent({mSelf.Width, mSelf.Height})
+                             .setImageExtent({mSelf.GetWidth(), mSelf.GetHeight()})
                              .setImageArrayLayers(1)
                              .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment |
                                             vk::ImageUsageFlagBits::eTransferDst)
@@ -119,33 +143,18 @@ struct RenderWindow::Impl
       });
     }
 
-    // Create render pass
-    mSelf.RenderPass =
-        RenderpassBuilder()
-            .Attachement(format)
-            .AttachementLoadOp(vk::AttachmentLoadOp::eLoad)
-            .AttachementStoreOp(vk::AttachmentStoreOp::eStore)
-            .AttachementInitialLayout(vk::ImageLayout::ePresentSrcKHR)
-            .AttachementFinalLayout(vk::ImageLayout::ePresentSrcKHR)
-            .Subpass(vk::PipelineBindPoint::eGraphics)
-            .SubpassColorAttachment(vk::ImageLayout::eColorAttachmentOptimal, 0)
-            .Dependency(VK_SUBPASS_EXTERNAL, 0)
-            .DependencySrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-            .DependencyDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-            .DependencyDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-            .Create(mDevice.Handle());
-
     // Create framebuffers
     for (const auto& imageView : mSwapChainImageViews)
     {
       vk::ImageView attachments[] = {*imageView};
-      auto framebufferInfo = vk::FramebufferCreateInfo()
-                                 .setRenderPass(*mSelf.RenderPass)
-                                 .setAttachmentCount(1)
-                                 .setPAttachments(attachments)
-                                 .setWidth(mSelf.Width)
-                                 .setHeight(mSelf.Height)
-                                 .setLayers(1);
+      auto framebufferInfo =
+          vk::FramebufferCreateInfo()
+              .setRenderPass(reinterpret_cast<VkRenderPass>(mSelf.GetRenderPass()))
+              .setAttachmentCount(1)
+              .setPAttachments(attachments)
+              .setWidth(mSelf.GetWidth())
+              .setHeight(mSelf.GetHeight())
+              .setLayers(1);
 
       mFrameBuffers.push_back(mDevice.Handle().createFramebufferUnique(framebufferInfo));
 
@@ -225,7 +234,12 @@ struct RenderWindow::Impl
 };
 
 RenderWindow::RenderWindow(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
-    : RenderTarget(width, height), mImpl(std::make_unique<Impl>(*this, device, surface))
+    : RenderTarget(device,
+                   width,
+                   height,
+                   MakeRenderPass(static_cast<VulkanDevice&>(device),
+                                  Format::B8G8R8A8Unorm))  // TODO choose format
+    , mImpl(std::make_unique<Impl>(*this, device, surface))
 {
 }
 

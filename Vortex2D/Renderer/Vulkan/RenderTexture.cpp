@@ -15,36 +15,43 @@ namespace Vortex2D
 {
 namespace Renderer
 {
+namespace
+{
+auto MakeRenderPass(VulkanDevice& device, Format format)
+{
+  VkRenderPass renderPass =
+      RenderpassBuilder()
+          .Attachement(format)
+          .AttachementLoadOp(vk::AttachmentLoadOp::eLoad)
+          .AttachementStoreOp(vk::AttachmentStoreOp::eStore)
+          // TODO should they both be general?
+          .AttachementInitialLayout(vk::ImageLayout::eGeneral)
+          .AttachementFinalLayout(vk::ImageLayout::eGeneral)
+          .Subpass(vk::PipelineBindPoint::eGraphics)
+          .SubpassColorAttachment(vk::ImageLayout::eColorAttachmentOptimal, 0)
+          .Dependency(VK_SUBPASS_EXTERNAL, 0)
+          .DependencySrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+          .DependencyDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+          .DependencySrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead)
+          .DependencyDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
+          .Create(device.Handle());
+
+  return reinterpret_cast<Handle::RenderPass>(renderPass);
+}
+}  // namespace
+
 struct RenderTexture::Impl
 {
-  Impl(RenderTexture& self, Device& device, Format format)
+  Impl(RenderTexture& self, Device& device)
       : mSelf(self), mDevice(static_cast<VulkanDevice&>(device))
   {
-    // Create render pass
-    mSelf.RenderPass =
-        RenderpassBuilder()
-            .Attachement(format)
-            .AttachementLoadOp(vk::AttachmentLoadOp::eLoad)
-            .AttachementStoreOp(vk::AttachmentStoreOp::eStore)
-            // TODO should they both be general?
-            .AttachementInitialLayout(vk::ImageLayout::eGeneral)
-            .AttachementFinalLayout(vk::ImageLayout::eGeneral)
-            .Subpass(vk::PipelineBindPoint::eGraphics)
-            .SubpassColorAttachment(vk::ImageLayout::eColorAttachmentOptimal, 0)
-            .Dependency(VK_SUBPASS_EXTERNAL, 0)
-            .DependencySrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-            .DependencyDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-            .DependencySrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead)
-            .DependencyDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-            .Create(mDevice.Handle());
-
     // Create framebuffer
-    vk::ImageView attachments[] = {mSelf.GetView()};
+    vk::ImageView attachments[] = {mSelf.Texture::GetView()};
 
     auto framebufferInfo = vk::FramebufferCreateInfo()
-                               .setWidth(mSelf.Width)
-                               .setHeight(mSelf.Height)
-                               .setRenderPass(*mSelf.RenderPass)
+                               .setWidth(mSelf.RenderTarget::GetWidth())
+                               .setHeight(mSelf.RenderTarget::GetHeight())
+                               .setRenderPass(reinterpret_cast<VkRenderPass>(mSelf.GetRenderPass()))
                                .setAttachmentCount(1)
                                .setPAttachments(attachments)
                                .setLayers(1);
@@ -66,9 +73,12 @@ struct RenderTexture::Impl
 };
 
 RenderTexture::RenderTexture(Device& device, uint32_t width, uint32_t height, Format format)
-    : RenderTarget(width, height)
+    : RenderTarget(device,
+                   width,
+                   height,
+                   MakeRenderPass(static_cast<VulkanDevice&>(device), format))
     , Texture(device, width, height, format)
-    , mImpl(std::make_unique<Impl>(*this, device, format))
+    , mImpl(std::make_unique<Impl>(*this, device))
 {
 }
 

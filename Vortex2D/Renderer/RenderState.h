@@ -63,7 +63,7 @@ struct RenderState
 
   uint32_t Width;
   uint32_t Height;
-  vk::RenderPass RenderPass;
+  Handle::RenderPass RenderPass;
   ColorBlendState BlendState;
 };
 

@@ -206,7 +206,7 @@ TEST(ShapeTests, RenderScaledEllipse)
   RenderTexture texture(*device, 50, 50, Format::R32Sfloat);
   Texture outTexture(*device, 50, 50, Format::R32Sfloat, MemoryUsage::Cpu);
 
-  texture.View = glm::scale(glm::vec3(2.0f, 2.0f, 1.0f));
+  texture.SetView(glm::scale(glm::vec3(2.0f, 2.0f, 1.0f)));
   texture.Record({clear, ellipse}).Submit();
 
   radius *= glm::vec2(2.0f);

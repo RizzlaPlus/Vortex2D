@@ -96,6 +96,7 @@ typedef struct PipelineLayout_T* PipelineLayout;
 typedef struct BindGroupLayout_T* BindGroupLayout;
 typedef struct Pipeline_T* Pipeline;
 typedef struct ShaderModule_T* ShaderModule;
+typedef struct RenderPass_T* RenderPass;
 }  // namespace Handle
 
 }  // namespace Renderer

@@ -86,7 +86,7 @@ public:
    * @param device
    * @return
    */
-  vk::UniqueRenderPass Create(vk::Device device);
+  vk::RenderPass Create(vk::Device device);
 
 private:
   constexpr static int mMaxRefs = 64;

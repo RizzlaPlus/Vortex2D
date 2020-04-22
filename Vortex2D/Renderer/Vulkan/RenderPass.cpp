@@ -96,7 +96,7 @@ RenderpassBuilder& RenderpassBuilder::DependencyDstAccessMask(vk::AccessFlags va
   return *this;
 }
 
-vk::UniqueRenderPass RenderpassBuilder::Create(vk::Device device)
+vk::RenderPass RenderpassBuilder::Create(vk::Device device)
 {
   auto renderPassInfo = vk::RenderPassCreateInfo()
                             .setAttachmentCount((uint32_t)mAttachementDescriptions.size())
@@ -106,7 +106,7 @@ vk::UniqueRenderPass RenderpassBuilder::Create(vk::Device device)
                             .setDependencyCount((uint32_t)mSubpassDependencies.size())
                             .setPDependencies(mSubpassDependencies.data());
 
-  return device.createRenderPassUnique(renderPassInfo);
+  return device.createRenderPass(renderPassInfo);
 }
 
 vk::AttachmentReference* RenderpassBuilder::GetAttachmentReference()

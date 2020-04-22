@@ -210,6 +210,10 @@ struct Pipeline_T
 {
 };
 
+struct RenderPass_T
+{
+};
+
 }  // namespace Handle
 }  // namespace Renderer
 }  // namespace Vortex2D

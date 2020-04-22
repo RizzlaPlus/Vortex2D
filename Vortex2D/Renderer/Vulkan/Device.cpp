@@ -544,7 +544,7 @@ Handle::Pipeline VulkanDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc
                           .setPMultisampleState(&multisampleInfo)
                           .setPColorBlendState(&blendInfo)
                           .setLayout(reinterpret_cast<VkPipelineLayout>(graphics.pipelineLayout))
-                          .setRenderPass(renderState.RenderPass)
+                          .setRenderPass(reinterpret_cast<VkRenderPass>(renderState.RenderPass))
                           .setPViewportState(&viewPortState);
 
   GraphicsPipelineCache pipeline = {

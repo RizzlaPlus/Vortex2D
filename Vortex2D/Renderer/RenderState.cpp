@@ -53,9 +53,9 @@ ColorBlendState::ColorBlendState(BlendFactor src,
 }
 
 RenderState::RenderState(const RenderTarget& renderTarget, struct ColorBlendState blendState)
-    : Width(renderTarget.Width)
-    , Height(renderTarget.Height)
-    , RenderPass(*renderTarget.RenderPass)
+    : Width(renderTarget.GetWidth())
+    , Height(renderTarget.GetHeight())
+    , RenderPass(renderTarget.GetRenderPass())
     , BlendState(blendState)
 {
 }
