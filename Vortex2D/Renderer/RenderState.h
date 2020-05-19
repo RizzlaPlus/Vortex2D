@@ -8,6 +8,8 @@
 
 #include <Vortex2D/Renderer/Common.h>
 
+#include <array>
+
 namespace Vortex2D
 {
 namespace Renderer
