@@ -226,6 +226,10 @@ struct Semaphore_T
 {
 };
 
+struct BindGroup_T
+{
+};
+
 inline Semaphore ConvertSemaphore(vk::Semaphore semaphore)
 {
   return reinterpret_cast<Semaphore>(static_cast<VkSemaphore>(semaphore));

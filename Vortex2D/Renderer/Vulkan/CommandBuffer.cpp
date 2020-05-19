@@ -58,8 +58,9 @@ struct CommandEncoder::Impl
                     vk::PipelineLayout layout,
                     BindGroup& bindGroup)
   {
+    vk::DescriptorSet descriptorSet = reinterpret_cast<VkDescriptorSet>(bindGroup.Handle());
     mCommandBuffer->bindDescriptorSets(
-        ConvertPipelineBindPoint(pipelineBindPoint), layout, 0, {*bindGroup.descriptorSet}, {});
+        ConvertPipelineBindPoint(pipelineBindPoint), layout, 0, {descriptorSet}, {});
   }
 
   void SetVertexBuffer(const GenericBuffer& buffer)

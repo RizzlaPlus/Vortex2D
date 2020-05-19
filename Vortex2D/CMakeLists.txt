@@ -16,6 +16,7 @@ set(LIB_VULKAN_SOURCES
     "Renderer/Vulkan/RenderTexture.cpp"
     "Renderer/Vulkan/RenderWindow.cpp"
     "Renderer/Vulkan/RenderTarget.cpp"
+    "Renderer/Vulkan/BindGroup.cpp"
     "Renderer/Vulkan/vk_mem_alloc.h")
 
 set(LIB_SOURCES
@@ -40,7 +41,6 @@ set(LIB_SOURCES
     "Engine/LinearSolver/IncompletePoisson.cpp"
     "Engine/LinearSolver/Transfer.cpp"
     "Engine/LinearSolver/Multigrid.cpp"
-    "Renderer/BindGroup.cpp"
     "Renderer/Pipeline.cpp"
     "Renderer/RenderState.cpp"
     "Renderer/Shapes.cpp"

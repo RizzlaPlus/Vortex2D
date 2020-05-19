@@ -81,8 +81,9 @@ void Bind(vk::Device device,
               descriptorType != vk::DescriptorType::eUniformBuffer)
             throw std::runtime_error("Binding not a storage buffer");
 
+          vk::DescriptorSet descriptorSet = reinterpret_cast<VkDescriptorSet>(dstSet.Handle());
           auto writeDescription = vk::WriteDescriptorSet()
-                                      .setDstSet(*dstSet.descriptorSet)
+                                      .setDstSet(descriptorSet)
                                       .setDstBinding(bind)
                                       .setDstArrayElement(0)
                                       .setDescriptorType(descriptorType)
@@ -111,8 +112,9 @@ void Bind(vk::Device device,
               descriptorType != vk::DescriptorType::eCombinedImageSampler)
             throw std::runtime_error("Binding not an image");
 
+          vk::DescriptorSet descriptorSet = reinterpret_cast<VkDescriptorSet>(dstSet.Handle());
           auto writeDescription = vk::WriteDescriptorSet()
-                                      .setDstSet(*dstSet.descriptorSet)
+                                      .setDstSet(descriptorSet)
                                       .setDstBinding(bind)
                                       .setDstArrayElement(0)
                                       .setDescriptorType(descriptorType)
@@ -424,18 +426,7 @@ BindGroup VulkanDevice::CreateBindGroup(const Handle::BindGroupLayout& bindGroup
                                         const SPIRV::ShaderLayouts& layout,
                                         const std::vector<BindingInput>& bindingInputs)
 {
-  vk::DescriptorSetLayout descriptorSetlayouts[] = {
-      reinterpret_cast<VkDescriptorSetLayout>(bindGroupLayout)};
-
-  auto descriptorSetInfo = vk::DescriptorSetAllocateInfo()
-                               .setDescriptorPool(*mDescriptorPool)
-                               .setDescriptorSetCount(1)
-                               .setPSetLayouts(descriptorSetlayouts);
-
-  BindGroup bindGroup;
-  bindGroup.descriptorSet =
-      std::move(mDevice->allocateDescriptorSetsUnique(descriptorSetInfo).at(0));
-
+  BindGroup bindGroup(*this, bindGroupLayout);
   Bind(*mDevice, bindGroup, layout, bindingInputs);
 
   return bindGroup;
@@ -605,6 +596,18 @@ vk::UniqueCommandBuffer VulkanDevice::CreateCommandBuffer() const
                                .setLevel(vk::CommandBufferLevel::ePrimary);
 
   return std::move(mDevice->allocateCommandBuffersUnique(commandBufferInfo).at(0));
+}
+
+vk::UniqueDescriptorSet VulkanDevice::CreateDescriptorSet(vk::DescriptorSetLayout layout) const
+{
+  vk::DescriptorSetLayout descriptorSetlayouts[] = {layout};
+
+  auto descriptorSetInfo = vk::DescriptorSetAllocateInfo()
+                               .setDescriptorPool(*mDescriptorPool)
+                               .setDescriptorSetCount(1)
+                               .setPSetLayouts(descriptorSetlayouts);
+
+  return std::move(mDevice->allocateDescriptorSetsUnique(descriptorSetInfo).at(0));
 }
 
 }  // namespace Renderer

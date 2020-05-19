@@ -85,6 +85,8 @@ public:
 
   vk::UniqueCommandBuffer CreateCommandBuffer() const;
 
+  vk::UniqueDescriptorSet CreateDescriptorSet(vk::DescriptorSetLayout layout) const;
+
 private:
   void CreateDescriptorPool(int size = 512);
 

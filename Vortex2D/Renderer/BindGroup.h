@@ -18,9 +18,21 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-struct BindGroup
+class BindGroup
 {
-  vk::UniqueDescriptorSet descriptorSet;
+public:
+  BindGroup();
+  BindGroup(Device& device, const Handle::BindGroupLayout& bindGroupLayout);
+  BindGroup(BindGroup&& other);
+  VORTEX2D_API ~BindGroup();
+
+  BindGroup& operator=(BindGroup&& other);
+
+  Handle::BindGroup Handle();
+
+private:
+  struct Impl;
+  std::unique_ptr<Impl> mImpl;
 };
 
 /**

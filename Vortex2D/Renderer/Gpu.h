@@ -100,6 +100,7 @@ typedef struct RenderPass_T* RenderPass;
 typedef struct Framebuffer_T* Framebuffer;
 typedef struct CommandBuffer_T* CommandBuffer;
 typedef struct Semaphore_T* Semaphore;
+typedef struct BindGroup_T* BindGroup;
 }  // namespace Handle
 
 }  // namespace Renderer
