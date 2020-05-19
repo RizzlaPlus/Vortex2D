@@ -50,7 +50,7 @@ vk::DescriptorType GetDescriptorType(uint32_t bind, const SPIRV::ShaderLayouts& 
     auto it = shaderLayout.bindings.find(bind);
     if (it != shaderLayout.bindings.end())
     {
-      return it->second;
+      return ConvertDescriptorType(it->second);
     }
   }
 
@@ -360,7 +360,7 @@ Handle::BindGroupLayout VulkanDevice::CreateBindGroupLayout(const SPIRV::ShaderL
       for (auto& desciptorType : shaderLayout.bindings)
       {
         descriptorSetLayoutBindings.push_back({desciptorType.first,
-                                               desciptorType.second,
+                                               ConvertDescriptorType(desciptorType.second),
                                                1,
                                                ConvertShaderStage(shaderLayout.shaderStage),
                                                nullptr});

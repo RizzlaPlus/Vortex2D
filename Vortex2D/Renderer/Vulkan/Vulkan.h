@@ -192,6 +192,21 @@ inline vk::BlendOp ConvertBlendOp(BlendOp blendOp)
   }
 }
 
+inline vk::DescriptorType ConvertDescriptorType(BindType type)
+{
+  switch (type)
+  {
+    case BindType::StorageBuffer:
+      return vk::DescriptorType::eStorageBuffer;
+    case BindType::StorageImage:
+      return vk::DescriptorType::eStorageImage;
+    case BindType::ImageSampler:
+      return vk::DescriptorType::eCombinedImageSampler;
+    case BindType::UniformBuffer:
+      return vk::DescriptorType::eUniformBuffer;
+  }
+}
+
 namespace Handle
 {
 inline Semaphore ConvertSemaphore(vk::Semaphore semaphore)

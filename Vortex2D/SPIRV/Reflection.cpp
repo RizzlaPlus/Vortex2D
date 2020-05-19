@@ -11,7 +11,7 @@ namespace Vortex2D
 namespace SPIRV
 {
 unsigned ReadBinding(spirv_cross::Compiler& compiler,
-                     Reflection::DescriptorTypesMap& descriptorType,
+                     Reflection::BindTypesMap& descriptorType,
                      unsigned id)
 {
   unsigned set = compiler.get_decoration(id, spv::DecorationDescriptorSet);
@@ -32,28 +32,28 @@ Reflection::Reflection(const Renderer::SpirvBinary& spirv) : mPushConstantSize(0
   for (auto& resource : resources.storage_buffers)
   {
     mDescriptorTypes[ReadBinding(compiler, mDescriptorTypes, resource.id)] =
-        vk::DescriptorType::eStorageBuffer;
+        Renderer::BindType::StorageBuffer;
   }
 
   // read storage images
   for (auto& resource : resources.storage_images)
   {
     mDescriptorTypes[ReadBinding(compiler, mDescriptorTypes, resource.id)] =
-        vk::DescriptorType::eStorageImage;
+        Renderer::BindType::StorageImage;
   }
 
   // read combined samplers
   for (auto& resource : resources.sampled_images)
   {
     mDescriptorTypes[ReadBinding(compiler, mDescriptorTypes, resource.id)] =
-        vk::DescriptorType::eCombinedImageSampler;
+        Renderer::BindType::ImageSampler;
   }
 
   // read uniforms
   for (auto& resource : resources.uniform_buffers)
   {
     mDescriptorTypes[ReadBinding(compiler, mDescriptorTypes, resource.id)] =
-        vk::DescriptorType::eUniformBuffer;
+        Renderer::BindType::UniformBuffer;
   }
 
   // get push constant size
@@ -83,7 +83,7 @@ Reflection::Reflection(const Renderer::SpirvBinary& spirv) : mPushConstantSize(0
   }
 }
 
-Reflection::DescriptorTypesMap Reflection::GetDescriptorTypesMap() const
+Reflection::BindTypesMap Reflection::GetDescriptorTypesMap() const
 {
   return mDescriptorTypes;
 }

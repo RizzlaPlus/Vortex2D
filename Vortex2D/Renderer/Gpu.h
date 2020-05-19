@@ -89,6 +89,14 @@ enum class BlendOp
   Min
 };
 
+enum class BindType
+{
+  StorageBuffer,
+  StorageImage,
+  ImageSampler,
+  UniformBuffer,
+};
+
 namespace Handle
 {
 // FIXME doesn't work for 32 bit

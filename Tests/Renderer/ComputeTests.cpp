@@ -394,16 +394,15 @@ TEST(ComputeTests, Reflection)
   Reflection spirv1(Stencil_comp);
 
   auto descriptorTypes = spirv1.GetDescriptorTypesMap();
-  DescriptorTypeBindings expectedDescriptorTypes = {{0, vk::DescriptorType::eStorageBuffer},
-                                                    {1, vk::DescriptorType::eStorageBuffer}};
+  BindTypeBindings expectedDescriptorTypes = {{0, BindType::StorageBuffer},
+                                              {1, BindType::StorageBuffer}};
 
   EXPECT_EQ(expectedDescriptorTypes, descriptorTypes);
 
   Reflection spirv2(Image_comp);
 
   descriptorTypes = spirv2.GetDescriptorTypesMap();
-  expectedDescriptorTypes = {{0, vk::DescriptorType::eStorageImage},
-                             {1, vk::DescriptorType::eStorageImage}};
+  expectedDescriptorTypes = {{0, BindType::StorageImage}, {1, BindType::StorageImage}};
 
   EXPECT_EQ(expectedDescriptorTypes, descriptorTypes);
 
