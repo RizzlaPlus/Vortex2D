@@ -20,7 +20,7 @@ namespace Fluid
 RigidBody::RigidBody(Renderer::Device& device,
                      const glm::ivec2& size,
                      Renderer::Drawable& drawable,
-                     vk::Flags<Type> type)
+                     Type type)
     : mSize(static_cast<float>(size.x))
     , mDevice(device)
     , mDrawable(drawable)
@@ -163,7 +163,7 @@ void RigidBody::BindPressure(float delta,
 
 void RigidBody::Div()
 {
-  if (mType & RigidBody::Type::eStatic)
+  if (mType == RigidBody::Type::eStatic || mType == RigidBody::Type::eStrong)
   {
     mDivCmd.Submit();
   }
@@ -171,7 +171,7 @@ void RigidBody::Div()
 
 void RigidBody::Force()
 {
-  if (mType & RigidBody::Type::eWeak)
+  if (mType == RigidBody::Type::eWeak || mType == Vortex2D::Fluid::RigidBody::Type::eStrong)
   {
     mForceCmd.Submit();
   }
@@ -187,13 +187,13 @@ void RigidBody::Pressure()
 
 void RigidBody::VelocityConstrain()
 {
-  if (mType & RigidBody::Type::eStatic)
+  if (mType == RigidBody::Type::eStatic || mType == RigidBody::Type::eStrong)
   {
     mConstrainCmd.Submit();
   }
 }
 
-vk::Flags<RigidBody::Type> RigidBody::GetType()
+RigidBody::Type RigidBody::GetType()
 {
   return mType;
 }
