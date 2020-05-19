@@ -79,8 +79,6 @@ public:
   VORTEX2D_API virtual Handle::Pipeline CreateComputePipeline(Handle::ShaderModule shader,
                                                               Handle::PipelineLayout layout,
                                                               SpecConstInfo specConstInfo = {}) = 0;
-
-  VORTEX2D_API virtual CommandEncoder CreateCommandEncoder() = 0;
 };
 
 }  // namespace Renderer

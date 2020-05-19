@@ -62,7 +62,8 @@ struct RenderTexture::Impl
   RenderCommand Record(DrawableList drawables, ColorBlendState blendState)
   {
     RenderState state(mSelf, blendState);
-    return RenderCommand(mDevice, mSelf, state, mFramebuffer, drawables);
+    return RenderCommand(
+        mDevice, mSelf, state, Handle::ConvertFramebuffer(*mFramebuffer), drawables);
   }
 
   void Submit(RenderCommand& renderCommand) { renderCommand.Render(); }

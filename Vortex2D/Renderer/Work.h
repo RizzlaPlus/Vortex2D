@@ -107,7 +107,7 @@ VORTEX2D_API ComputeSize MakeCheckerboardComputeSize(const glm::ivec2& size);
 struct DispatchParams
 {
   VORTEX2D_API DispatchParams(int count);
-  alignas(16) vk::DispatchIndirectCommand workSize;
+  alignas(16) glm::uvec3 workSize;
   alignas(4) uint32_t count;
 };
 

@@ -13,7 +13,7 @@ namespace Vortex2D
 namespace Renderer
 {
 void TextureBarrier(vk::Image image,
-                    vk::CommandBuffer commandBuffer,
+                    Handle::CommandBuffer commandBuffer,
                     vk::ImageLayout oldLayout,
                     vk::AccessFlags srcMask,
                     vk::ImageLayout newLayout,
@@ -29,13 +29,13 @@ void TextureBarrier(vk::Image image,
                                  .setSrcAccessMask(srcMask)
                                  .setDstAccessMask(dstMask);
 
-  commandBuffer.pipelineBarrier(
-      vk::PipelineStageFlagBits::eAllCommands | vk::PipelineStageFlagBits::eHost,
-      vk::PipelineStageFlagBits::eAllCommands | vk::PipelineStageFlagBits::eHost,
-      {},
-      nullptr,
-      nullptr,
-      imageMemoryBarriers);
+  vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(commandBuffer);
+  cmd.pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands | vk::PipelineStageFlagBits::eHost,
+                      vk::PipelineStageFlagBits::eAllCommands | vk::PipelineStageFlagBits::eHost,
+                      {},
+                      nullptr,
+                      nullptr,
+                      imageMemoryBarriers);
 }
 
 std::uint64_t GetBytesPerPixel(Format format)
@@ -195,11 +195,11 @@ struct Texture::Impl
 
         auto clearValue = vk::ClearColorValue().setFloat32({{0.0f, 0.0f, 0.0f, 0.0f}});
 
-        command.Handle().clearColorImage(
-            mImage,
-            vk::ImageLayout::eGeneral,
-            clearValue,
-            vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
+        vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command.Handle());
+        cmd.clearColorImage(mImage,
+                            vk::ImageLayout::eGeneral,
+                            clearValue,
+                            vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
         TextureBarrier(Handle(),
                        command.Handle(),
@@ -264,11 +264,11 @@ struct Texture::Impl
                    vk::ImageLayout::eGeneral,
                    vk::AccessFlagBits::eTransferWrite);
 
-    command.Handle().clearColorImage(
-        mImage,
-        vk::ImageLayout::eGeneral,
-        colour,
-        vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
+    vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command.Handle());
+    cmd.clearColorImage(mImage,
+                        vk::ImageLayout::eGeneral,
+                        colour,
+                        vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
     TextureBarrier(Handle(),
                    command.Handle(),
@@ -398,11 +398,12 @@ struct Texture::Impl
                       .setDstSubresource({vk::ImageAspectFlagBits::eColor, 0, 0, 1})
                       .setExtent({mWidth, mHeight, 1});
 
-    command.Handle().copyImage(srcImage.Handle(),
-                               vk::ImageLayout::eTransferSrcOptimal,
-                               mImage,
-                               vk::ImageLayout::eTransferDstOptimal,
-                               region);
+    vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command.Handle());
+    cmd.copyImage(srcImage.Handle(),
+                  vk::ImageLayout::eTransferSrcOptimal,
+                  mImage,
+                  vk::ImageLayout::eTransferDstOptimal,
+                  region);
 
     TextureBarrier(srcImage.Handle(),
                    command.Handle(),

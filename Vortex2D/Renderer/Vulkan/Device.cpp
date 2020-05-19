@@ -597,16 +597,14 @@ Handle::Pipeline VulkanDevice::CreateComputePipeline(Handle::ShaderModule shader
   return reinterpret_cast<Handle::Pipeline>(handle);
 }
 
-CommandEncoder VulkanDevice::CreateCommandEncoder()
+vk::UniqueCommandBuffer VulkanDevice::CreateCommandBuffer() const
 {
   auto commandBufferInfo = vk::CommandBufferAllocateInfo()
                                .setCommandBufferCount(1)
                                .setCommandPool(*mCommandPool)
                                .setLevel(vk::CommandBufferLevel::ePrimary);
 
-  auto commandBufferUnique =
-      std::move(mDevice->allocateCommandBuffersUnique(commandBufferInfo).at(0));
-  return {*this, std::move(commandBufferUnique)};
+  return std::move(mDevice->allocateCommandBuffersUnique(commandBufferInfo).at(0));
 }
 
 }  // namespace Renderer

@@ -17,7 +17,7 @@ namespace Vortex2D
 namespace Renderer
 {
 void TextureBarrier(vk::Image image,
-                    vk::CommandBuffer commandBuffer,
+                    Handle::CommandBuffer commandBuffer,
                     vk::ImageLayout oldLayout,
                     vk::AccessFlags srcMask,
                     vk::ImageLayout newLayout,
@@ -128,7 +128,8 @@ struct RenderWindow::Impl
 
         auto clearValue = vk::ClearColorValue().setFloat32({{0.0f, 0.0f, 0.0f, 0.0f}});
 
-        command.Handle().clearColorImage(
+        vk::CommandBuffer commandBuffer = reinterpret_cast<VkCommandBuffer>(command.Handle());
+        commandBuffer.clearColorImage(
             image,
             vk::ImageLayout::eGeneral,
             clearValue,
@@ -169,7 +170,14 @@ struct RenderWindow::Impl
   RenderCommand Record(RenderTarget::DrawableList drawables, ColorBlendState blendState)
   {
     RenderState state(mSelf, blendState);
-    return RenderCommand(mDevice, mSelf, state, mFrameBuffers, mIndex, drawables);
+
+    std::vector<Handle::Framebuffer> framebuffers;
+    for (auto& frameBuffer : mFrameBuffers)
+    {
+      framebuffers.push_back(Handle::ConvertFramebuffer(*frameBuffer));
+    }
+
+    return RenderCommand(mDevice, mSelf, state, framebuffers, mIndex, drawables);
   }
 
   void Submit(RenderCommand& renderCommand) { mRenderCommands.emplace_back(renderCommand); }
@@ -192,17 +200,20 @@ struct RenderWindow::Impl
 
     if (mRenderCommands.size() == 1)
     {
-      mRenderCommands[0].get().Render({*mImageAvailableSemaphores[mFrameIndex]},
-                                      {*mRenderFinishedSemaphores[mFrameIndex]});
+      mRenderCommands[0].get().Render(
+          {Handle::ConvertSemaphore(*mImageAvailableSemaphores[mFrameIndex])},
+          {Handle::ConvertSemaphore(*mRenderFinishedSemaphores[mFrameIndex])});
     }
     else
     {
-      mRenderCommands.front().get().Render({*mImageAvailableSemaphores[mFrameIndex]});
+      mRenderCommands.front().get().Render(
+          {Handle::ConvertSemaphore(*mImageAvailableSemaphores[mFrameIndex])});
       for (std::size_t i = 1; i < mRenderCommands.size() - 1; i++)
       {
         mRenderCommands[i].get().Render();
       }
-      mRenderCommands.back().get().Render({}, {*mRenderFinishedSemaphores[mFrameIndex]});
+      mRenderCommands.back().get().Render(
+          {}, {Handle::ConvertSemaphore(*mRenderFinishedSemaphores[mFrameIndex])});
     }
 
     vk::SwapchainKHR swapChain[] = {*mSwapChain};

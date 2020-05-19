@@ -21,8 +21,8 @@ const uint32_t zero = 0;
 
 struct CommandEncoder::Impl
 {
-  Impl(Device& device, vk::UniqueCommandBuffer commandBuffer)
-      : mDevice(static_cast<VulkanDevice&>(device)), mCommandBuffer(std::move(commandBuffer))
+  Impl(Device& device)
+      : mDevice(static_cast<VulkanDevice&>(device)), mCommandBuffer(mDevice.CreateCommandBuffer())
   {
   }
 
@@ -34,11 +34,11 @@ struct CommandEncoder::Impl
     mCommandBuffer->begin(bufferBegin);
   }
 
-  void BeginRenderPass(const RenderTarget& renderTarget, vk::Framebuffer framebuffer)
+  void BeginRenderPass(const RenderTarget& renderTarget, Handle::Framebuffer framebuffer)
   {
     auto renderPassBegin =
         vk::RenderPassBeginInfo()
-            .setFramebuffer(framebuffer)
+            .setFramebuffer(reinterpret_cast<VkFramebuffer>(framebuffer))
             .setRenderPass(reinterpret_cast<VkRenderPass>(renderTarget.GetRenderPass()))
             .setRenderArea({{0, 0}, {renderTarget.GetWidth(), renderTarget.GetHeight()}});
 
@@ -116,10 +116,7 @@ struct CommandEncoder::Impl
   vk::UniqueCommandBuffer mCommandBuffer;
 };
 
-CommandEncoder::CommandEncoder(Device& device, vk::UniqueCommandBuffer commandBuffer)
-    : mImpl(std::make_unique<Impl>(device, std::move(commandBuffer)))
-{
-}
+CommandEncoder::CommandEncoder(Device& device) : mImpl(std::make_unique<Impl>(device)) {}
 
 CommandEncoder::CommandEncoder(CommandEncoder&& other) : mImpl(std::move(other.mImpl)) {}
 
@@ -130,7 +127,8 @@ void CommandEncoder::Begin()
   mImpl->Begin();
 }
 
-void CommandEncoder::BeginRenderPass(const RenderTarget& renderTarget, vk::Framebuffer framebuffer)
+void CommandEncoder::BeginRenderPass(const RenderTarget& renderTarget,
+                                     Handle::Framebuffer framebuffer)
 {
   mImpl->BeginRenderPass(renderTarget, framebuffer);
 }
@@ -202,9 +200,10 @@ void CommandEncoder::DebugMarkerEnd()
   mImpl->DebugMarkerEnd();
 }
 
-vk::CommandBuffer CommandEncoder::Handle()
+Handle::CommandBuffer CommandEncoder::Handle()
 {
-  return mImpl->Handle();
+  VkCommandBuffer commandBuffer = mImpl->Handle();
+  return reinterpret_cast<Handle::CommandBuffer>(commandBuffer);
 }
 
 struct CommandBuffer::Impl
@@ -213,7 +212,7 @@ struct CommandBuffer::Impl
       : mDevice(static_cast<VulkanDevice&>(device))
       , mSynchronise(synchronise)
       , mRecorded(false)
-      , mCommandEncoder(device.CreateCommandEncoder())
+      , mCommandEncoder(device)
       , mFence(mDevice.Handle().createFenceUnique({vk::FenceCreateFlagBits::eSignaled}))
   {
   }
@@ -228,7 +227,9 @@ struct CommandBuffer::Impl
     mRecorded = true;
   }
 
-  void Record(const RenderTarget& renderTarget, vk::Framebuffer framebuffer, CommandFn commandFn)
+  void Record(const RenderTarget& renderTarget,
+              Handle::Framebuffer framebuffer,
+              CommandFn commandFn)
   {
     Wait();
 
@@ -258,8 +259,8 @@ struct CommandBuffer::Impl
     }
   }
 
-  void Submit(const std::initializer_list<vk::Semaphore>& waitSemaphores,
-              const std::initializer_list<vk::Semaphore>& signalSemaphores)
+  void Submit(const std::initializer_list<Handle::Semaphore>& waitSemaphores,
+              const std::initializer_list<Handle::Semaphore>& signalSemaphores)
   {
     if (!mRecorded)
       throw std::runtime_error("Submitting a command that wasn't recorded");
@@ -269,15 +270,28 @@ struct CommandBuffer::Impl
     std::vector<vk::PipelineStageFlags> waitStages(waitSemaphores.size(),
                                                    vk::PipelineStageFlagBits::eAllCommands);
 
-    vk::CommandBuffer commandBuffers[] = {mCommandEncoder.Handle()};
+    vk::CommandBuffer commandBuffers[] = {
+        reinterpret_cast<VkCommandBuffer>(mCommandEncoder.Handle())};
+
+    std::vector<vk::Semaphore> waitS;
+    for (auto& semaphore : waitSemaphores)
+    {
+      waitS.push_back(Handle::ConvertSemaphore(semaphore));
+    }
+
+    std::vector<vk::Semaphore> signalS;
+    for (auto& semaphore : signalSemaphores)
+    {
+      signalS.push_back(Handle::ConvertSemaphore(semaphore));
+    }
 
     auto submitInfo = vk::SubmitInfo()
                           .setCommandBufferCount(1)
                           .setPCommandBuffers(commandBuffers)
                           .setWaitSemaphoreCount(static_cast<uint32_t>(waitSemaphores.size()))
-                          .setPWaitSemaphores(waitSemaphores.begin())
+                          .setPWaitSemaphores(waitS.data())
                           .setSignalSemaphoreCount(static_cast<uint32_t>(signalSemaphores.size()))
-                          .setPSignalSemaphores(signalSemaphores.begin())
+                          .setPSignalSemaphores(signalS.data())
                           .setPWaitDstStageMask(waitStages.data());
 
     if (mSynchronise)
@@ -315,7 +329,7 @@ CommandBuffer& CommandBuffer::Record(CommandFn commandFn)
 }
 
 CommandBuffer& CommandBuffer::Record(const RenderTarget& renderTarget,
-                                     vk::Framebuffer framebuffer,
+                                     Handle::Framebuffer framebuffer,
                                      CommandFn commandFn)
 {
   mImpl->Record(renderTarget, framebuffer, commandFn);
@@ -334,8 +348,9 @@ CommandBuffer& CommandBuffer::Reset()
   return *this;
 }
 
-CommandBuffer& CommandBuffer::Submit(const std::initializer_list<vk::Semaphore>& waitSemaphores,
-                                     const std::initializer_list<vk::Semaphore>& signalSemaphores)
+CommandBuffer& CommandBuffer::Submit(
+    const std::initializer_list<Handle::Semaphore>& waitSemaphores,
+    const std::initializer_list<Handle::Semaphore>& signalSemaphores)
 {
   mImpl->Submit(waitSemaphores, signalSemaphores);
   return *this;
@@ -354,7 +369,7 @@ struct RenderCommand::Impl
        Device& device,
        RenderTarget& renderTarget,
        const RenderState& renderState,
-       const vk::UniqueFramebuffer& frameBuffer,
+       const Handle::Framebuffer& frameBuffer,
        RenderTarget::DrawableList drawables)
       : mSelf(&self)
       , mRenderTarget(&renderTarget)
@@ -368,7 +383,7 @@ struct RenderCommand::Impl
     }
 
     CommandBuffer cmd(device, true);
-    cmd.Record(renderTarget, *frameBuffer, [&](CommandEncoder& command) {
+    cmd.Record(renderTarget, frameBuffer, [&](CommandEncoder& command) {
       for (auto& drawable : drawables)
       {
         drawable.get().Draw(command, renderState);
@@ -382,7 +397,7 @@ struct RenderCommand::Impl
        Device& device,
        RenderTarget& renderTarget,
        const RenderState& renderState,
-       const std::vector<vk::UniqueFramebuffer>& frameBuffers,
+       const std::vector<Handle::Framebuffer>& frameBuffers,
        const uint32_t& index,
        RenderTarget::DrawableList drawables)
       : mSelf(&self)
@@ -399,7 +414,7 @@ struct RenderCommand::Impl
     for (auto& frameBuffer : frameBuffers)
     {
       CommandBuffer cmd(device, true);
-      cmd.Record(renderTarget, *frameBuffer, [&](CommandEncoder& command) {
+      cmd.Record(renderTarget, frameBuffer, [&](CommandEncoder& command) {
         for (auto& drawable : drawables)
         {
           drawable.get().Draw(command, renderState);
@@ -435,8 +450,8 @@ struct RenderCommand::Impl
     mCmds[*mIndex].Wait();
   }
 
-  void Render(const std::initializer_list<vk::Semaphore>& waitSemaphores,
-              const std::initializer_list<vk::Semaphore>& signalSemaphores)
+  void Render(const std::initializer_list<Handle::Semaphore>& waitSemaphores,
+              const std::initializer_list<Handle::Semaphore>& signalSemaphores)
   {
     assert(mIndex);
     if (mCmds.empty())
@@ -476,7 +491,7 @@ RenderCommand::RenderCommand(RenderCommand&& other) : mImpl(std::move(other.mImp
 RenderCommand::RenderCommand(Device& device,
                              RenderTarget& renderTarget,
                              const RenderState& renderState,
-                             const vk::UniqueFramebuffer& frameBuffer,
+                             const Handle::Framebuffer& frameBuffer,
                              RenderTarget::DrawableList drawables)
     : mImpl(std::make_unique<Impl>(*this,
                                    device,
@@ -490,7 +505,7 @@ RenderCommand::RenderCommand(Device& device,
 RenderCommand::RenderCommand(Device& device,
                              RenderTarget& renderTarget,
                              const RenderState& renderState,
-                             const std::vector<vk::UniqueFramebuffer>& frameBuffers,
+                             const std::vector<Handle::Framebuffer>& frameBuffers,
                              const uint32_t& index,
                              RenderTarget::DrawableList drawables)
     : mImpl(std::make_unique<Impl>(*this,
@@ -521,8 +536,8 @@ void RenderCommand::Wait()
   mImpl->Wait();
 }
 
-void RenderCommand::Render(const std::initializer_list<vk::Semaphore>& waitSemaphores,
-                           const std::initializer_list<vk::Semaphore>& signalSemaphores)
+void RenderCommand::Render(const std::initializer_list<Handle::Semaphore>& waitSemaphores,
+                           const std::initializer_list<Handle::Semaphore>& signalSemaphores)
 {
   mImpl->Render(waitSemaphores, signalSemaphores);
 }

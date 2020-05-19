@@ -214,6 +214,33 @@ struct RenderPass_T
 {
 };
 
+struct Framebuffer_T
+{
+};
+
+struct CommandBuffer_T
+{
+};
+
+struct Semaphore_T
+{
+};
+
+inline Semaphore ConvertSemaphore(vk::Semaphore semaphore)
+{
+  return reinterpret_cast<Semaphore>(static_cast<VkSemaphore>(semaphore));
+}
+
+inline vk::Semaphore ConvertSemaphore(Semaphore semaphore)
+{
+  return reinterpret_cast<VkSemaphore>(semaphore);
+}
+
+inline Framebuffer ConvertFramebuffer(vk::Framebuffer framebuffer)
+{
+  return reinterpret_cast<Framebuffer>(static_cast<VkFramebuffer>(framebuffer));
+}
+
 }  // namespace Handle
 }  // namespace Renderer
 }  // namespace Vortex2D

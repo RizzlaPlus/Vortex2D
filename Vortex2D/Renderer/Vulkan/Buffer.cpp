@@ -15,14 +15,14 @@ namespace Vortex2D
 namespace Renderer
 {
 void TextureBarrier(vk::Image image,
-                    vk::CommandBuffer commandBuffer,
+                    Handle::CommandBuffer commandBuffer,
                     vk::ImageLayout oldLayout,
                     vk::AccessFlags srcMask,
                     vk::ImageLayout newLayout,
                     vk::AccessFlags dstMask);
 
 void BufferBarrier(vk::Buffer buffer,
-                   vk::CommandBuffer command,
+                   Handle::CommandBuffer command,
                    vk::AccessFlags oldAccess,
                    vk::AccessFlags newAccess)
 {
@@ -34,12 +34,13 @@ void BufferBarrier(vk::Buffer buffer,
                                   .setSrcAccessMask(oldAccess)
                                   .setDstAccessMask(newAccess);
 
-  command.pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands,
-                          vk::PipelineStageFlagBits::eAllCommands,
-                          {},
-                          nullptr,
-                          bufferMemoryBarriers,
-                          nullptr);
+  vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command);
+  cmd.pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands,
+                      vk::PipelineStageFlagBits::eAllCommands,
+                      {},
+                      nullptr,
+                      bufferMemoryBarriers,
+                      nullptr);
 }
 
 struct GenericBuffer::Impl
@@ -136,7 +137,8 @@ struct GenericBuffer::Impl
 
     auto region = vk::BufferCopy().setSize(mSize);
 
-    command.Handle().copyBuffer(srcBuffer.Handle(), mBuffer, region);
+    vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command.Handle());
+    cmd.copyBuffer(srcBuffer.Handle(), mBuffer, region);
 
     BufferBarrier(Handle(),
                   command.Handle(),
@@ -168,8 +170,8 @@ struct GenericBuffer::Impl
                     .setImageSubresource({vk::ImageAspectFlagBits::eColor, 0, 0, 1})
                     .setImageExtent({srcTexture.GetWidth(), srcTexture.GetHeight(), 1});
 
-    command.Handle().copyImageToBuffer(
-        srcTexture.Handle(), vk::ImageLayout::eTransferSrcOptimal, mBuffer, info);
+    vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command.Handle());
+    cmd.copyImageToBuffer(srcTexture.Handle(), vk::ImageLayout::eTransferSrcOptimal, mBuffer, info);
 
     TextureBarrier(srcTexture.Handle(),
                    command.Handle(),
@@ -195,7 +197,10 @@ struct GenericBuffer::Impl
                   command.Handle(),
                   vk::AccessFlagBits::eShaderRead,
                   vk::AccessFlagBits::eTransferWrite);
-    command.Handle().fillBuffer(mBuffer, 0, mSize, 0);
+
+    vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command.Handle());
+    cmd.fillBuffer(mBuffer, 0, mSize, 0);
+
     BufferBarrier(Handle(),
                   command.Handle(),
                   vk::AccessFlagBits::eTransferWrite,

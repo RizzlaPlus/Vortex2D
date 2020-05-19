@@ -39,24 +39,28 @@ struct Timer::Impl
     mPool = mDevice.Handle().createQueryPoolUnique(queryPoolInfo);
 
     mStart.Record([&](CommandEncoder& command) {
-      command.Handle().resetQueryPool(*mPool, 0, 2);
-      command.Handle().writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 0);
+      vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command.Handle());
+      cmd.resetQueryPool(*mPool, 0, 2);
+      cmd.writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 0);
     });
 
     mStop.Record([&](CommandEncoder& command) {
-      command.Handle().writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 1);
+      vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command.Handle());
+      cmd.writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 1);
     });
   }
 
   void Start(CommandEncoder& command)
   {
-    command.Handle().resetQueryPool(*mPool, 0, 2);
-    command.Handle().writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 0);
+    vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command.Handle());
+    cmd.resetQueryPool(*mPool, 0, 2);
+    cmd.writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 0);
   }
 
   void Stop(CommandEncoder& command)
   {
-    command.Handle().writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 1);
+    vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command.Handle());
+    cmd.writeTimestamp(vk::PipelineStageFlagBits::eAllCommands, *mPool, 1);
   }
 
   void Start() { mStart.Submit(); }

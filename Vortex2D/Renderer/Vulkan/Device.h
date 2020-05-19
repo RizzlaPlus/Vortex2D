@@ -70,8 +70,6 @@ public:
                                          Handle::PipelineLayout layout,
                                          SpecConstInfo specConstInfo = {}) override;
 
-  CommandEncoder CreateCommandEncoder() override;
-
   // Vulkan specific functions
   VmaAllocator Allocator() const;
 
@@ -84,6 +82,8 @@ public:
   VORTEX2D_API vk::PhysicalDevice GetPhysicalDevice() const;
 
   int GetFamilyIndex() const;
+
+  vk::UniqueCommandBuffer CreateCommandBuffer() const;
 
 private:
   void CreateDescriptorPool(int size = 512);

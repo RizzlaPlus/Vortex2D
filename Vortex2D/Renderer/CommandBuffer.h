@@ -24,12 +24,12 @@ class GenericBuffer;
 class CommandEncoder
 {
 public:
-  CommandEncoder(Device& device, vk::UniqueCommandBuffer commandBuffer);
+  CommandEncoder(Device& device);
   CommandEncoder(CommandEncoder&&);
   ~CommandEncoder();
 
   void Begin();
-  void BeginRenderPass(const RenderTarget& renderTarget, vk::Framebuffer framebuffer);
+  void BeginRenderPass(const RenderTarget& renderTarget, Handle::Framebuffer framebuffer);
   void EndRenderPass();
   void End();
 
@@ -56,7 +56,7 @@ public:
   VORTEX2D_API void DebugMarkerBegin(const char* name, const glm::vec4& color);
   VORTEX2D_API void DebugMarkerEnd();
 
-  vk::CommandBuffer Handle();
+  Handle::CommandBuffer Handle();
 
 private:
   struct Impl;
@@ -102,7 +102,7 @@ public:
    * recorded.
    */
   VORTEX2D_API CommandBuffer& Record(const RenderTarget& renderTarget,
-                                     vk::Framebuffer framebuffer,
+                                     Handle::Framebuffer framebuffer,
                                      CommandFn commandFn);
 
   /**
@@ -120,8 +120,8 @@ public:
    * @brief submit the command buffer
    */
   VORTEX2D_API CommandBuffer& Submit(
-      const std::initializer_list<vk::Semaphore>& waitSemaphores = {},
-      const std::initializer_list<vk::Semaphore>& signalSemaphores = {});
+      const std::initializer_list<Handle::Semaphore>& waitSemaphores = {},
+      const std::initializer_list<Handle::Semaphore>& signalSemaphores = {});
 
   /**
    * @brief explicit conversion operator to bool, indicates if the command was
@@ -151,13 +151,13 @@ public:
   VORTEX2D_API RenderCommand(Device& device,
                              RenderTarget& renderTarget,
                              const RenderState& renderState,
-                             const vk::UniqueFramebuffer& frameBuffer,
+                             const Handle::Framebuffer& frameBuffer,
                              RenderTarget::DrawableList drawables);
 
   VORTEX2D_API RenderCommand(Device& device,
                              RenderTarget& renderTarget,
                              const RenderState& renderState,
-                             const std::vector<vk::UniqueFramebuffer>& frameBuffers,
+                             const std::vector<Handle::Framebuffer>& frameBuffers,
                              const uint32_t& index,
                              RenderTarget::DrawableList drawables);
 
@@ -173,8 +173,8 @@ public:
    */
   VORTEX2D_API void Wait();
 
-  VORTEX2D_API void Render(const std::initializer_list<vk::Semaphore>& waitSemaphores = {},
-                           const std::initializer_list<vk::Semaphore>& signalSemaphores = {});
+  VORTEX2D_API void Render(const std::initializer_list<Handle::Semaphore>& waitSemaphores = {},
+                           const std::initializer_list<Handle::Semaphore>& signalSemaphores = {});
 
   /**
    * @brief explicit conversion operator to bool, indicates if the command was

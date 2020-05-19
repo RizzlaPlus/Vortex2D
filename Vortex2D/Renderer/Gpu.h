@@ -97,6 +97,9 @@ typedef struct BindGroupLayout_T* BindGroupLayout;
 typedef struct Pipeline_T* Pipeline;
 typedef struct ShaderModule_T* ShaderModule;
 typedef struct RenderPass_T* RenderPass;
+typedef struct Framebuffer_T* Framebuffer;
+typedef struct CommandBuffer_T* CommandBuffer;
+typedef struct Semaphore_T* Semaphore;
 }  // namespace Handle
 
 }  // namespace Renderer
