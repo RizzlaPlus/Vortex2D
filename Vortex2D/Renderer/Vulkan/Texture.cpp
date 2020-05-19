@@ -12,7 +12,7 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-void TextureBarrier(vk::Image image,
+void TextureBarrier(Handle::Image image,
                     Handle::CommandBuffer commandBuffer,
                     vk::ImageLayout oldLayout,
                     vk::AccessFlags srcMask,
@@ -24,7 +24,7 @@ void TextureBarrier(vk::Image image,
                                  .setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
                                  .setOldLayout(oldLayout)
                                  .setNewLayout(newLayout)
-                                 .setImage(image)
+                                 .setImage(ConvertImage(image))
                                  .setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1})
                                  .setSrcAccessMask(srcMask)
                                  .setDstAccessMask(dstMask);
@@ -95,7 +95,10 @@ struct Sampler::Impl
     mSampler = static_cast<VulkanDevice&>(device).Handle().createSamplerUnique(samplerInfo);
   }
 
-  vk::Sampler Handle() { return *mSampler; }
+  Handle::Sampler Handle()
+  {
+    return reinterpret_cast<Handle::Sampler>(static_cast<VkSampler>(*mSampler));
+  }
 
   vk::UniqueSampler mSampler;
 };
@@ -109,7 +112,7 @@ Sampler::Sampler(Sampler&& other) : mImpl(std::move(other.mImpl)) {}
 
 Sampler::~Sampler() {}
 
-vk::Sampler Sampler::Handle()
+Handle::Sampler Sampler::Handle()
 {
   return mImpl->Handle();
 }
@@ -398,8 +401,8 @@ struct Texture::Impl
                       .setDstSubresource({vk::ImageAspectFlagBits::eColor, 0, 0, 1})
                       .setExtent({mWidth, mHeight, 1});
 
-    vk::CommandBuffer cmd = reinterpret_cast<VkCommandBuffer>(command.Handle());
-    cmd.copyImage(srcImage.Handle(),
+    vk::CommandBuffer cmd = ConvertCommandBuffer(command.Handle());
+    cmd.copyImage(ConvertImage(srcImage.Handle()),
                   vk::ImageLayout::eTransferSrcOptimal,
                   mImage,
                   vk::ImageLayout::eTransferDstOptimal,
@@ -428,7 +431,7 @@ struct Texture::Impl
                ImageLayout newLayout,
                Access dstMask)
   {
-    TextureBarrier(mImage,
+    TextureBarrier(Handle(),
                    command.Handle(),
                    ConvertImageLayout(oldLayout),
                    ConvertAccess(srcMask),
@@ -436,7 +439,7 @@ struct Texture::Impl
                    ConvertAccess(dstMask));
   }
 
-  vk::ImageView GetView() const { return *mImageView; }
+  Handle::ImageView GetView() const { return Handle::ConvertImageView(*mImageView); }
 
   uint32_t GetWidth() const { return mWidth; }
 
@@ -444,7 +447,7 @@ struct Texture::Impl
 
   Format GetFormat() const { return mFormat; }
 
-  vk::Image Handle() const { return mImage; }
+  Handle::Image Handle() const { return Handle::ConvertImage(mImage); }
 };
 
 Texture::Texture(Device& device,
@@ -484,7 +487,7 @@ void Texture::Barrier(CommandEncoder& command,
   mImpl->Barrier(command, oldLayout, oldAccess, newLayout, newAccess);
 }
 
-vk::ImageView Texture::GetView() const
+Handle::ImageView Texture::GetView() const
 {
   return mImpl->GetView();
 }
@@ -514,7 +517,7 @@ void Texture::Clear(CommandEncoder& command, const std::array<float, 4>& colour)
   mImpl->Clear(command, colour);
 }
 
-vk::Image Texture::Handle() const
+Handle::Image Texture::Handle() const
 {
   return mImpl->Handle();
 }

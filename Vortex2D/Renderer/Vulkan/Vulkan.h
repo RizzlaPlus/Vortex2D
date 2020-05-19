@@ -194,42 +194,6 @@ inline vk::BlendOp ConvertBlendOp(BlendOp blendOp)
 
 namespace Handle
 {
-struct PipelineLayout_T
-{
-};
-
-struct BindGroupLayout_T
-{
-};
-
-struct ShaderModule_T
-{
-};
-
-struct Pipeline_T
-{
-};
-
-struct RenderPass_T
-{
-};
-
-struct Framebuffer_T
-{
-};
-
-struct CommandBuffer_T
-{
-};
-
-struct Semaphore_T
-{
-};
-
-struct BindGroup_T
-{
-};
-
 inline Semaphore ConvertSemaphore(vk::Semaphore semaphore)
 {
   return reinterpret_cast<Semaphore>(static_cast<VkSemaphore>(semaphore));
@@ -243,6 +207,51 @@ inline vk::Semaphore ConvertSemaphore(Semaphore semaphore)
 inline Framebuffer ConvertFramebuffer(vk::Framebuffer framebuffer)
 {
   return reinterpret_cast<Framebuffer>(static_cast<VkFramebuffer>(framebuffer));
+}
+
+inline vk::CommandBuffer ConvertCommandBuffer(CommandBuffer commandBuffer)
+{
+  return reinterpret_cast<VkCommandBuffer>(commandBuffer);
+}
+
+inline vk::Image ConvertImage(Image image)
+{
+  return reinterpret_cast<VkImage>(image);
+}
+
+inline Image ConvertImage(vk::Image image)
+{
+  return reinterpret_cast<Image>(static_cast<VkImage>(image));
+}
+
+inline vk::ImageView ConvertImageView(ImageView imageView)
+{
+  return reinterpret_cast<VkImageView>(imageView);
+}
+
+inline ImageView ConvertImageView(vk::ImageView imageView)
+{
+  return reinterpret_cast<ImageView>(static_cast<VkImageView>(imageView));
+}
+
+inline vk::Buffer ConvertBuffer(Buffer buffer)
+{
+  return reinterpret_cast<VkBuffer>(buffer);
+}
+
+inline vk::Sampler ConvertSampler(Sampler sampler)
+{
+  return reinterpret_cast<VkSampler>(sampler);
+}
+
+inline vk::SurfaceKHR ConvertSurface(Surface surface)
+{
+  return reinterpret_cast<VkSurfaceKHR>(surface);
+}
+
+inline Surface ConvertSurface(vk::SurfaceKHR surface)
+{
+  return reinterpret_cast<Surface>(static_cast<VkSurfaceKHR>(surface));
 }
 
 }  // namespace Handle

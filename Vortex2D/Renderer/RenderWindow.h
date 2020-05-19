@@ -29,7 +29,7 @@ public:
    * @param height
    */
   VORTEX2D_API RenderWindow(Device& device,
-                            vk::SurfaceKHR surface,
+                            Handle::Surface surface,
                             uint32_t width,
                             uint32_t height);
   VORTEX2D_API ~RenderWindow() override;

@@ -65,7 +65,7 @@ struct CommandEncoder::Impl
 
   void SetVertexBuffer(const GenericBuffer& buffer)
   {
-    mCommandBuffer->bindVertexBuffers(0, {buffer.Handle()}, {0ul});
+    mCommandBuffer->bindVertexBuffers(0, {Handle::ConvertBuffer(buffer.Handle())}, {0ul});
   }
 
   void PushConstants(vk::PipelineLayout layout,
@@ -86,7 +86,7 @@ struct CommandEncoder::Impl
 
   void DispatchIndirect(GenericBuffer& buffer)
   {
-    mCommandBuffer->dispatchIndirect(buffer.Handle(), 0);
+    mCommandBuffer->dispatchIndirect(Handle::ConvertBuffer(buffer.Handle()), 0);
   }
 
   void Clear(const glm::ivec2& pos, const glm::uvec2& size, const glm::vec4& colour)

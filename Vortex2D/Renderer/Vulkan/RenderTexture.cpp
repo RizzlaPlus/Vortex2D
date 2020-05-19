@@ -46,7 +46,7 @@ struct RenderTexture::Impl
       : mSelf(self), mDevice(static_cast<VulkanDevice&>(device))
   {
     // Create framebuffer
-    vk::ImageView attachments[] = {mSelf.Texture::GetView()};
+    vk::ImageView attachments[] = {Handle::ConvertImageView(mSelf.Texture::GetView())};
 
     auto framebufferInfo = vk::FramebufferCreateInfo()
                                .setWidth(mSelf.RenderTarget::GetWidth())

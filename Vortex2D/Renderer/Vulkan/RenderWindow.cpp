@@ -16,7 +16,7 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-void TextureBarrier(vk::Image image,
+void TextureBarrier(Handle::Image image,
                     Handle::CommandBuffer commandBuffer,
                     vk::ImageLayout oldLayout,
                     vk::AccessFlags srcMask,
@@ -65,11 +65,11 @@ struct SwapChainSupportDetails
 
 struct RenderWindow::Impl
 {
-  Impl(RenderWindow& self, Device& device, vk::SurfaceKHR surface)
+  Impl(RenderWindow& self, Device& device, Handle::Surface surface)
       : mSelf(self), mDevice(static_cast<VulkanDevice&>(device)), mIndex(0), mFrameIndex(0)
   {
     // get swap chain support details
-    SwapChainSupportDetails details(mDevice.GetPhysicalDevice(), surface);
+    SwapChainSupportDetails details(mDevice.GetPhysicalDevice(), Handle::ConvertSurface(surface));
     if (!details.IsValid())
     {
       throw std::runtime_error("Swap chain support invalid");
@@ -86,7 +86,7 @@ struct RenderWindow::Impl
 
     // create swap chain
     auto swapChainInfo = vk::SwapchainCreateInfoKHR()
-                             .setSurface(surface)
+                             .setSurface(Handle::ConvertSurface(surface))
                              .setImageFormat(ConvertFormat(format))
                              .setImageColorSpace(vk::ColorSpaceKHR::eSrgbNonlinear)
                              .setMinImageCount(numFramebuffers)
@@ -119,7 +119,7 @@ struct RenderWindow::Impl
       mSwapChainImageViews.push_back(mDevice.Handle().createImageViewUnique(imageViewInfo));
 
       mDevice.Execute([&](CommandEncoder& command) {
-        TextureBarrier(image,
+        TextureBarrier(Handle::ConvertImage(image),
                        command.Handle(),
                        vk::ImageLayout::eUndefined,
                        vk::AccessFlags{},
@@ -135,7 +135,7 @@ struct RenderWindow::Impl
             clearValue,
             vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
-        TextureBarrier(image,
+        TextureBarrier(Handle::ConvertImage(image),
                        command.Handle(),
                        vk::ImageLayout::eGeneral,
                        vk::AccessFlagBits::eTransferWrite,
@@ -244,7 +244,7 @@ struct RenderWindow::Impl
   uint32_t mFrameIndex;
 };
 
-RenderWindow::RenderWindow(Device& device, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
+RenderWindow::RenderWindow(Device& device, Handle::Surface surface, uint32_t width, uint32_t height)
     : RenderTarget(device,
                    width,
                    height,
@@ -260,6 +260,7 @@ RenderCommand RenderWindow::Record(DrawableList drawables, ColorBlendState blend
 {
   return mImpl->Record(drawables, blendState);
 }
+
 void RenderWindow::Submit(RenderCommand& renderCommand)
 {
   mImpl->Submit(renderCommand);

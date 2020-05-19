@@ -94,8 +94,8 @@ void Bind(vk::Device device,
               descriptorWrites.back().pBufferInfo)
           {
             descriptorWrites.back().descriptorCount++;
-            bufferInfo[numBuffers++] =
-                vk::DescriptorBufferInfo(buffer->Handle(), 0, buffer->Size());
+            bufferInfo[numBuffers++] = vk::DescriptorBufferInfo(
+                Handle::ConvertBuffer(buffer->Handle()), 0, buffer->Size());
           }
           else
           {
@@ -126,11 +126,14 @@ void Bind(vk::Device device,
           {
             descriptorWrites.back().descriptorCount++;
 
-            vk::Sampler sampler =
-                image.Sampler != nullptr ? image.Sampler->Handle() : vk::Sampler{};
+            vk::Sampler sampler = image.Sampler != nullptr
+                                      ? Handle::ConvertSampler(image.Sampler->Handle())
+                                      : vk::Sampler{};
 
-            imageInfo[numImages++] = vk::DescriptorImageInfo(
-                sampler, image.Texture->GetView(), vk::ImageLayout::eGeneral);
+            imageInfo[numImages++] =
+                vk::DescriptorImageInfo(sampler,
+                                        Handle::ConvertImageView(image.Texture->GetView()),
+                                        vk::ImageLayout::eGeneral);
           }
           else
           {

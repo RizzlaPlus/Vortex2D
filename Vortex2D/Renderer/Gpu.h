@@ -101,6 +101,11 @@ typedef struct Framebuffer_T* Framebuffer;
 typedef struct CommandBuffer_T* CommandBuffer;
 typedef struct Semaphore_T* Semaphore;
 typedef struct BindGroup_T* BindGroup;
+typedef struct Buffer_T* Buffer;
+typedef struct Sampler_T* Sampler;
+typedef struct Image_T* Image;
+typedef struct ImageView_T* ImageView;
+typedef struct Surface_T* Surface;
 }  // namespace Handle
 
 }  // namespace Renderer

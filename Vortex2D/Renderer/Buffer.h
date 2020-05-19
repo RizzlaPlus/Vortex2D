@@ -48,7 +48,7 @@ public:
   /**
    * @brief The vulkan handle
    */
-  VORTEX2D_API vk::Buffer Handle() const;
+  VORTEX2D_API Handle::Buffer Handle() const;
 
   /**
    * @brief The size in bytes of the buffer

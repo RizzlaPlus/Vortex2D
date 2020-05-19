@@ -45,7 +45,7 @@ public:
 
   VORTEX2D_API ~Sampler();
 
-  vk::Sampler Handle();
+  Handle::Sampler Handle();
 
 private:
   struct Impl;
@@ -121,7 +121,7 @@ public:
                             ImageLayout newLayout,
                             Access newAccess);
 
-  VORTEX2D_API vk::ImageView GetView() const;
+  VORTEX2D_API Handle::ImageView GetView() const;
   VORTEX2D_API uint32_t GetWidth() const;
   VORTEX2D_API uint32_t GetHeight() const;
   VORTEX2D_API Format GetFormat() const;
@@ -129,7 +129,7 @@ public:
   VORTEX2D_API void Clear(CommandEncoder& command, const std::array<int, 4>& colour);
   VORTEX2D_API void Clear(CommandEncoder& command, const std::array<float, 4>& colour);
 
-  VORTEX2D_API vk::Image Handle() const;
+  VORTEX2D_API Handle::Image Handle() const;
 
 private:
   struct Impl;
