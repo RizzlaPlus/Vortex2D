@@ -30,7 +30,8 @@ public:
    * @param shaderStage shader state (vertex, fragment or compute)
    * @return *this
    */
-  VORTEX2D_API GraphicsPipelineDescriptor& Shader(Handle::ShaderModule shader, ShaderStage shaderStage);
+  VORTEX2D_API GraphicsPipelineDescriptor& Shader(Handle::ShaderModule shader,
+                                                  ShaderStage shaderStage);
 
   /**
    * @brief Sets the vertex attributes
@@ -107,22 +108,23 @@ struct SpecConstInfo
     Type value;
   };
 
-  vk::SpecializationInfo info;
-  std::vector<vk::SpecializationMapEntry> mapEntries;
+  struct Entry
+  {
+    uint32_t constantID;
+    uint32_t offset;
+    size_t size;
+  };
+
+  std::vector<Entry> mapEntries;
   std::vector<char> data;
 };
 
+bool operator==(const SpecConstInfo::Entry& left, const SpecConstInfo::Entry& right);
 bool operator==(const SpecConstInfo& left, const SpecConstInfo& right);
 
 namespace Detail
 {
-inline void InsertSpecConst(SpecConstInfo& specConstInfo)
-{
-  specConstInfo.info.setMapEntryCount(static_cast<uint32_t>(specConstInfo.mapEntries.size()))
-      .setPMapEntries(specConstInfo.mapEntries.data())
-      .setDataSize(specConstInfo.data.size())
-      .setPData(specConstInfo.data.data());
-}
+inline void InsertSpecConst(SpecConstInfo&) {}
 
 template <typename Arg, typename... Args>
 inline void InsertSpecConst(SpecConstInfo& specConstInfo, Arg&& arg, Args&&... args)
@@ -130,7 +132,7 @@ inline void InsertSpecConst(SpecConstInfo& specConstInfo, Arg&& arg, Args&&... a
   auto offset = static_cast<uint32_t>(specConstInfo.data.size());
   specConstInfo.data.resize(offset + sizeof(Arg));
   std::memcpy(&specConstInfo.data[offset], &arg.value, sizeof(Arg));
-  specConstInfo.mapEntries.emplace_back(arg.id, offset, sizeof(Arg));
+  specConstInfo.mapEntries.push_back({arg.id, offset, sizeof(Arg)});
 
   InsertSpecConst(specConstInfo, std::forward<Args>(args)...);
 }

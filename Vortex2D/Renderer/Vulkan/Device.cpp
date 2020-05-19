@@ -572,11 +572,21 @@ Handle::Pipeline VulkanDevice::CreateComputePipeline(Handle::ShaderModule shader
     return reinterpret_cast<Handle::Pipeline>(handle);
   }
 
+  static_assert(sizeof(vk::SpecializationMapEntry) == sizeof(SpecConstInfo::Entry),
+                "Incorrect sized spec const info");
+
+  auto specInfo = vk::SpecializationInfo()
+                      .setMapEntryCount(static_cast<uint32_t>(specConstInfo.mapEntries.size()))
+                      .setPMapEntries(reinterpret_cast<vk::SpecializationMapEntry*>(
+                          specConstInfo.mapEntries.data()))
+                      .setDataSize(specConstInfo.data.size())
+                      .setPData(specConstInfo.data.data());
+
   auto stageInfo = vk::PipelineShaderStageCreateInfo()
                        .setModule(shaderModule)
                        .setPName("main")
                        .setStage(vk::ShaderStageFlagBits::eCompute)
-                       .setPSpecializationInfo(&specConstInfo.info);
+                       .setPSpecializationInfo(&specInfo);
 
   auto pipelineInfo = vk::ComputePipelineCreateInfo().setStage(stageInfo).setLayout(
       reinterpret_cast<VkPipelineLayout>(layout));

@@ -77,6 +77,12 @@ bool operator==(const GraphicsPipelineDescriptor& left, const GraphicsPipelineDe
 
 SpecConstInfo::SpecConstInfo() {}
 
+bool operator==(const SpecConstInfo::Entry& left, const SpecConstInfo::Entry& right)
+{
+  return left.size == right.size && left.offset == right.offset &&
+         left.constantID == right.constantID;
+}
+
 bool operator==(const SpecConstInfo& left, const SpecConstInfo& right)
 {
   return left.data == right.data && left.mapEntries == right.mapEntries;
