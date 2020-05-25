@@ -19,6 +19,22 @@ set(LIB_VULKAN_SOURCES
     "Renderer/Vulkan/BindGroup.cpp"
     "Renderer/Vulkan/vk_mem_alloc.h")
 
+set(LIB_WEBGPU_HEADERS
+    "Renderer/WebGPU/WebGPU.h"
+    "Renderer/WebGPU/Device.h"
+    )
+
+set(LIB_WEBGPU_SOURCES
+    "Renderer/WebGPU/Device.cpp"
+    "Renderer/WebGPU/CommandBuffer.cpp"
+    "Renderer/WebGPU/Texture.cpp"
+    "Renderer/WebGPU/Buffer.cpp"
+    "Renderer/WebGPU/Timer.cpp"
+    "Renderer/WebGPU/RenderTexture.cpp"
+    "Renderer/WebGPU/RenderWindow.cpp"
+    "Renderer/WebGPU/RenderTarget.cpp"
+    "Renderer/WebGPU/BindGroup.cpp")
+
 set(LIB_SOURCES
     "Engine/Density.cpp"
     "Engine/LevelSet.cpp"
@@ -156,14 +172,42 @@ endif()
 set_property(TARGET spirv-cross-core PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 vortex2d_find_package(PythonInterp REQUIRED)
-vortex2d_find_vulkan()
-
 compile_shader(SOURCES ${SHADER_SOURCES} OUTPUT "vortex2d_generated_spirv" VERSION 1.0)
+
+include(ExternalProject)
+
+if(VORTEX2D_BACKEND STREQUAL "Vulkan")
+
+  set (BACKEND_SOURCES ${LIB_VULKAN_SOURCES})
+  set (BACKEND_HEADERS ${LIB_VULKAN_HEADERS})
+
+  vortex2d_find_vulkan()
+  set (BACKEND_LIB ${VULKAN_LIBRARIES})
+  set (BACKEND_INCLUDE ${VULKAN_INCLUDES})
+
+elseif(VORTEX2D_BACKEND STREQUAL "WebGPU")
+  set (BACKEND_SOURCES ${LIB_WEBGPU_SOURCES})
+  set (BACKEND_HEADERS ${LIB_WEBGPU_HEADERS})
+
+  ExternalProject_Add(
+      webgpu_rust
+      GIT_REPOSITORY "https://github.com/gfx-rs/wgpu.git"
+      GIT_TAG "origin/v0.5"
+      CONFIGURE_COMMAND ""
+      BUILD_IN_SOURCE ON
+      BUILD_COMMAND cargo build COMMAND cargo build --release
+      INSTALL_COMMAND ""
+      LOG_BUILD ON)
+
+  set (BACKEND_INCLUDE "${CMAKE_CURRENT_BINARY_DIR}/webgpu_rust-prefix/src/webgpu_rust/ffi")
+else()
+  message(FATAL_ERROR "Backend not set!")
+endif()
 
 add_library(vortex2d
   SHARED
-    ${LIB_VULKAN_HEADERS}
-    ${LIB_VULKAN_SOURCES}
+    ${BACKEND_HEADERS}
+    ${BACKEND_SOURCES}
     ${LIB_SOURCES}
     ${LIB_HEADERS}
     ${SHADER_SOURCES}
@@ -175,6 +219,8 @@ add_library(vortex2d
     "Engine/Kernels/CommonInterpolate.comp"
     vortex2d_generated_spirv.cpp
     vortex2d_generated_spirv.h)
+
+add_dependencies(vortex2d webgpu_rust)
 
 set(CMAKE_DIR "${PROJECT_SOURCE_DIR}/cmake")
 
@@ -218,12 +264,12 @@ if (APPLE)
   target_link_options(vortex2d PUBLIC "LINKER:-force_load,$<TARGET_FILE:spirv-cross-core>")
 endif()
 
-target_link_libraries(vortex2d PUBLIC ${VULKAN_LIBRARIES} PRIVATE spirv-cross-core glm)
+target_link_libraries(vortex2d PUBLIC ${BACKEND_LIB} PRIVATE spirv-cross-core glm)
 
 target_include_directories(vortex2d
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/..
-        $<BUILD_INTERFACE:${VULKAN_INCLUDES}>
+        $<BUILD_INTERFACE:${BACKEND_INCLUDE}>
         $<INSTALL_INTERFACE:include/Vortex2D>
     PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR})
