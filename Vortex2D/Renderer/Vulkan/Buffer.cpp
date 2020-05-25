@@ -73,6 +73,8 @@ struct GenericBuffer::Impl
   Impl(Impl&& other)
       : mDevice(other.mDevice)
       , mSize(other.mSize)
+      , mUsageFlags(other.mUsageFlags)
+      , mMemoryUsage(other.mMemoryUsage)
       , mBuffer(other.mBuffer)
       , mAllocation(other.mAllocation)
       , mAllocationInfo(other.mAllocationInfo)

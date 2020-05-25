@@ -10,7 +10,6 @@
 #include <Vortex2D/Renderer/CommandBuffer.h>
 #include <Vortex2D/Renderer/Common.h>
 #include <Vortex2D/Renderer/Pipeline.h>
-#include <Vortex2D/Renderer/Vulkan/Instance.h>
 #include <map>
 
 namespace Vortex2D
