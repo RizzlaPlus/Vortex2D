@@ -1,23 +1,12 @@
+#ifdef VORTEX2D_BACKEND_VULKAN
 #include <Vortex2D/Renderer/Vulkan/Device.h>
 #include <Vortex2D/Renderer/Vulkan/Instance.h>
+#else
+#include <Vortex2D/Renderer/WebGPU/Device.h>
+#endif
 #include <gtest/gtest.h>
 
 Vortex2D::Renderer::Device* device;
-
-TEST(Vulkan, Init)
-{
-  auto physicalDevice = static_cast<Vortex2D::Renderer::VulkanDevice*>(device)->GetPhysicalDevice();
-  auto properties = physicalDevice.getProperties();
-  std::cout << "Device name: " << properties.deviceName << std::endl;
-
-  for (int i = 0; i < 3; i++)
-  {
-    std::cout << "Max local size " << i << " : " << properties.limits.maxComputeWorkGroupSize[i]
-              << std::endl;
-  }
-  std::cout << "Max local size total: " << properties.limits.maxComputeWorkGroupInvocations
-            << std::endl;
-}
 
 int main(int argc, char** argv)
 {
@@ -27,8 +16,12 @@ int main(int argc, char** argv)
   bool debug = true;
 #endif
 
+#ifdef VORTEX2D_BACKEND_VULKAN
   Vortex2D::Renderer::Instance instance("Tests", {}, debug);
   Vortex2D::Renderer::VulkanDevice device_(instance);
+#else
+  Vortex2D::Renderer::WebGPUDevice device_;
+#endif
 
   device = &device_;
 

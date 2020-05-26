@@ -1,5 +1,10 @@
-#include <Vortex2D/Renderer/Vulkan/Device.h>
 #include <Vortex2D/Vortex2D.h>
+
+#ifdef VORTEX2D_BACKEND_VULKAN
+#include <Vortex2D/Renderer/Vulkan/Device.h>
+#else
+#include <Vortex2D/Renderer/WebGPU/Device.h>
+#endif
 
 #include <GLFW/glfw3.h>
 
@@ -33,6 +38,7 @@ static void ErrorCallback(int error, const char* description)
                            " What: " + std::string(description));
 }
 
+#ifdef VORTEX2D_BACKEND_VULKAN
 std::vector<const char*> GetGLFWExtensions()
 {
   std::vector<const char*> extensions;
@@ -62,6 +68,7 @@ vk::UniqueSurfaceKHR GetGLFWSurface(GLFWwindow* window, vk::Instance instance)
   vk::UniqueSurfaceKHR uniqueSurface(surface, instance);
   return uniqueSurface;
 }
+#endif
 
 GLFWwindow* GetGLFWWindow(const glm::ivec2& size)
 {
@@ -84,6 +91,7 @@ public:
 
   App(bool validation = true)
       : glfwWindow(GetGLFWWindow(windowSize))
+#ifdef VORTEX2D_BACKEND_VULKAN
       , instance("Vortex2D", GetGLFWExtensions(), validation)
       , surface(GetGLFWSurface(glfwWindow, static_cast<VkInstance>(instance.GetInstance())))
       , device(instance, *surface, validation)
@@ -91,6 +99,10 @@ public:
                Vortex2D::Renderer::Handle::ConvertSurface(*surface),
                (uint32_t)(windowSize.x),
                (uint32_t)(windowSize.y))
+#else
+      , device()
+      , window(device, {}, (uint32_t)(windowSize.x), (uint32_t)(windowSize.y))
+#endif
       , clearRender(window.Record({clear}))
   {
     // setup callback
@@ -182,9 +194,13 @@ public:
   }
 
   GLFWwindow* glfwWindow;
+#ifdef VORTEX2D_BACKEND_VULKAN
   Vortex2D::Renderer::Instance instance;
   vk::UniqueSurfaceKHR surface;
   Vortex2D::Renderer::VulkanDevice device;
+#else
+  Vortex2D::Renderer::WebGPUDevice device;
+#endif
   Renderer::RenderWindow window;
   Renderer::Clear clear = {{0.1f, 0.1f, 0.1f, 1.0f}};
   std::unique_ptr<Runner> example;

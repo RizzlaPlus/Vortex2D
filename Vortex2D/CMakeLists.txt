@@ -220,8 +220,6 @@ add_library(vortex2d
     vortex2d_generated_spirv.cpp
     vortex2d_generated_spirv.h)
 
-add_dependencies(vortex2d webgpu_rust)
-
 set(CMAKE_DIR "${PROJECT_SOURCE_DIR}/cmake")
 
 # Create framework for macOS/iOS
@@ -277,6 +275,14 @@ target_include_directories(vortex2d
 # windows definition to correctly generate the dll
 if(WIN32)
     target_compile_definitions(vortex2d PRIVATE VORTEX2D_API_EXPORTS)
+endif()
+
+if(VORTEX2D_BACKEND STREQUAL "Vulkan")
+  target_compile_definitions(vortex2d PUBLIC VORTEX2D_BACKEND_VULKAN)
+elseif(VORTEX2D_BACKEND STREQUAL "WebGPU")
+  target_compile_definitions(vortex2d PUBLIC VORTEX2D_BACKEND_WEBGPU)
+else()
+  message(FATAL_ERROR "Backend not set!")
 endif()
 
 install(TARGETS vortex2d
