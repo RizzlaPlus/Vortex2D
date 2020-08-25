@@ -12,7 +12,10 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-WebGPUDevice::WebGPUDevice() {}
+WebGPUDevice::WebGPUDevice(const Instance& instance)
+    : mDevice(wgpu_adapter_request_device(instance.GetAdapter(), nullptr))
+{
+}
 
 WebGPUDevice::~WebGPUDevice() {}
 

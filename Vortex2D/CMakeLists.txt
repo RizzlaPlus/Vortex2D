@@ -22,10 +22,12 @@ set(LIB_VULKAN_SOURCES
 set(LIB_WEBGPU_HEADERS
     "Renderer/WebGPU/WebGPU.h"
     "Renderer/WebGPU/Device.h"
+    "Renderer/WebGPU/Instance.h"
     )
 
 set(LIB_WEBGPU_SOURCES
     "Renderer/WebGPU/Device.cpp"
+    "Renderer/WebGPU/Instance.cpp"
     "Renderer/WebGPU/CommandBuffer.cpp"
     "Renderer/WebGPU/Texture.cpp"
     "Renderer/WebGPU/Buffer.cpp"
@@ -174,32 +176,40 @@ set_property(TARGET spirv-cross-core PROPERTY POSITION_INDEPENDENT_CODE ON)
 vortex2d_find_package(PythonInterp REQUIRED)
 compile_shader(SOURCES ${SHADER_SOURCES} OUTPUT "vortex2d_generated_spirv" VERSION 1.0)
 
-include(ExternalProject)
-
 if(VORTEX2D_BACKEND STREQUAL "Vulkan")
-
   set (BACKEND_SOURCES ${LIB_VULKAN_SOURCES})
   set (BACKEND_HEADERS ${LIB_VULKAN_HEADERS})
 
   vortex2d_find_vulkan()
   set (BACKEND_LIB ${VULKAN_LIBRARIES})
   set (BACKEND_INCLUDE ${VULKAN_INCLUDES})
-
 elseif(VORTEX2D_BACKEND STREQUAL "WebGPU")
   set (BACKEND_SOURCES ${LIB_WEBGPU_SOURCES})
   set (BACKEND_HEADERS ${LIB_WEBGPU_HEADERS})
 
-  ExternalProject_Add(
-      webgpu_rust
-      GIT_REPOSITORY "https://github.com/gfx-rs/wgpu.git"
-      GIT_TAG "origin/v0.5"
-      CONFIGURE_COMMAND ""
-      BUILD_IN_SOURCE ON
-      BUILD_COMMAND cargo build COMMAND cargo build --release
-      INSTALL_COMMAND ""
-      LOG_BUILD ON)
+  FetchContent_Declare(
+    webgpu_rust
+    GIT_REPOSITORY "https://github.com/gfx-rs/wgpu-native.git"
+    GIT_TAG        "v0.5.2"
+  )
+  FetchContent_GetProperties(webgpu_rust)
+  if(NOT webgpu_rust_POPULATED)
+    FetchContent_Populate(webgpu_rust)
+  endif()
 
-  set (BACKEND_INCLUDE "${CMAKE_CURRENT_BINARY_DIR}/webgpu_rust-prefix/src/webgpu_rust/ffi")
+  string(TOLOWER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
+  if(BUILD_TYPE STREQUAL "release")
+    execute_process(COMMAND cargo build --release
+                    WORKING_DIRECTORY ${webgpu_rust_SOURCE_DIR})
+  elseif(BUILD_TYPE STREQUAL "debug")
+    execute_process(COMMAND cargo build
+                     WORKING_DIRECTORY ${webgpu_rust_SOURCE_DIR})
+  endif()
+
+  find_library(WEBGPU_LIB NAMES wgpu_native HINTS "${webgpu_rust_SOURCE_DIR}/target/${BUILD_TYPE}/")
+  set (BACKEND_LIB ${WEBGPU_LIB})
+  set (BACKEND_INCLUDE "${webgpu_rust_SOURCE_DIR}/ffi")
+  set (OS_LIBRARIES "userenv" "ws2_32" "Dwmapi" "dbghelp" "d3dcompiler" "D3D12" "D3D11" "DXGI" "setupapi")
 else()
   message(FATAL_ERROR "Backend not set!")
 endif()
@@ -262,7 +272,7 @@ if (APPLE)
   target_link_options(vortex2d PUBLIC "LINKER:-force_load,$<TARGET_FILE:spirv-cross-core>")
 endif()
 
-target_link_libraries(vortex2d PUBLIC ${BACKEND_LIB} PRIVATE spirv-cross-core glm)
+target_link_libraries(vortex2d PUBLIC ${BACKEND_LIB} ${OS_LIBRARIES} PRIVATE spirv-cross-core glm)
 
 target_include_directories(vortex2d
     PUBLIC

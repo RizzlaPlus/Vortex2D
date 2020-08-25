@@ -100,7 +100,7 @@ public:
                (uint32_t)(windowSize.x),
                (uint32_t)(windowSize.y))
 #else
-      , device()
+      , device(instance)
       , window(device, {}, (uint32_t)(windowSize.x), (uint32_t)(windowSize.y))
 #endif
       , clearRender(window.Record({clear}))
@@ -199,6 +199,7 @@ public:
   vk::UniqueSurfaceKHR surface;
   Vortex2D::Renderer::VulkanDevice device;
 #else
+  Vortex2D::Renderer::Instance instance;
   Vortex2D::Renderer::WebGPUDevice device;
 #endif
   Renderer::RenderWindow window;

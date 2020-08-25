@@ -3,6 +3,7 @@
 #include <Vortex2D/Renderer/Vulkan/Instance.h>
 #else
 #include <Vortex2D/Renderer/WebGPU/Device.h>
+#include <Vortex2D/Renderer/WebGPU/Instance.h>
 #endif
 #include <gtest/gtest.h>
 
@@ -20,7 +21,8 @@ int main(int argc, char** argv)
   Vortex2D::Renderer::Instance instance("Tests", {}, debug);
   Vortex2D::Renderer::VulkanDevice device_(instance);
 #else
-  Vortex2D::Renderer::WebGPUDevice device_;
+  Vortex2D::Renderer::Instance instance;
+  Vortex2D::Renderer::WebGPUDevice device_(instance);
 #endif
 
   device = &device_;

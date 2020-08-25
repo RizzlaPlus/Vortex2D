@@ -13,6 +13,7 @@
 #include <Vortex2D/Renderer/Pipeline.h>
 #include <map>
 
+#include "Instance.h"
 #include "WebGPU.h"
 
 namespace Vortex2D
@@ -22,7 +23,7 @@ namespace Renderer
 class WebGPUDevice : public Device
 {
 public:
-  VORTEX2D_API WebGPUDevice();
+  VORTEX2D_API WebGPUDevice(const Instance& instance);
 
   VORTEX2D_API ~WebGPUDevice();
 
@@ -49,6 +50,9 @@ public:
   Handle::Pipeline CreateComputePipeline(Handle::ShaderModule shader,
                                          Handle::PipelineLayout layout,
                                          SpecConstInfo specConstInfo = {}) override;
+
+private:
+  WGPUDeviceId mDevice;
 };
 
 }  // namespace Renderer
