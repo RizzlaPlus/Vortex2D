@@ -21,15 +21,69 @@ const uint32_t zero = 0;
 
 struct CommandEncoder::Impl
 {
-  Impl(Device& device) {}
+  WebGPUDevice& mDevice;
+  WGPUCommandEncoderId mCommandEncoder;
+  WGPUCommandBufferId mCommandBuffer;
+  WGPURawPass* mRawPass;
 
-  void Begin() {}
+  Impl(Device& device)
+      : mDevice(static_cast<WebGPUDevice&>(device))
+      , mCommandEncoder(0)
+      , mCommandBuffer(0)
+      , mRawPass(nullptr)
+  {
+    WGPUCommandEncoderDescriptor descriptor{};
+    mCommandEncoder = wgpu_device_create_command_encoder(mDevice.Handle(), &descriptor);
+    // TODO check if valid
+  }
 
-  void BeginRenderPass(const RenderTarget& renderTarget, Handle::Framebuffer framebuffer) {}
+  ~Impl()
+  {
+    if (mCommandEncoder != 0)
+    {
+      wgpu_command_encoder_destroy(mCommandEncoder);
+    }
 
-  void EndRenderPass() {}
+    if (mCommandBuffer != 0)
+    {
+      wgpu_command_buffer_destroy(mCommandBuffer);
+    }
+  }
 
-  void End() {}
+  Handle::CommandBuffer Handle() const
+  {
+    return reinterpret_cast<Handle::CommandBuffer>(mCommandEncoder);
+  }
+
+  void Begin()
+  {
+    WGPUComputePassDescriptor descriptor{};
+    mRawPass = wgpu_command_encoder_begin_compute_pass(mCommandEncoder, &descriptor);
+  }
+
+  void BeginRenderPass(const RenderTarget& renderTarget, Handle::Framebuffer framebuffer)
+  {
+    WGPURenderPassDescriptor descriptor{};
+    mRawPass = wgpu_command_encoder_begin_render_pass(mCommandEncoder, &descriptor);
+  }
+
+  void EndRenderPass()
+  {
+    wgpu_render_pass_end_pass(mRawPass);
+    // TODO do we need to destroy the pass?
+
+    WGPUCommandBufferDescriptor descriptor{};
+    mCommandBuffer = wgpu_command_encoder_finish(mCommandEncoder, &descriptor);
+  }
+
+  void End()
+  {
+    wgpu_compute_pass_end_pass(mRawPass);
+    // TODO do we need to destroy the pass?
+
+    WGPUCommandBufferDescriptor descriptor{};
+    mCommandBuffer = wgpu_command_encoder_finish(mCommandEncoder, &descriptor);
+  }
 
   void SetPipeline(PipelineBindPoint pipelineBindPoint, Handle::Pipeline pipeline) {}
 
@@ -51,9 +105,15 @@ struct CommandEncoder::Impl
 
   void Draw(std::uint32_t vertexCount) {}
 
-  void Dispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z) {}
+  void Dispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z)
+  {
+    wgpu_compute_pass_dispatch(mRawPass, x, y, z);
+  }
 
-  void DispatchIndirect(GenericBuffer& buffer) {}
+  void DispatchIndirect(GenericBuffer& buffer)
+  {
+    wgpu_compute_pass_dispatch_indirect(mRawPass, Handle::ConvertBuffer(buffer.Handle()), 0);
+  }
 
   void Clear(const glm::ivec2& pos, const glm::uvec2& size, const glm::vec4& colour) {}
 
@@ -145,15 +205,20 @@ void CommandEncoder::DebugMarkerEnd()
   mImpl->DebugMarkerEnd();
 }
 
-Handle::CommandBuffer CommandEncoder::Handle()
+Handle::CommandBuffer CommandEncoder::Handle() const
 {
-  return {};
+  return mImpl->Handle();
 }
 
 struct CommandBuffer::Impl
 {
+  WebGPUDevice& mDevice;
+
   Impl(Device& device, bool synchronise)
-      : mSynchronise(synchronise), mRecorded(false), mCommandEncoder(device)
+      : mDevice(static_cast<WebGPUDevice&>(device))
+      , mSynchronise(synchronise)
+      , mRecorded(false)
+      , mCommandEncoder(device)
   {
   }
 
@@ -173,27 +238,35 @@ struct CommandBuffer::Impl
   {
     Wait();
 
-    mCommandEncoder.Begin();
     mCommandEncoder.BeginRenderPass(renderTarget, framebuffer);
-
     commandFn(mCommandEncoder);
-
     mCommandEncoder.EndRenderPass();
-    mCommandEncoder.End();
     mRecorded = true;
   }
 
-  void Wait() {}
+  void Wait()
+  {
+    // TODO seems terribly inefficient
+    if (mSynchronise)
+    {
+      wgpu_device_poll(mDevice.Handle(), mSynchronise);
+    }
+  }
 
-  void Reset() {}
+  void Reset()
+  {
+    // Nothing todo
+  }
 
-  void Submit(const std::initializer_list<Handle::Semaphore>& waitSemaphores,
-              const std::initializer_list<Handle::Semaphore>& signalSemaphores)
+  void Submit(const std::initializer_list<Handle::Semaphore>& /*waitSemaphores*/,
+              const std::initializer_list<Handle::Semaphore>& /*signalSemaphores*/)
   {
     if (!mRecorded)
       throw std::runtime_error("Submitting a command that wasn't recorded");
 
-    Reset();
+    // TODO need to get command buffer and not command encoder
+    // WGPUCommandBufferId buffers[] = {Handle::ConvertCommandBuffer(mCommandEncoder.Handle())};
+    // wgpu_queue_submit(mDevice.Queue(), buffers, 1);
   }
 
   bool IsValid() const { return mRecorded; }

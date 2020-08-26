@@ -13,11 +13,21 @@ namespace Vortex2D
 namespace Renderer
 {
 WebGPUDevice::WebGPUDevice(const Instance& instance)
-    : mDevice(wgpu_adapter_request_device(instance.GetAdapter(), nullptr))
 {
+  mDevice = wgpu_adapter_request_device(instance.GetAdapter(), nullptr, nullptr);
+  // TODO check device is valid
+
+  mQueue = wgpu_device_get_default_queue(mDevice);
+  // TODO check queue is valid
 }
 
-WebGPUDevice::~WebGPUDevice() {}
+WebGPUDevice::~WebGPUDevice()
+{
+  if (mDevice != 0)
+  {
+    wgpu_device_destroy(mDevice);
+  }
+}
 
 bool WebGPUDevice::HasTimer() const
 {
@@ -61,6 +71,16 @@ Handle::Pipeline WebGPUDevice::CreateComputePipeline(Handle::ShaderModule shader
                                                      SpecConstInfo specConstInfo)
 {
   return {};
+}
+
+WGPUDeviceId WebGPUDevice::Handle() const
+{
+  return mDevice;
+}
+
+WGPUQueueId WebGPUDevice::Queue() const
+{
+  return mQueue;
 }
 
 }  // namespace Renderer

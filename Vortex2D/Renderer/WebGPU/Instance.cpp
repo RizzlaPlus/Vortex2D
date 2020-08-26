@@ -17,7 +17,7 @@ void RequestAdapterCallback(WGPUAdapterId received, void* userdata)
   promise->set_value(received);
 }
 
-Instance::Instance()
+Instance::Instance() : mAdapter(0)
 {
   std::promise<WGPUAdapterId> adapterPromise;
 
@@ -26,7 +26,13 @@ Instance::Instance()
   mAdapter = adapterPromise.get_future().get();
 }
 
-Instance::~Instance() {}
+Instance::~Instance()
+{
+  if (mAdapter != 0)
+  {
+    wgpu_adapter_destroy(mAdapter);
+  }
+}
 
 WGPUAdapterId Instance::GetAdapter() const
 {

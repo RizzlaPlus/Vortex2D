@@ -51,8 +51,15 @@ public:
                                          Handle::PipelineLayout layout,
                                          SpecConstInfo specConstInfo = {}) override;
 
+  // WebGPU specific functiosn
+
+  VORTEX2D_API WGPUDeviceId Handle() const;
+
+  VORTEX2D_API WGPUQueueId Queue() const;
+
 private:
   WGPUDeviceId mDevice;
+  WGPUQueueId mQueue;
 };
 
 }  // namespace Renderer

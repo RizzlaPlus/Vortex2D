@@ -14,35 +14,90 @@ namespace Vortex2D
 {
 namespace Renderer
 {
+void BufferMapReadCallback(WGPUBufferMapAsyncStatus status, const uint8_t* data, uint8_t* userdata)
+{
+  // TODO implement
+}
+
+void BufferMapWriteCallback(WGPUBufferMapAsyncStatus status, uint8_t* data, uint8_t* userdata)
+{
+  // TODO implement
+}
+
 struct GenericBuffer::Impl
 {
+  WebGPUDevice& mDevice;
+  WGPUBufferUsage mUsageFlags;
   std::uint64_t mSize;
   MemoryUsage mMemoryUsage;
+  WGPUBufferId mBuffer;
 
   Impl(Device& device, BufferUsage usageFlags, MemoryUsage memoryUsage, std::uint64_t deviceSize)
-      : mSize(deviceSize), mMemoryUsage(memoryUsage)
+      : mDevice(static_cast<WebGPUDevice&>(device))
+      , mUsageFlags(ConvertBufferUsage(usageFlags))
+      , mSize(deviceSize)
+      , mMemoryUsage(memoryUsage)
+      , mBuffer(0)
   {
+    Create();
   }
 
-  ~Impl() {}
+  ~Impl()
+  {
+    if (mBuffer != 0)
+    {
+      wgpu_buffer_destroy(mBuffer);
+      mBuffer = 0;
+    }
+  }
 
-  Impl(Impl&& other) : mSize(other.mSize) { other.mSize = 0; }
+  Impl(Impl&& other) : mDevice(other.mDevice), mUsageFlags(other.mUsageFlags), mSize(other.mSize)
+  {
+    other.mSize = 0;
+    other.mBuffer = 0;
+  }
 
-  Handle::Buffer Handle() const { return {}; }
+  void Create()
+  {
+    WGPUBufferDescriptor descriptor{};
+    descriptor.size = mSize;
+    descriptor.usage = mUsageFlags;
+
+    mBuffer = wgpu_device_create_buffer(mDevice.Handle(), &descriptor);
+    // TODO check if valid
+  }
+
+  Handle::Buffer Handle() const { return reinterpret_cast<Handle::Buffer>(mBuffer); }
 
   std::uint64_t Size() const { return mSize; }
 
-  void Resize(std::uint64_t size) {}
+  void Resize(std::uint64_t size)
+  {
+    if (mBuffer != 0)
+    {
+      wgpu_buffer_destroy(mBuffer);
+    }
 
-  void CopyFrom(Renderer::CommandEncoder& command, GenericBuffer& srcBuffer)
+    mSize = size;
+    Create();
+  }
+
+  void CopyFrom(CommandEncoder& command, GenericBuffer& srcBuffer)
   {
     if (mSize != srcBuffer.Size())
     {
       throw std::runtime_error("Cannot copy buffers of different sizes");
     }
+
+    wgpu_command_encoder_copy_buffer_to_buffer(Handle::ConvertCommandBuffer(command.Handle()),
+                                               Handle::ConvertBuffer(srcBuffer.Handle()),
+                                               0,
+                                               mBuffer,
+                                               0,
+                                               mSize);
   }
 
-  void CopyFrom(Renderer::CommandEncoder& command, Texture& srcTexture)
+  void CopyFrom(CommandEncoder& command, Texture& srcTexture)
   {
     auto textureSize =
         srcTexture.GetWidth() * srcTexture.GetHeight() * GetBytesPerPixel(srcTexture.GetFormat());
@@ -50,15 +105,45 @@ struct GenericBuffer::Impl
     {
       throw std::runtime_error("Cannot copy texture of different sizes");
     }
+
+    WGPUTextureCopyView src{};
+    src.origin = {0, 0, 0};
+    src.texture = Handle::ConvertImage(srcTexture.Handle());
+
+    WGPUTextureDataLayout layout{};
+    layout.offset = 0;
+    layout.bytes_per_row = GetBytesPerPixel(srcTexture.GetFormat()) * srcTexture.GetWidth();
+    layout.rows_per_image = srcTexture.GetHeight();
+
+    WGPUBufferCopyView dst{};
+    dst.buffer = mBuffer;
+    dst.layout = layout;
+
+    WGPUExtent3d extent{};
+    extent.width = srcTexture.GetWidth();
+    extent.height = srcTexture.GetHeight();
+    extent.depth = 0;
+
+    wgpu_command_encoder_copy_texture_to_buffer(
+        Handle::ConvertCommandBuffer(command.Handle()), &src, &dst, &extent);
   }
 
-  void Barrier(CommandEncoder& command, Access oldAccess, Access newAccess) {}
+  void Barrier(CommandEncoder& /*command*/, Access /*oldAccess*/, Access /*newAccess*/) {}
 
-  void Clear(Renderer::CommandEncoder& command) {}
+  void Clear(CommandEncoder& command)
+  {
+    // TODO implement
+  }
 
-  void CopyFrom(uint32_t offset, const void* data, uint32_t size) {}
+  void CopyFrom(uint32_t offset, const void* data, uint32_t size)
+  {
+    wgpu_buffer_map_write_async(mBuffer, offset, size, BufferMapWriteCallback, nullptr);
+  }
 
-  void CopyTo(uint32_t offset, void* data, uint32_t size) {}
+  void CopyTo(uint32_t offset, void* data, uint32_t size)
+  {
+    wgpu_buffer_map_read_async(mBuffer, offset, size, BufferMapReadCallback, nullptr);
+  }
 };
 
 GenericBuffer::GenericBuffer(Device& device,
@@ -73,12 +158,12 @@ GenericBuffer::GenericBuffer(GenericBuffer&& other) : mImpl(std::move(other.mImp
 
 GenericBuffer::~GenericBuffer() {}
 
-void GenericBuffer::CopyFrom(Renderer::CommandEncoder& command, GenericBuffer& srcBuffer)
+void GenericBuffer::CopyFrom(CommandEncoder& command, GenericBuffer& srcBuffer)
 {
   mImpl->CopyFrom(command, srcBuffer);
 }
 
-void GenericBuffer::CopyFrom(Renderer::CommandEncoder& command, Texture& srcTexture)
+void GenericBuffer::CopyFrom(CommandEncoder& command, Texture& srcTexture)
 {
   mImpl->CopyFrom(command, srcTexture);
 }
@@ -103,7 +188,7 @@ void GenericBuffer::Barrier(CommandEncoder& command, Access oldAccess, Access ne
   mImpl->Barrier(command, oldAccess, newAccess);
 }
 
-void GenericBuffer::Clear(Renderer::CommandEncoder& command)
+void GenericBuffer::Clear(CommandEncoder& command)
 {
   mImpl->Clear(command);
 }
