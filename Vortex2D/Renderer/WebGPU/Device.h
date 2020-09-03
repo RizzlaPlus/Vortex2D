@@ -60,6 +60,8 @@ public:
 private:
   WGPUDeviceId mDevice;
   WGPUQueueId mQueue;
+
+  std::unique_ptr<CommandBuffer> mExecute;
 };
 
 }  // namespace Renderer

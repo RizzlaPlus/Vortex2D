@@ -30,8 +30,8 @@ public:
 
   void Begin();
   void BeginRenderPass(const RenderTarget& renderTarget, Handle::Framebuffer framebuffer);
-  void EndRenderPass();
-  void End();
+  Handle::CommandBuffer EndRenderPass();
+  Handle::CommandBuffer End();
 
   VORTEX2D_API void SetPipeline(PipelineBindPoint pipelineBindPoint, Handle::Pipeline pipeline);
 
@@ -56,7 +56,7 @@ public:
   VORTEX2D_API void DebugMarkerBegin(const char* name, const glm::vec4& color);
   VORTEX2D_API void DebugMarkerEnd();
 
-  Handle::CommandBuffer Handle();
+  Handle::CommandEncoder Handle() const;
 
 private:
   struct Impl;

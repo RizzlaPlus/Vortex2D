@@ -16,12 +16,28 @@ namespace Renderer
 {
 void BufferMapReadCallback(WGPUBufferMapAsyncStatus status, const uint8_t* data, uint8_t* userdata)
 {
-  // TODO implement
+  auto promise = reinterpret_cast<std::promise<const uint8_t*>*>(userdata);
+  if (status == WGPUBufferMapAsyncStatus_Success)
+  {
+    promise->set_value(data);
+  }
+  else
+  {
+    promise->set_exception(std::make_exception_ptr(std::runtime_error("buffer read error")));
+  }
 }
 
 void BufferMapWriteCallback(WGPUBufferMapAsyncStatus status, uint8_t* data, uint8_t* userdata)
 {
-  // TODO implement
+  auto promise = reinterpret_cast<std::promise<uint8_t*>*>(userdata);
+  if (status == WGPUBufferMapAsyncStatus_Success)
+  {
+    promise->set_value(data);
+  }
+  else
+  {
+    promise->set_exception(std::make_exception_ptr(std::runtime_error("buffer write error")));
+  }
 }
 
 struct GenericBuffer::Impl
@@ -29,14 +45,12 @@ struct GenericBuffer::Impl
   WebGPUDevice& mDevice;
   WGPUBufferUsage mUsageFlags;
   std::uint64_t mSize;
-  MemoryUsage mMemoryUsage;
   WGPUBufferId mBuffer;
 
   Impl(Device& device, BufferUsage usageFlags, MemoryUsage memoryUsage, std::uint64_t deviceSize)
       : mDevice(static_cast<WebGPUDevice&>(device))
-      , mUsageFlags(ConvertBufferUsage(usageFlags))
+      , mUsageFlags(ConvertBufferUsage(usageFlags) | ConvertMemoryUsage(memoryUsage))
       , mSize(deviceSize)
-      , mMemoryUsage(memoryUsage)
       , mBuffer(0)
   {
     Create();
@@ -64,7 +78,10 @@ struct GenericBuffer::Impl
     descriptor.usage = mUsageFlags;
 
     mBuffer = wgpu_device_create_buffer(mDevice.Handle(), &descriptor);
-    // TODO check if valid
+    if (mBuffer == 0)
+    {
+      throw std::runtime_error("Error creating buffer");
+    }
   }
 
   Handle::Buffer Handle() const { return reinterpret_cast<Handle::Buffer>(mBuffer); }
@@ -89,7 +106,7 @@ struct GenericBuffer::Impl
       throw std::runtime_error("Cannot copy buffers of different sizes");
     }
 
-    wgpu_command_encoder_copy_buffer_to_buffer(Handle::ConvertCommandBuffer(command.Handle()),
+    wgpu_command_encoder_copy_buffer_to_buffer(Handle::ConvertCommandEncoder(command.Handle()),
                                                Handle::ConvertBuffer(srcBuffer.Handle()),
                                                0,
                                                mBuffer,
@@ -125,7 +142,7 @@ struct GenericBuffer::Impl
     extent.depth = 0;
 
     wgpu_command_encoder_copy_texture_to_buffer(
-        Handle::ConvertCommandBuffer(command.Handle()), &src, &dst, &extent);
+        Handle::ConvertCommandEncoder(command.Handle()), &src, &dst, &extent);
   }
 
   void Barrier(CommandEncoder& /*command*/, Access /*oldAccess*/, Access /*newAccess*/) {}
@@ -137,12 +154,28 @@ struct GenericBuffer::Impl
 
   void CopyFrom(uint32_t offset, const void* data, uint32_t size)
   {
-    wgpu_buffer_map_write_async(mBuffer, offset, size, BufferMapWriteCallback, nullptr);
+    std::promise<uint8_t*> promise;
+    wgpu_buffer_map_write_async(mBuffer, offset, size, BufferMapWriteCallback, (uint8_t*)&promise);
+
+    wgpu_device_poll(mDevice.Handle(), false);
+
+    uint8_t* dstData = promise.get_future().get();
+    std::memcpy(dstData, data, size);
+
+    wgpu_buffer_unmap(mBuffer);
   }
 
   void CopyTo(uint32_t offset, void* data, uint32_t size)
   {
-    wgpu_buffer_map_read_async(mBuffer, offset, size, BufferMapReadCallback, nullptr);
+    std::promise<const uint8_t*> promise;
+    wgpu_buffer_map_read_async(mBuffer, offset, size, BufferMapReadCallback, (uint8_t*)&promise);
+
+    wgpu_device_poll(mDevice.Handle(), false);
+
+    const uint8_t* srcData = promise.get_future().get();
+    std::memcpy(data, srcData, size);
+
+    wgpu_buffer_unmap(mBuffer);
   }
 };
 

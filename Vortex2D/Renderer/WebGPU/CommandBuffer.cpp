@@ -23,18 +23,18 @@ struct CommandEncoder::Impl
 {
   WebGPUDevice& mDevice;
   WGPUCommandEncoderId mCommandEncoder;
-  WGPUCommandBufferId mCommandBuffer;
+
   WGPURawPass* mRawPass;
 
   Impl(Device& device)
-      : mDevice(static_cast<WebGPUDevice&>(device))
-      , mCommandEncoder(0)
-      , mCommandBuffer(0)
-      , mRawPass(nullptr)
+      : mDevice(static_cast<WebGPUDevice&>(device)), mCommandEncoder(0), mRawPass(nullptr)
   {
     WGPUCommandEncoderDescriptor descriptor{};
     mCommandEncoder = wgpu_device_create_command_encoder(mDevice.Handle(), &descriptor);
-    // TODO check if valid
+    if (mCommandEncoder == 0)
+    {
+      throw std::runtime_error("Invalid command encoder");
+    }
   }
 
   ~Impl()
@@ -43,16 +43,11 @@ struct CommandEncoder::Impl
     {
       wgpu_command_encoder_destroy(mCommandEncoder);
     }
-
-    if (mCommandBuffer != 0)
-    {
-      wgpu_command_buffer_destroy(mCommandBuffer);
-    }
   }
 
-  Handle::CommandBuffer Handle() const
+  Handle::CommandEncoder Handle() const
   {
-    return reinterpret_cast<Handle::CommandBuffer>(mCommandEncoder);
+    return reinterpret_cast<Handle::CommandEncoder>(mCommandEncoder);
   }
 
   void Begin()
@@ -67,30 +62,42 @@ struct CommandEncoder::Impl
     mRawPass = wgpu_command_encoder_begin_render_pass(mCommandEncoder, &descriptor);
   }
 
-  void EndRenderPass()
+  Handle::CommandBuffer EndRenderPass()
   {
     wgpu_render_pass_end_pass(mRawPass);
     // TODO do we need to destroy the pass?
 
     WGPUCommandBufferDescriptor descriptor{};
-    mCommandBuffer = wgpu_command_encoder_finish(mCommandEncoder, &descriptor);
+    return reinterpret_cast<Handle::CommandBuffer>(
+        wgpu_command_encoder_finish(mCommandEncoder, &descriptor));
   }
 
-  void End()
+  Handle::CommandBuffer End()
   {
     wgpu_compute_pass_end_pass(mRawPass);
     // TODO do we need to destroy the pass?
 
     WGPUCommandBufferDescriptor descriptor{};
-    mCommandBuffer = wgpu_command_encoder_finish(mCommandEncoder, &descriptor);
+    return reinterpret_cast<Handle::CommandBuffer>(
+        wgpu_command_encoder_finish(mCommandEncoder, &descriptor));
   }
 
-  void SetPipeline(PipelineBindPoint pipelineBindPoint, Handle::Pipeline pipeline) {}
+  void SetPipeline(PipelineBindPoint pipelineBindPoint, Handle::Pipeline pipeline)
+  {
+    if (pipelineBindPoint == PipelineBindPoint::Compute)
+    {
+      wgpu_compute_pass_set_pipeline(mRawPass, reinterpret_cast<WGPUComputePipelineId>(pipeline));
+    }
+  }
 
   void SetBindGroup(PipelineBindPoint pipelineBindPoint,
                     Handle::PipelineLayout layout,
                     BindGroup& bindGroup)
   {
+    if (pipelineBindPoint == PipelineBindPoint::Compute)
+    {
+      // wgpu_compute_pass_set_bind_group(mRawPass, 0);
+    }
   }
 
   void SetVertexBuffer(const GenericBuffer& buffer) {}
@@ -139,14 +146,14 @@ void CommandEncoder::BeginRenderPass(const RenderTarget& renderTarget,
   mImpl->BeginRenderPass(renderTarget, framebuffer);
 }
 
-void CommandEncoder::EndRenderPass()
+Handle::CommandBuffer CommandEncoder::EndRenderPass()
 {
-  mImpl->EndRenderPass();
+  return mImpl->EndRenderPass();
 }
 
-void CommandEncoder::End()
+Handle::CommandBuffer CommandEncoder::End()
 {
-  mImpl->End();
+  return mImpl->End();
 }
 
 void CommandEncoder::SetPipeline(PipelineBindPoint pipelineBindPoint, Handle::Pipeline pipeline)
@@ -205,22 +212,23 @@ void CommandEncoder::DebugMarkerEnd()
   mImpl->DebugMarkerEnd();
 }
 
-Handle::CommandBuffer CommandEncoder::Handle() const
+Handle::CommandEncoder CommandEncoder::Handle() const
 {
   return mImpl->Handle();
 }
 
 struct CommandBuffer::Impl
 {
-  WebGPUDevice& mDevice;
-
   Impl(Device& device, bool synchronise)
       : mDevice(static_cast<WebGPUDevice&>(device))
+      , mCommandBuffer(0)
       , mSynchronise(synchronise)
       , mRecorded(false)
       , mCommandEncoder(device)
   {
   }
+
+  ~Impl() { Reset(); }
 
   void Record(CommandBuffer::CommandFn commandFn)
   {
@@ -228,7 +236,7 @@ struct CommandBuffer::Impl
 
     mCommandEncoder.Begin();
     commandFn(mCommandEncoder);
-    mCommandEncoder.End();
+    mCommandBuffer = Handle::ConvertCommandBuffer(mCommandEncoder.End());
     mRecorded = true;
   }
 
@@ -240,7 +248,7 @@ struct CommandBuffer::Impl
 
     mCommandEncoder.BeginRenderPass(renderTarget, framebuffer);
     commandFn(mCommandEncoder);
-    mCommandEncoder.EndRenderPass();
+    mCommandBuffer = Handle::ConvertCommandBuffer(mCommandEncoder.EndRenderPass());
     mRecorded = true;
   }
 
@@ -255,7 +263,11 @@ struct CommandBuffer::Impl
 
   void Reset()
   {
-    // Nothing todo
+    if (mCommandBuffer != 0)
+    {
+      wgpu_command_buffer_destroy(mCommandBuffer);
+      mCommandBuffer = 0;
+    }
   }
 
   void Submit(const std::initializer_list<Handle::Semaphore>& /*waitSemaphores*/,
@@ -264,13 +276,14 @@ struct CommandBuffer::Impl
     if (!mRecorded)
       throw std::runtime_error("Submitting a command that wasn't recorded");
 
-    // TODO need to get command buffer and not command encoder
-    // WGPUCommandBufferId buffers[] = {Handle::ConvertCommandBuffer(mCommandEncoder.Handle())};
-    // wgpu_queue_submit(mDevice.Queue(), buffers, 1);
+    WGPUCommandBufferId buffers[] = {mCommandBuffer};
+    wgpu_queue_submit(mDevice.Queue(), buffers, 1);
   }
 
   bool IsValid() const { return mRecorded; }
 
+  WebGPUDevice& mDevice;
+  WGPUCommandBufferId mCommandBuffer;
   bool mSynchronise;
   bool mRecorded;
   CommandEncoder mCommandEncoder;

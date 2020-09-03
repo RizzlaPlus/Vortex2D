@@ -33,19 +33,70 @@ inline WGPUBufferUsage ConvertBufferUsage(BufferUsage usage)
       return WGPUBufferUsage_INDEX;
   }
 }
+
+inline WGPUBufferUsage ConvertMemoryUsage(MemoryUsage usage)
+{
+  switch (usage)
+  {
+    case MemoryUsage::Cpu:
+    case MemoryUsage::CpuToGpu:
+    case MemoryUsage::GpuToCpu:
+      return WGPUBufferUsage_MAP_READ | WGPUBufferUsage_MAP_WRITE | WGPUBufferUsage_COPY_DST |
+             WGPUBufferUsage_COPY_SRC;
+    case MemoryUsage::Gpu:
+      return WGPUBufferUsage_COPY_DST | WGPUBufferUsage_COPY_SRC;
+  }
+}
+
+inline WGPUBindingType ConvertBindingType(BindType type)
+{
+  switch (type)
+  {
+    case BindType::StorageBuffer:
+      return WGPUBindingType_StorageBuffer;
+    case BindType::StorageImage:
+      return WGPUBindingType_WriteonlyStorageTexture;
+    case BindType::ImageSampler:
+      return WGPUBindingType_SampledTexture;
+    case BindType::UniformBuffer:
+      return WGPUBindingType_UniformBuffer;
+  }
+}
+
+inline WGPUShaderStage ConvertShaderStage(ShaderStage stage)
+{
+  switch (stage)
+  {
+    case ShaderStage::Compute:
+      return WGPUShaderStage_COMPUTE;
+    case ShaderStage::Fragment:
+      return WGPUShaderStage_FRAGMENT;
+    case ShaderStage::Vertex:
+      return WGPUShaderStage_VERTEX;
+  }
+}
+
 namespace Handle
 {
 inline WGPUBufferId ConvertBuffer(Buffer buffer)
 {
   return reinterpret_cast<WGPUBufferId>(buffer);
 }
-inline WGPUCommandEncoderId ConvertCommandBuffer(CommandBuffer commandBuffer)
+inline WGPUCommandEncoderId ConvertCommandEncoder(CommandEncoder commandEncoder)
 {
-  return reinterpret_cast<WGPUCommandEncoderId>(commandBuffer);
+  return reinterpret_cast<WGPUCommandEncoderId>(commandEncoder);
+}
+inline WGPUCommandBufferId ConvertCommandBuffer(CommandBuffer commandBuffer)
+{
+  return reinterpret_cast<WGPUCommandBufferId>(commandBuffer);
 }
 inline WGPUTextureId ConvertImage(Image image)
 {
   return reinterpret_cast<WGPUTextureId>(image);
+}
+inline WGPUBindGroupLayoutId ConvertBindGroupLayout(BindGroupLayout layout)
+{
+  return reinterpret_cast<WGPUBindGroupLayoutId>(layout);
 }
 }  // namespace Handle
 }  // namespace Renderer
