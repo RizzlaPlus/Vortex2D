@@ -11,39 +11,41 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-void RequestAdapterCallback(WGPUAdapterId received, void* userdata)
+void RequestAdapterCallback(WGPUAdapter received, void* userdata)
 {
-  auto promise = reinterpret_cast<std::promise<WGPUAdapterId>*>(userdata);
+  auto promise = reinterpret_cast<std::promise<WGPUAdapter>*>(userdata);
   promise->set_value(received);
 }
 
-void WGPULogCallback(int level, const char* msg)
+void LogCallback(WGPULogLevel level, const char* msg)
 {
   std::cout << "[" << level << "]" << msg << std::endl;
 }
 
 Instance::Instance() : mAdapter(0)
 {
-  wgpu_set_log_callback(&WGPULogCallback);
-  wgpu_set_log_level(WGPULogLevel_Debug);
+  wgpuSetLogCallback(&LogCallback);
+  wgpuSetLogLevel(WGPULogLevel_Debug);
 
-  std::promise<WGPUAdapterId> adapterPromise;
+  // TODO create instance
+  // WGPUInstanceDescriptor descriptor{};
+  // mInstance = wgpuCreateInstance(&descriptor);
 
-  wgpu_request_adapter_async(
-      nullptr, 2 | 4 | 8, false, &RequestAdapterCallback, (void*)&adapterPromise);
+  std::promise<WGPUAdapter> adapterPromise;
+
+  WGPURequestAdapterOptions options{};
+  wgpuInstanceRequestAdapter(nullptr, &options, &RequestAdapterCallback, (void*)&adapterPromise);
 
   mAdapter = adapterPromise.get_future().get();
 }
 
 Instance::~Instance()
 {
-  if (mAdapter != 0)
-  {
-    wgpu_adapter_destroy(mAdapter);
-  }
+  // TODO do we need to destroy mInstance?
+  // TODO do we need to destroy mAdapter?
 }
 
-WGPUAdapterId Instance::GetAdapter() const
+WGPUAdapter Instance::GetAdapter() const
 {
   return mAdapter;
 }

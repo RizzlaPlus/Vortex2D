@@ -44,6 +44,12 @@ inline std::uint64_t GetBytesPerPixel(Format format)
   }
 }
 
+inline uint32_t GetPaddedBytes(uint32_t offset, uint32_t align)
+{
+  auto padding = (align - (offset % align)) % align;
+  return offset + padding;
+}
+
 class Sampler
 {
 public:
@@ -92,34 +98,34 @@ public:
   template <typename T>
   void CopyFrom(const std::vector<T>& data)
   {
-    if (data.size() != GetWidth() * GetHeight())
+    if (data.size() > GetWidth() * GetHeight())
       throw std::runtime_error("Invalid input data size");
     if (sizeof(T) != GetBytesPerPixel(GetFormat()))
       throw std::runtime_error("Invalid input data format");
-    CopyFrom(data.data());
+    CopyFrom(data.data(), data.size());
   }
 
   template <typename T>
   void CopyTo(std::vector<T>& data)
   {
-    if (data.size() != GetWidth() * GetHeight())
+    if (data.size() > GetWidth() * GetHeight())
       throw std::runtime_error("Invalid input data size");
     if (sizeof(T) != GetBytesPerPixel(GetFormat()))
       throw std::runtime_error("Invalid input data format");
-    CopyTo(data.data());
+    CopyTo(data.data(), data.size());
   }
 
   /**
    * @brief Copies width*heigh*bytesPerPixel amount of data
    * @param data source data
    */
-  VORTEX2D_API void CopyFrom(const void* data);
+  VORTEX2D_API void CopyFrom(const void* data, int size);
 
   /**
    * @brief Copies width*heigh*bytesPerPixel amount of data
    * @param data destination data
    */
-  VORTEX2D_API void CopyTo(void* data);
+  VORTEX2D_API void CopyTo(void* data, int size);
 
   /**
    * @brief Copies source texture in this texture

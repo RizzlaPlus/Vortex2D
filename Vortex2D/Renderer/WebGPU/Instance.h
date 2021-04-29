@@ -28,10 +28,11 @@ public:
   VORTEX2D_API Instance();
   VORTEX2D_API ~Instance();
 
-  WGPUAdapterId GetAdapter() const;
+  WGPUAdapter GetAdapter() const;
 
 private:
-  WGPUAdapterId mAdapter;
+  WGPUInstance mInstance;
+  WGPUAdapter mAdapter;
 };
 
 }  // namespace Renderer

@@ -12,15 +12,27 @@ namespace Vortex2D
 {
 namespace Renderer
 {
+void RequestDeviceCallback(WGPUDevice received, void* userdata)
+{
+  auto promise = reinterpret_cast<std::promise<WGPUDevice>*>(userdata);
+  promise->set_value(received);
+}
+
 WebGPUDevice::WebGPUDevice(const Instance& instance) : mDevice(0), mQueue(0)
 {
-  mDevice = wgpu_adapter_request_device(instance.GetAdapter(), 0, nullptr, false, nullptr);
+  std::promise<WGPUDevice> devicePromise;
+
+  WGPUDeviceDescriptor descriptor{};
+  wgpuAdapterRequestDevice(
+      instance.GetAdapter(), &descriptor, RequestDeviceCallback, (void*)&devicePromise);
+
+  mDevice = devicePromise.get_future().get();
   if (mDevice == 0)
   {
     throw std::runtime_error("Error creating device");
   }
 
-  mQueue = wgpu_device_get_default_queue(mDevice);
+  mQueue = wgpuDeviceGetQueue(mDevice);
   if (mQueue == 0)
   {
     throw std::runtime_error("Invalid queue");
@@ -31,10 +43,7 @@ WebGPUDevice::WebGPUDevice(const Instance& instance) : mDevice(0), mQueue(0)
 
 WebGPUDevice::~WebGPUDevice()
 {
-  if (mDevice != 0)
-  {
-    wgpu_device_destroy(mDevice);
-  }
+  // TODO do we need to destroy mDevice?
 }
 
 bool WebGPUDevice::HasTimer() const
@@ -44,7 +53,7 @@ bool WebGPUDevice::HasTimer() const
 
 void WebGPUDevice::WaitIdle()
 {
-  wgpu_device_poll(mDevice, true);
+  wgpuDevicePoll(mDevice, true);
 }
 
 void WebGPUDevice::Execute(CommandBuffer::CommandFn commandFn) const
@@ -57,9 +66,18 @@ void WebGPUDevice::Execute(CommandBuffer::CommandFn commandFn) const
 Handle::ShaderModule WebGPUDevice::CreateShaderModule(const SpirvBinary& spirv)
 {
   // TODO missing caching
+  WGPUShaderModuleDescriptor descriptor{};
 
-  WGPUShaderSource source = {spirv.data(), spirv.words()};
-  return reinterpret_cast<Handle::ShaderModule>(wgpu_device_create_shader_module(mDevice, source));
+  auto* spirvDescriptor =
+      (WGPUShaderModuleSPIRVDescriptor*)malloc(sizeof(WGPUShaderModuleSPIRVDescriptor));
+  spirvDescriptor->chain.next = NULL;
+  spirvDescriptor->chain.sType = WGPUSType_ShaderModuleSPIRVDescriptor;
+  spirvDescriptor->code = spirv.data();
+  spirvDescriptor->codeSize = spirv.words();
+  descriptor.nextInChain = (const WGPUChainedStruct*)spirvDescriptor;
+  descriptor.label = NULL;
+
+  return reinterpret_cast<Handle::ShaderModule>(wgpuDeviceCreateShaderModule(mDevice, &descriptor));
 }
 
 Handle::BindGroupLayout WebGPUDevice::CreateBindGroupLayout(const SPIRV::ShaderLayouts& layouts)
@@ -74,12 +92,29 @@ Handle::BindGroupLayout WebGPUDevice::CreateBindGroupLayout(const SPIRV::ShaderL
     std::vector<WGPUBindGroupLayoutEntry> entries;
     for (auto& layout : layouts)
     {
-      for (auto& desciptorType : layout.bindings)
+      for (auto& descriptorType : layout.bindings)
       {
         WGPUBindGroupLayoutEntry entry{};
-        entry.binding = desciptorType.first;
+        entry.binding = descriptorType.first;
         entry.visibility = ConvertShaderStage(layout.shaderStage);
-        entry.ty = ConvertBindingType(desciptorType.second);
+
+        switch (descriptorType.second)
+        {
+          case BindType::StorageBuffer:
+            entry.buffer.type = WGPUBufferBindingType_Storage;
+            break;
+          case BindType::UniformBuffer:
+            entry.buffer.type = WGPUBufferBindingType_Uniform;
+            break;
+          case BindType::ImageSampler:
+            entry.sampler.type = WGPUSamplerBindingType_Filtering;
+            break;
+            // TODO FIXME
+            // case BindType::StorageImage:
+            //   entry.storageTexture.
+          default:
+            assert(false);
+        }
 
         // TODO do we need to fill the rest of the struct?
 
@@ -89,9 +124,9 @@ Handle::BindGroupLayout WebGPUDevice::CreateBindGroupLayout(const SPIRV::ShaderL
 
     WGPUBindGroupLayoutDescriptor descriptor{};
     descriptor.entries = entries.data();
-    descriptor.entries_length = entries.size();
+    descriptor.entryCount = entries.size();
 
-    auto handle = wgpu_device_create_bind_group_layout(mDevice, &descriptor);
+    auto handle = wgpuDeviceCreateBindGroupLayout(mDevice, &descriptor);
 
     mGroupLayouts.emplace_back(layouts, handle);
     return reinterpret_cast<Handle::BindGroupLayout>(handle);
@@ -110,14 +145,14 @@ Handle::PipelineLayout WebGPUDevice::CreatePipelineLayout(const SPIRV::ShaderLay
 
   if (it == mPipelineLayouts.end())
   {
-    WGPUBindGroupLayoutId bindGroupLayouts[] = {
+    WGPUBindGroupLayout bindGroupLayouts[] = {
         Handle::ConvertBindGroupLayout(CreateBindGroupLayout(layouts))};
 
     WGPUPipelineLayoutDescriptor descriptor{};
-    descriptor.bind_group_layouts = bindGroupLayouts;
-    descriptor.bind_group_layouts_length = 1;
+    descriptor.bindGroupLayouts = bindGroupLayouts;
+    descriptor.bindGroupLayoutCount = 1;
 
-    auto handle = wgpu_device_create_pipeline_layout(mDevice, &descriptor);
+    auto handle = wgpuDeviceCreatePipelineLayout(mDevice, &descriptor);
 
     mPipelineLayouts.emplace_back(layouts, handle);
     return reinterpret_cast<Handle::PipelineLayout>(handle);
@@ -140,18 +175,18 @@ BindGroup WebGPUDevice::CreateBindGroup(const Handle::BindGroupLayout& bindGroup
 
     bindingInputs[i].Input.match(
         [&](Renderer::GenericBuffer* buffer) {
-          entry.buffer = reinterpret_cast<WGPUBufferId>(buffer->Handle());
+          entry.buffer = reinterpret_cast<WGPUBuffer>(buffer->Handle());
           entry.offset = 0;
           entry.size = buffer->Size();
         },
         [&](Image image) {
           if (image.Sampler != nullptr)
           {
-            entry.sampler = {reinterpret_cast<WGPUSamplerId>(image.Sampler->Handle())};
+            entry.sampler = {reinterpret_cast<WGPUSampler>(image.Sampler->Handle())};
           }
           else
           {
-            entry.texture_view = {reinterpret_cast<WGPUTextureViewId>(image.Texture->GetView())};
+            entry.textureView = {reinterpret_cast<WGPUTextureView>(image.Texture->GetView())};
           }
         });
 
@@ -161,9 +196,9 @@ BindGroup WebGPUDevice::CreateBindGroup(const Handle::BindGroupLayout& bindGroup
   WGPUBindGroupDescriptor descriptor{};
   descriptor.layout = Handle::ConvertBindGroupLayout(bindGroupLayout);
   descriptor.entries = entries.data();
-  descriptor.entries_length = entries.size();
+  descriptor.entryCount = entries.size();
 
-  return {reinterpret_cast<Handle::BindGroup>(wgpu_device_create_bind_group(mDevice, &descriptor))};
+  return {reinterpret_cast<Handle::BindGroup>(wgpuDeviceCreateBindGroup(mDevice, &descriptor))};
 }
 
 Handle::Pipeline WebGPUDevice::CreateGraphicsPipeline(const GraphicsPipelineDescriptor& graphics,
@@ -179,23 +214,22 @@ Handle::Pipeline WebGPUDevice::CreateComputePipeline(Handle::ShaderModule shader
   // TODO missing caching
 
   WGPUProgrammableStageDescriptor computeStage{};
-  computeStage.entry_point = "main";
-  computeStage.module = reinterpret_cast<WGPUShaderModuleId>(shader);
+  computeStage.entryPoint = "main";
+  computeStage.module = reinterpret_cast<WGPUShaderModule>(shader);
 
   WGPUComputePipelineDescriptor descriptor{};
-  descriptor.compute_stage = computeStage;
-  descriptor.layout = reinterpret_cast<WGPUPipelineLayoutId>(layout);
+  descriptor.computeStage = computeStage;
+  descriptor.layout = reinterpret_cast<WGPUPipelineLayout>(layout);
 
-  return reinterpret_cast<Handle::Pipeline>(
-      wgpu_device_create_compute_pipeline(mDevice, &descriptor));
+  return reinterpret_cast<Handle::Pipeline>(wgpuDeviceCreateComputePipeline(mDevice, &descriptor));
 }
 
-WGPUDeviceId WebGPUDevice::Handle() const
+WGPUDevice WebGPUDevice::Handle() const
 {
   return mDevice;
 }
 
-WGPUQueueId WebGPUDevice::Queue() const
+WGPUQueue WebGPUDevice::Queue() const
 {
   return mQueue;
 }

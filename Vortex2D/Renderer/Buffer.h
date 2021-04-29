@@ -169,7 +169,7 @@ public:
 template <template <typename> class BufferType, typename T>
 void CopyTo(BufferType<T>& buffer, T& t)
 {
-  if (sizeof(T) != buffer.Size())
+  if (sizeof(T) > buffer.Size())
     throw std::runtime_error("Mismatch data size");
   buffer.CopyTo(0, &t, sizeof(T));
 }
@@ -181,7 +181,7 @@ void CopyTo(BufferType<T>& buffer, T& t)
 template <template <typename> class BufferType, typename T>
 void CopyTo(BufferType<T>& buffer, std::vector<T>& t)
 {
-  if (sizeof(T) * t.size() != buffer.Size())
+  if (sizeof(T) * t.size() > buffer.Size())
     throw std::runtime_error("Mismatch data size");
   buffer.CopyTo(0, t.data(), sizeof(T) * t.size());
 }
@@ -192,7 +192,7 @@ void CopyTo(BufferType<T>& buffer, std::vector<T>& t)
 template <template <typename> class BufferType, typename T>
 void CopyFrom(BufferType<T>& buffer, const T& t)
 {
-  if (sizeof(T) != buffer.Size())
+  if (sizeof(T) > buffer.Size())
     throw std::runtime_error("Mismatch data size");
   buffer.CopyFrom(0, &t, sizeof(T));
 }
@@ -203,7 +203,7 @@ void CopyFrom(BufferType<T>& buffer, const T& t)
 template <template <typename> class BufferType, typename T>
 void CopyFrom(BufferType<T>& buffer, const std::vector<T>& t)
 {
-  if (sizeof(T) * t.size() != buffer.Size())
+  if (sizeof(T) * t.size() > buffer.Size())
     throw std::runtime_error("Mismatch data size");
   buffer.CopyFrom(0u, t.data(), static_cast<uint32_t>(sizeof(T) * t.size()));
 }

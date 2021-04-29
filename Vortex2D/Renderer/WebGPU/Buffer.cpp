@@ -14,16 +14,41 @@ namespace Vortex2D
 {
 namespace Renderer
 {
+void BufferMapCallback(WGPUBufferMapAsyncStatus status, void* userdata)
+{
+  auto promise = reinterpret_cast<std::promise<void>*>(userdata);
+  if (status == WGPUBufferMapAsyncStatus_Success)
+  {
+    promise->set_value();
+  }
+  else
+  {
+    promise->set_exception(std::make_exception_ptr(std::runtime_error("buffer read error")));
+  }
+}
+
+WGPUBufferUsageFlags GetBufferUsage(BufferUsage usage, MemoryUsage memoryUsage)
+{
+  if (memoryUsage == MemoryUsage::Gpu)
+  {
+    return ConvertBufferUsage(usage) | ConvertMemoryUsage(memoryUsage);
+  }
+  else
+  {
+    return ConvertMemoryUsage(memoryUsage);
+  }
+}
+
 struct GenericBuffer::Impl
 {
   WebGPUDevice& mDevice;
-  WGPUBufferUsage mUsageFlags;
+  WGPUBufferUsageFlags mUsageFlags;
   std::uint64_t mSize;
-  WGPUBufferId mBuffer;
+  WGPUBuffer mBuffer;
 
   Impl(Device& device, BufferUsage usageFlags, MemoryUsage memoryUsage, std::uint64_t deviceSize)
       : mDevice(static_cast<WebGPUDevice&>(device))
-      , mUsageFlags(ConvertBufferUsage(usageFlags) | ConvertMemoryUsage(memoryUsage))
+      , mUsageFlags(GetBufferUsage(usageFlags, memoryUsage))
       , mSize(deviceSize)
       , mBuffer(0)
   {
@@ -34,7 +59,8 @@ struct GenericBuffer::Impl
   {
     if (mBuffer != 0)
     {
-      wgpu_buffer_destroy(mBuffer);
+      // FIXME buffer destroy
+      // wgpuBufferDestroy(mBuffer);
       mBuffer = 0;
     }
   }
@@ -51,7 +77,7 @@ struct GenericBuffer::Impl
     descriptor.size = mSize;
     descriptor.usage = mUsageFlags;
 
-    mBuffer = wgpu_device_create_buffer(mDevice.Handle(), &descriptor);
+    mBuffer = wgpuDeviceCreateBuffer(mDevice.Handle(), &descriptor);
     if (mBuffer == 0)
     {
       throw std::runtime_error("Error creating buffer");
@@ -66,7 +92,8 @@ struct GenericBuffer::Impl
   {
     if (mBuffer != 0)
     {
-      wgpu_buffer_destroy(mBuffer);
+      // FIXME buffer destroy
+      // wgpuBufferDestroy(mBuffer);
     }
 
     mSize = size;
@@ -80,41 +107,40 @@ struct GenericBuffer::Impl
       throw std::runtime_error("Cannot copy buffers of different sizes");
     }
 
-    wgpu_command_encoder_copy_buffer_to_buffer(Handle::ConvertCommandEncoder(command.Handle()),
-                                               Handle::ConvertBuffer(srcBuffer.Handle()),
-                                               0,
-                                               mBuffer,
-                                               0,
-                                               mSize);
+    wgpuCommandEncoderCopyBufferToBuffer(Handle::ConvertCommandEncoder(command.Handle()),
+                                         Handle::ConvertBuffer(srcBuffer.Handle()),
+                                         0,
+                                         mBuffer,
+                                         0,
+                                         mSize);
   }
 
   void CopyFrom(CommandEncoder& command, Texture& srcTexture)
   {
     auto textureSize =
-        srcTexture.GetWidth() * srcTexture.GetHeight() * GetBytesPerPixel(srcTexture.GetFormat());
-    if (textureSize != mSize)
+        GetBytesPerPixel(srcTexture.GetFormat()) * srcTexture.GetWidth() * srcTexture.GetHeight();
+    if (textureSize > mSize)
     {
       throw std::runtime_error("Cannot copy texture of different sizes");
     }
 
-    WGPUTextureCopyView src{};
+    WGPUImageCopyTexture src{};
     src.texture = Handle::ConvertImage(srcTexture.Handle());
 
     WGPUTextureDataLayout layout{};
-    layout.offset = 0;
-    layout.bytes_per_row = GetBytesPerPixel(srcTexture.GetFormat()) * srcTexture.GetWidth();
-    layout.rows_per_image = srcTexture.GetHeight();
+    layout.bytesPerRow =
+        GetPaddedBytes(GetBytesPerPixel(srcTexture.GetFormat()) * srcTexture.GetWidth(), 256);
 
-    WGPUBufferCopyView dst{};
+    WGPUImageCopyBuffer dst{};
     dst.buffer = mBuffer;
     dst.layout = layout;
 
-    WGPUExtent3d extent{};
+    WGPUExtent3D extent{};
     extent.width = srcTexture.GetWidth();
     extent.height = srcTexture.GetHeight();
     extent.depth = 1;
 
-    wgpu_command_encoder_copy_texture_to_buffer(
+    wgpuCommandEncoderCopyTextureToBuffer(
         Handle::ConvertCommandEncoder(command.Handle()), &src, &dst, &extent);
   }
 
@@ -127,20 +153,42 @@ struct GenericBuffer::Impl
 
   void CopyFrom(uint32_t offset, const void* data, uint32_t size)
   {
-    uint8_t* dstData = wgpu_buffer_get_mapped_range(mBuffer, offset, size);
+    std::promise<void> promise;
+    wgpuBufferMapAsync(
+        mBuffer, WGPUMapMode_Write, offset, size, BufferMapCallback, (uint8_t*)&promise);
+
+    // TODO why is this needed? maybe queue needs to be empty?
+    wgpuDevicePoll(mDevice.Handle(), false);
+
+    promise.get_future().get();
+
+    auto* dstData = (uint8_t*)wgpuBufferGetMappedRange(mBuffer, offset, size);
 
     std::memcpy(dstData, data, size);
 
-    wgpu_buffer_unmap(mBuffer);
+    wgpuBufferUnmap(mBuffer);
   }
 
   void CopyTo(uint32_t offset, void* data, uint32_t size)
   {
-    const uint8_t* srcData = wgpu_buffer_get_mapped_range(mBuffer, offset, size);
+    std::promise<void> promise;
+    wgpuBufferMapAsync(
+        mBuffer, WGPUMapMode_Read, offset, size, BufferMapCallback, (uint8_t*)&promise);
+
+    // TODO why is this needed?  maybe queue needs to be empty?
+    wgpuDevicePoll(mDevice.Handle(), false);
+
+    promise.get_future().get();
+
+    const auto* srcData = (const uint8_t*)wgpuBufferGetMappedRange(mBuffer, offset, size);
+    if (srcData == nullptr)
+    {
+      throw std::runtime_error("Could not map buffer");
+    }
 
     std::memcpy(data, srcData, size);
 
-    wgpu_buffer_unmap(mBuffer);
+    wgpuBufferUnmap(mBuffer);
   }
 };
 

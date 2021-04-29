@@ -53,17 +53,17 @@ public:
 
   // WebGPU specific functiosn
 
-  VORTEX2D_API WGPUDeviceId Handle() const;
+  VORTEX2D_API WGPUDevice Handle() const;
 
-  VORTEX2D_API WGPUQueueId Queue() const;
+  VORTEX2D_API WGPUQueue Queue() const;
 
 private:
-  WGPUDeviceId mDevice;
-  WGPUQueueId mQueue;
+  WGPUDevice mDevice;
+  WGPUQueue mQueue;
 
   std::unique_ptr<CommandBuffer> mExecute;
-  std::vector<std::tuple<SPIRV::ShaderLayouts, WGPUBindGroupLayoutId>> mGroupLayouts;
-  std::vector<std::tuple<SPIRV::ShaderLayouts, WGPUPipelineLayoutId>> mPipelineLayouts;
+  std::vector<std::tuple<SPIRV::ShaderLayouts, WGPUBindGroupLayout>> mGroupLayouts;
+  std::vector<std::tuple<SPIRV::ShaderLayouts, WGPUPipelineLayout>> mPipelineLayouts;
 };
 
 }  // namespace Renderer

@@ -6,6 +6,8 @@
 #ifndef Vortex2D_WebGPU_h
 #define Vortex2D_WebGPU_h
 
+#include <stdexcept>
+
 #include <Vortex2D/Renderer/Gpu.h>
 
 extern "C"
@@ -17,49 +19,35 @@ namespace Vortex2D
 {
 namespace Renderer
 {
-inline WGPUBufferUsage ConvertBufferUsage(BufferUsage usage)
+inline WGPUBufferUsageFlags ConvertBufferUsage(BufferUsage usage)
 {
   switch (usage)
   {
     case BufferUsage::Indirect:
-      return WGPUBufferUsage_INDIRECT;
+      return WGPUBufferUsage_Indirect;
     case BufferUsage::Vertex:
-      return WGPUBufferUsage_VERTEX;
+      return WGPUBufferUsage_Vertex;
     case BufferUsage::Uniform:
-      return WGPUBufferUsage_UNIFORM;
+      return WGPUBufferUsage_Uniform;
     case BufferUsage::Storage:
-      return WGPUBufferUsage_STORAGE;
+      return WGPUBufferUsage_Storage;
     case BufferUsage::Index:
-      return WGPUBufferUsage_INDEX;
+      return WGPUBufferUsage_Index;
   }
 }
 
-inline WGPUBufferUsage ConvertMemoryUsage(MemoryUsage usage)
+inline WGPUBufferUsageFlags ConvertMemoryUsage(MemoryUsage usage)
 {
   switch (usage)
   {
-    case MemoryUsage::Cpu:
     case MemoryUsage::CpuToGpu:
+      return WGPUBufferUsage_MapWrite | WGPUBufferUsage_CopySrc;
     case MemoryUsage::GpuToCpu:
-      return WGPUBufferUsage_MAP_READ | WGPUBufferUsage_MAP_WRITE | WGPUBufferUsage_COPY_DST |
-             WGPUBufferUsage_COPY_SRC;
+      return WGPUBufferUsage_MapRead | WGPUBufferUsage_CopyDst;
     case MemoryUsage::Gpu:
-      return WGPUBufferUsage_COPY_DST | WGPUBufferUsage_COPY_SRC;
-  }
-}
-
-inline WGPUBindingType ConvertBindingType(BindType type)
-{
-  switch (type)
-  {
-    case BindType::StorageBuffer:
-      return WGPUBindingType_StorageBuffer;
-    case BindType::StorageImage:
-      return WGPUBindingType_WriteonlyStorageTexture;
-    case BindType::ImageSampler:
-      return WGPUBindingType_SampledTexture;
-    case BindType::UniformBuffer:
-      return WGPUBindingType_UniformBuffer;
+      return WGPUBufferUsage_CopyDst | WGPUBufferUsage_CopySrc;
+    case MemoryUsage::Cpu:
+      throw std::invalid_argument("Cpu memory usage not supported");
   }
 }
 
@@ -68,11 +56,11 @@ inline WGPUShaderStage ConvertShaderStage(ShaderStage stage)
   switch (stage)
   {
     case ShaderStage::Compute:
-      return WGPUShaderStage_COMPUTE;
+      return WGPUShaderStage_Compute;
     case ShaderStage::Fragment:
-      return WGPUShaderStage_FRAGMENT;
+      return WGPUShaderStage_Fragment;
     case ShaderStage::Vertex:
-      return WGPUShaderStage_VERTEX;
+      return WGPUShaderStage_Vertex;
   }
 }
 
@@ -89,56 +77,57 @@ inline WGPUTextureFormat ConvertTextureFormat(Format format)
     case Format::R32Sint:
       return WGPUTextureFormat_R32Sint;
     case Format::R8G8B8A8Unorm:
-      return WGPUTextureFormat_Rgba8Unorm;
+      return WGPUTextureFormat_RGBA8Unorm;
     case Format::B8G8R8A8Unorm:
-      return WGPUTextureFormat_Bgra8Unorm;
+      return WGPUTextureFormat_BGRA8Unorm;
     case Format::R32G32Sfloat:
-      return WGPUTextureFormat_Rg32Float;
+      return WGPUTextureFormat_RG32Float;
     case Format::R32G32B32A32Sfloat:
-      return WGPUTextureFormat_Rgba32Float;
+      return WGPUTextureFormat_RGBA32Float;
   }
 }
 
-inline WGPUTextureUsage ConvertTextureUsage(MemoryUsage memoryUsage)
+inline WGPUTextureUsageFlags ConvertTextureUsage(MemoryUsage memoryUsage)
 {
   switch (memoryUsage)
   {
     case MemoryUsage::Gpu:
-      return WGPUTextureUsage_COPY_DST | WGPUTextureUsage_COPY_SRC |
-             WGPUTextureUsage_OUTPUT_ATTACHMENT | WGPUTextureUsage_SAMPLED |
-             WGPUTextureUsage_STORAGE;
-    case MemoryUsage::Cpu:
+      return WGPUTextureUsage_CopyDst | WGPUTextureUsage_CopySrc |
+             WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_Sampled |
+             WGPUTextureUsage_Storage;
     case MemoryUsage::CpuToGpu:
     case MemoryUsage::GpuToCpu:
-      return WGPUTextureUsage_COPY_DST | WGPUTextureUsage_COPY_SRC | WGPUTextureUsage_STORAGE;
+      return WGPUTextureUsage_CopyDst | WGPUTextureUsage_CopySrc | WGPUTextureUsage_Storage;
+    case MemoryUsage::Cpu:
+      throw std::invalid_argument("Cpu memory usage not supported");
   }
 }
 
 namespace Handle
 {
-inline WGPUBufferId ConvertBuffer(Buffer buffer)
+inline WGPUBuffer ConvertBuffer(Buffer buffer)
 {
-  return reinterpret_cast<WGPUBufferId>(buffer);
+  return reinterpret_cast<WGPUBuffer>(buffer);
 }
-inline WGPUCommandEncoderId ConvertCommandEncoder(CommandEncoder commandEncoder)
+inline WGPUCommandEncoder ConvertCommandEncoder(CommandEncoder commandEncoder)
 {
-  return reinterpret_cast<WGPUCommandEncoderId>(commandEncoder);
+  return reinterpret_cast<WGPUCommandEncoder>(commandEncoder);
 }
-inline WGPUCommandBufferId ConvertCommandBuffer(CommandBuffer commandBuffer)
+inline WGPUCommandBuffer ConvertCommandBuffer(CommandBuffer commandBuffer)
 {
-  return reinterpret_cast<WGPUCommandBufferId>(commandBuffer);
+  return reinterpret_cast<WGPUCommandBuffer>(commandBuffer);
 }
-inline WGPUTextureId ConvertImage(Image image)
+inline WGPUTexture ConvertImage(Image image)
 {
-  return reinterpret_cast<WGPUTextureId>(image);
+  return reinterpret_cast<WGPUTexture>(image);
 }
-inline WGPUBindGroupLayoutId ConvertBindGroupLayout(BindGroupLayout layout)
+inline WGPUBindGroupLayout ConvertBindGroupLayout(BindGroupLayout layout)
 {
-  return reinterpret_cast<WGPUBindGroupLayoutId>(layout);
+  return reinterpret_cast<WGPUBindGroupLayout>(layout);
 }
-inline WGPUTextureId ConvertTexture(Image image)
+inline WGPUTexture ConvertTexture(Image image)
 {
-  return reinterpret_cast<WGPUTextureId>(image);
+  return reinterpret_cast<WGPUTexture>(image);
 }
 }  // namespace Handle
 }  // namespace Renderer

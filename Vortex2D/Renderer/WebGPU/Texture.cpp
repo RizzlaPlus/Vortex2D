@@ -3,6 +3,7 @@
 //  Vortex2D
 //
 
+#include <Vortex2D/Renderer/Buffer.h>
 #include <Vortex2D/Renderer/CommandBuffer.h>
 #include <Vortex2D/Renderer/Texture.h>
 
@@ -40,8 +41,11 @@ struct Texture::Impl
   uint32_t mWidth;
   uint32_t mHeight;
   Format mFormat;
-  WGPUTextureId mId;
-  WGPUTextureViewId mViewId;
+  WGPUTexture mId;
+  WGPUTextureView mViewId;
+  MemoryUsage mMemoryUsage;
+  std::unique_ptr<GenericBuffer> mStagingBuffer;
+  std::unique_ptr<CommandBuffer> mStagingCopyFromCmd, mStagingCopyToCmd;
 
   Impl(Texture& self,
        Device& device,
@@ -56,48 +60,76 @@ struct Texture::Impl
       , mFormat(format)
       , mId(0)
       , mViewId(0)
+      , mMemoryUsage(memoryUsage)
   {
     WGPUTextureDescriptor textureDesc{};
-    textureDesc.sample_count = 1;
-    textureDesc.mip_level_count = 1;
+    textureDesc.sampleCount = 1;
+    textureDesc.mipLevelCount = 1;
     textureDesc.size = {mWidth, mHeight, 1};
-    textureDesc.dimension = WGPUTextureDimension_D2;
+    textureDesc.dimension = WGPUTextureDimension_2D;
     textureDesc.format = ConvertTextureFormat(mFormat);
     textureDesc.usage = ConvertTextureUsage(memoryUsage);
 
-    mId = wgpu_device_create_texture(mDevice.Handle(), &textureDesc);
+    mId = wgpuDeviceCreateTexture(mDevice.Handle(), &textureDesc);
     if (mId == 0)
     {
       throw std::runtime_error("Error creating texture");
     }
 
-    if (memoryUsage != MemoryUsage::Cpu)
+    if (memoryUsage == MemoryUsage::Gpu)
     {
       WGPUTextureViewDescriptor textureViewDesc{};
       textureViewDesc.format = ConvertTextureFormat(mFormat);
-      textureViewDesc.dimension = WGPUTextureViewDimension_D2;
+      textureViewDesc.dimension = WGPUTextureViewDimension_2D;
       textureViewDesc.aspect = WGPUTextureAspect_All;
-      textureViewDesc.array_layer_count = 1;
-      textureViewDesc.level_count = 1;
+      textureViewDesc.arrayLayerCount = 1;
+      textureViewDesc.mipLevelCount = 1;
 
-      mViewId = wgpu_texture_create_view(mId, &textureViewDesc);
+      mViewId = wgpuTextureCreateView(mId, &textureViewDesc);
       if (mViewId == 0)
       {
         throw std::runtime_error("Error creating texture view");
+      }
+    }
+    else
+    {
+      std::int64_t size = GetPaddedBytes(GetBytesPerPixel(mFormat) * mWidth, 256) * mHeight;
+      mStagingBuffer =
+          std::make_unique<GenericBuffer>(mDevice, BufferUsage::Storage, memoryUsage, size);
+    }
+  }
+
+  void Init()
+  {
+    if (mStagingBuffer)
+    {
+      if (mMemoryUsage == MemoryUsage::CpuToGpu)
+      {
+        mStagingCopyFromCmd = std::make_unique<CommandBuffer>(mDevice);
+        mStagingCopyFromCmd->Record(
+            [&](CommandEncoder& command) { CopyFrom(command, *mStagingBuffer); });
+      }
+
+      if (mMemoryUsage == MemoryUsage::GpuToCpu)
+      {
+        mStagingCopyToCmd = std::make_unique<CommandBuffer>(mDevice);
+        mStagingCopyToCmd->Record(
+            [&](CommandEncoder& command) { mStagingBuffer->CopyFrom(command, mSelf); });
       }
     }
   }
 
   ~Impl()
   {
-    if (mId != 0)
-    {
-      wgpu_texture_destroy(mId);
-    }
-
     if (mViewId != 0)
     {
-      wgpu_texture_view_destroy(mViewId);
+      // TODO do we need to destroy mViewId?
+    }
+
+    if (mId != 0)
+    {
+      // FIXME texture destroy
+      // wgpuTextureDestroy(mId);
     }
   }
 
@@ -118,28 +150,43 @@ struct Texture::Impl
 
   void Clear(CommandEncoder& command, const std::array<float, 4>& colour) {}
 
-  void CopyFrom(const void* data)
+  void CopyFrom(const void* data, int size)
   {
-    // TODO very ineficient
+    // TODO very inefficient
 
-    std::int64_t size = GetBytesPerPixel(mFormat) * mWidth * mHeight;
-    GenericBuffer stagingBuffer(mDevice, BufferUsage::Storage, MemoryUsage::Cpu, size);
+    std::int64_t rowSize = GetBytesPerPixel(mFormat) * mWidth;
+    std::int64_t paddedRowSize = GetPaddedBytes(rowSize, 256);
 
-    stagingBuffer.CopyFrom(0, data, size);
+    std::vector<uint8_t> alignedBuffer(mStagingBuffer->Size());
+    for (int i = 0; i < mHeight; i++)
+    {
+      std::memcpy(
+          alignedBuffer.data() + i * paddedRowSize, (const uint8_t*)data + i * rowSize, rowSize);
+    }
 
-    mDevice.Execute([&](CommandEncoder& command) { CopyFrom(command, stagingBuffer); });
+    mStagingBuffer->CopyFrom(0, alignedBuffer.data(), alignedBuffer.size());
+
+    mStagingCopyFromCmd->Submit();
+    mStagingCopyFromCmd->Wait();
   }
 
-  void CopyTo(void* data)
+  void CopyTo(void* data, int size)
   {
-    // TODO very ineficient
+    // TODO very inefficient
 
-    std::int64_t size = GetBytesPerPixel(mFormat) * mWidth * mHeight;
-    GenericBuffer stagingBuffer(mDevice, BufferUsage::Storage, MemoryUsage::Cpu, size);
+    mStagingCopyToCmd->Submit();
+    mStagingCopyToCmd->Wait();
 
-    mDevice.Execute([&](CommandEncoder& command) { stagingBuffer.CopyFrom(command, mSelf); });
+    std::vector<uint8_t> alignedBuffer(mStagingBuffer->Size());
+    mStagingBuffer->CopyTo(0, alignedBuffer.data(), alignedBuffer.size());
 
-    stagingBuffer.CopyTo(0, data, size);
+    std::int64_t rowSize = GetBytesPerPixel(mFormat) * mWidth;
+    std::int64_t paddedRowSize = GetPaddedBytes(rowSize, 256);
+
+    for (int i = 0; i < mHeight; i++)
+    {
+      std::memcpy((uint8_t*)data + i * rowSize, alignedBuffer.data() + i * paddedRowSize, rowSize);
+    }
   }
 
   void CopyFrom(CommandEncoder& command, Texture& srcImage)
@@ -150,41 +197,39 @@ struct Texture::Impl
       throw std::runtime_error("Copying texture of different size/format");
     }
 
-    WGPUTextureCopyView srcView{};
+    WGPUImageCopyTexture srcView{};
     srcView.texture = Handle::ConvertTexture(srcImage.Handle());
 
-    WGPUTextureCopyView dstView{};
-    dstView.texture = Handle::ConvertTexture(Handle());
+    WGPUImageCopyTexture dstView{};
+    dstView.texture = mId;
 
-    WGPUExtent3d extent{};
+    WGPUExtent3D extent{};
     extent.width = mWidth;
     extent.height = mHeight;
     extent.depth = 1;
 
-    wgpu_command_encoder_copy_texture_to_texture(
+    wgpuCommandEncoderCopyTextureToTexture(
         Handle::ConvertCommandEncoder(command.Handle()), &srcView, &dstView, &extent);
   }
 
   void CopyFrom(CommandEncoder& command, GenericBuffer& srcBuffer)
   {
     WGPUTextureDataLayout layout{};
-    layout.offset = 0;
-    layout.bytes_per_row = GetBytesPerPixel(mFormat) * mWidth;
-    layout.rows_per_image = mHeight;
+    layout.bytesPerRow = GetPaddedBytes(GetBytesPerPixel(mFormat) * mWidth, 256);
 
-    WGPUBufferCopyView src{};
+    WGPUImageCopyBuffer src{};
     src.buffer = Handle::ConvertBuffer(srcBuffer.Handle());
     src.layout = layout;
 
-    WGPUTextureCopyView dst{};
+    WGPUImageCopyTexture dst{};
     dst.texture = Handle::ConvertTexture(Handle());
 
-    WGPUExtent3d extent{};
+    WGPUExtent3D extent{};
     extent.width = mWidth;
     extent.height = mHeight;
     extent.depth = 1;
 
-    wgpu_command_encoder_copy_buffer_to_texture(
+    wgpuCommandEncoderCopyBufferToTexture(
         Handle::ConvertCommandEncoder(command.Handle()), &src, &dst, &extent);
   }
 
@@ -214,20 +259,21 @@ Texture::Texture(Device& device,
                  MemoryUsage memoryUsage)
     : mImpl(std::make_unique<Impl>(*this, device, width, height, format, memoryUsage))
 {
+  mImpl->Init();
 }
 
 Texture::Texture(Texture&& other) : mImpl(std::move(other.mImpl)) {}
 
 Texture::~Texture() {}
 
-void Texture::CopyFrom(const void* data)
+void Texture::CopyFrom(const void* data, int size)
 {
-  mImpl->CopyFrom(data);
+  mImpl->CopyFrom(data, size);
 }
 
-void Texture::CopyTo(void* data)
+void Texture::CopyTo(void* data, int size)
 {
-  mImpl->CopyTo(data);
+  mImpl->CopyTo(data, size);
 }
 
 void Texture::CopyFrom(CommandEncoder& command, Texture& srcImage)

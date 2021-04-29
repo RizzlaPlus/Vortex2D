@@ -22,7 +22,7 @@ using namespace Vortex2D::SPIRV;
 
 extern Device* device;
 
-TEST(ComputeTests, WriteBuffer)
+TEST(ComputeTests, DISABLED_WriteBuffer)
 {
   std::vector<float> data(100, 23.4f);
   Buffer<float> buffer(*device, data.size(), MemoryUsage::Cpu);
@@ -32,13 +32,13 @@ TEST(ComputeTests, WriteBuffer)
   CheckBuffer(data, buffer);
 }
 
-TEST(ComputeTests, WriteImage)
+TEST(ComputeTests, DISABLED_WriteImage)
 {
   const int size = 10;
   std::vector<float> data(size * size, 23.4f);
   Texture texture(*device, size, size, Format::R32Sfloat, MemoryUsage::Cpu);
 
-  texture.CopyFrom(data.data());
+  texture.CopyFrom(data.data(), data.size());
 
   CheckTexture(data, texture);
 }
@@ -47,8 +47,8 @@ TEST(ComputeTests, BufferCopy)
 {
   std::vector<float> data(100, 23.4f);
   Buffer<float> buffer(*device, data.size());
-  Buffer<float> inBuffer(*device, data.size(), MemoryUsage::Cpu);
-  Buffer<float> outBuffer(*device, data.size(), MemoryUsage::Cpu);
+  Buffer<float> inBuffer(*device, data.size(), MemoryUsage::CpuToGpu);
+  Buffer<float> outBuffer(*device, data.size(), MemoryUsage::GpuToCpu);
 
   CopyFrom(inBuffer, data);
 
@@ -62,14 +62,34 @@ TEST(ComputeTests, BufferCopy)
 
 TEST(ComputeTests, ImageCopy)
 {
-  const int size = 10;
-  std::vector<float> data(size * size, 23.4f);
+  const int size = 20;
+  std::vector<float> data(size, 23.4f);
 
-  Texture texture(*device, size, size, Format::R32Sfloat);
-  Texture inTexture(*device, size, size, Format::R32Sfloat, MemoryUsage::Cpu);
-  Texture outTexture(*device, size, size, Format::R32Sfloat, MemoryUsage::Cpu);
+  Texture texture(*device, size, 1, Format::R32Sfloat);
+  Texture inTexture(*device, size, 1, Format::R32Sfloat, MemoryUsage::CpuToGpu);
+  Texture outTexture(*device, size, 1, Format::R32Sfloat, MemoryUsage::GpuToCpu);
 
-  inTexture.CopyFrom(data.data());
+  inTexture.CopyFrom(data.data(), data.size());
+
+  device->Execute([&](CommandEncoder& command) {
+    texture.CopyFrom(command, inTexture);
+    outTexture.CopyFrom(command, texture);
+  });
+
+  CheckTexture(data, outTexture);
+}
+
+TEST(ComputeTests, ImageCopy_Large)
+{
+  const int width = 100;
+  const int height = 10;
+  std::vector<float> data(width * height, 23.4f);
+
+  Texture texture(*device, width, height, Format::R32Sfloat);
+  Texture inTexture(*device, width, height, Format::R32Sfloat, MemoryUsage::CpuToGpu);
+  Texture outTexture(*device, width, height, Format::R32Sfloat, MemoryUsage::GpuToCpu);
+
+  inTexture.CopyFrom(data.data(), data.size());
 
   device->Execute([&](CommandEncoder& command) {
     texture.CopyFrom(command, inTexture);
