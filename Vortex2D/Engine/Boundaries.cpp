@@ -9,6 +9,8 @@
 #include <Vortex2D/Engine/Particles.h>
 #include <Vortex2D/SPIRV/Reflection.h>
 
+#include <algorithm>
+
 #include "vortex2d_generated_spirv.h"
 
 namespace Vortex2D

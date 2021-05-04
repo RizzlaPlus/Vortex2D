@@ -8,6 +8,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
 
+#include <algorithm>
+
 namespace Vortex2D
 {
 namespace Fluid

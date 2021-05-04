@@ -4,6 +4,7 @@
 //
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <fstream>
 
 #include <Vortex2D/Renderer/CommandBuffer.h>
