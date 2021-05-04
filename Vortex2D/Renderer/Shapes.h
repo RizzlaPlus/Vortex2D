@@ -8,7 +8,6 @@
 
 #include <Vortex2D/Renderer/Buffer.h>
 #include <Vortex2D/Renderer/Common.h>
-#include <Vortex2D/Renderer/DescriptorSet.h>
 #include <Vortex2D/Renderer/Device.h>
 #include <Vortex2D/Renderer/Drawable.h>
 #include <Vortex2D/Renderer/Pipeline.h>
@@ -40,7 +39,7 @@ public:
 class AbstractShape : public Shape
 {
 public:
-  VORTEX2D_API AbstractShape(const Device& device,
+  VORTEX2D_API AbstractShape(Device& device,
                              const SpirvBinary& fragShader,
                              const std::vector<glm::vec2>& vertices);
   VORTEX2D_API AbstractShape(AbstractShape&& other);
@@ -48,15 +47,16 @@ public:
 
   VORTEX2D_API void Initialize(const RenderState& renderState) override;
   VORTEX2D_API void Update(const glm::mat4& projection, const glm::mat4& view) override;
-  VORTEX2D_API void Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState) override;
+  VORTEX2D_API void Draw(CommandEncoder& encoder, const RenderState& renderState) override;
 
 protected:
-  const Device& mDevice;
+  Device& mDevice;
   UniformBuffer<glm::mat4> mMVPBuffer;
   UniformBuffer<glm::vec4> mColourBuffer;
   VertexBuffer<glm::vec2> mVertexBuffer;
-  DescriptorSet mDescriptorSet;
-  GraphicsPipeline mPipeline;
+  Handle::PipelineLayout mPipelineLayout;
+  BindGroup mBindGroup;
+  GraphicsPipelineDescriptor mPipeline;
   uint32_t mNumVertices;
 };
 
@@ -67,7 +67,7 @@ protected:
 class Rectangle : public AbstractShape
 {
 public:
-  VORTEX2D_API Rectangle(const Device& device, const glm::vec2& size);
+  VORTEX2D_API Rectangle(Device& device, const glm::vec2& size);
 };
 
 /**
@@ -77,7 +77,7 @@ public:
 class IntRectangle : public AbstractShape
 {
 public:
-  VORTEX2D_API IntRectangle(const Device& device, const glm::vec2& size);
+  VORTEX2D_API IntRectangle(Device& device, const glm::vec2& size);
 };
 
 /**
@@ -87,12 +87,12 @@ public:
 class Ellipse : public Shape
 {
 public:
-  VORTEX2D_API Ellipse(const Device& device, const glm::vec2& radius);
+  VORTEX2D_API Ellipse(Device& device, const glm::vec2& radius);
   VORTEX2D_API ~Ellipse() override;
 
   void Initialize(const RenderState& renderState) override;
   void Update(const glm::mat4& projection, const glm::mat4& view) override;
-  void Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState) override;
+  void Draw(CommandEncoder& command, const RenderState& renderState) override;
 
 private:
   // std140 aligned structure
@@ -104,14 +104,15 @@ private:
     alignas(16) glm::mat2x4 rotation;
   };
 
-  const Device& mDevice;
+  Device& mDevice;
   glm::vec2 mRadius;
   UniformBuffer<glm::mat4> mMVPBuffer;
   UniformBuffer<glm::vec4> mColourBuffer;
   VertexBuffer<glm::vec2> mVertexBuffer;
   UniformBuffer<Size> mSizeBuffer;
-  DescriptorSet mDescriptorSet;
-  GraphicsPipeline mPipeline;
+  Handle::PipelineLayout mPipelineLayout;
+  BindGroup mBindGroup;
+  GraphicsPipelineDescriptor mPipeline;
 };
 
 /**
@@ -125,7 +126,7 @@ public:
 
   void Initialize(const RenderState& renderState) override;
   void Update(const glm::mat4& projection, const glm::mat4& view) override;
-  void Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState) override;
+  void Draw(CommandEncoder& command, const RenderState& renderState) override;
 
 private:
   glm::vec4 mColour;

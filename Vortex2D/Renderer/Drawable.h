@@ -13,6 +13,7 @@ namespace Vortex2D
 namespace Renderer
 {
 struct RenderState;
+class CommandEncoder;
 
 /**
  * @brief Interface of a drawable object.
@@ -41,7 +42,7 @@ struct Drawable
    * @param commandBuffer the command buffer to record into.
    * @param renderState the render state to use.
    */
-  virtual void Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState) = 0;
+  virtual void Draw(CommandEncoder& commandEncoder, const RenderState& renderState) = 0;
 };
 
 }  // namespace Renderer

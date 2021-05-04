@@ -19,19 +19,20 @@ namespace Renderer
 class Timer
 {
 public:
-  VORTEX2D_API Timer(const Device& device);
+  VORTEX2D_API Timer(Device& device);
+  VORTEX2D_API ~Timer();
 
   /**
    * @brief Start the timer after the current last command buffer
    * @param commandBuffer command buffer to write timestamp
    */
-  VORTEX2D_API void Start(vk::CommandBuffer commandBuffer);
+  VORTEX2D_API void Start(CommandEncoder& command);
 
   /**
    * @brief Start the timer after the current last command buffer
    * @param commandBuffer command buffer to write timestamp
    */
-  VORTEX2D_API void Stop(vk::CommandBuffer commandBuffer);
+  VORTEX2D_API void Stop(CommandEncoder& command);
 
   /**
    * @brief Start the timer after the current last command buffer
@@ -57,10 +58,8 @@ public:
   VORTEX2D_API uint64_t GetElapsedNs();
 
 private:
-  const Device& mDevice;
-  CommandBuffer mStart;
-  CommandBuffer mStop;
-  vk::UniqueQueryPool mPool;
+  struct Impl;
+  std::unique_ptr<Impl> mImpl;
 };
 
 }  // namespace Renderer

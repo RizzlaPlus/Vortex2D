@@ -13,7 +13,7 @@ class Runner
 {
 public:
   virtual ~Runner() {}
-  virtual void Init(const Vortex2D::Renderer::Device& device,
+  virtual void Init(Vortex2D::Renderer::Device& device,
                     Vortex2D::Renderer::RenderTarget& renderTarget) = 0;
   virtual void Step() = 0;
 };

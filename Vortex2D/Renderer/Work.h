@@ -8,7 +8,6 @@
 
 #include <Vortex2D/Renderer/Buffer.h>
 #include <Vortex2D/Renderer/Common.h>
-#include <Vortex2D/Renderer/DescriptorSet.h>
 #include <Vortex2D/Renderer/Device.h>
 #include <Vortex2D/Renderer/Pipeline.h>
 #include <Vortex2D/Renderer/Texture.h>
@@ -108,7 +107,7 @@ VORTEX2D_API ComputeSize MakeCheckerboardComputeSize(const glm::ivec2& size);
 struct DispatchParams
 {
   VORTEX2D_API DispatchParams(int count);
-  alignas(16) vk::DispatchIndirectCommand workSize;
+  alignas(16) glm::uvec3 workSize;
   alignas(4) uint32_t count;
 };
 
@@ -128,7 +127,7 @@ public:
    * @param spirv binary spirv
    * @param additionalSpecConstInfo additional specialization constants
    */
-  VORTEX2D_API Work(const Device& device,
+  VORTEX2D_API Work(Device& device,
                     const ComputeSize& computeSize,
                     const SpirvBinary& spirv,
                     const SpecConstInfo& additionalSpecConstInfo = {});
@@ -149,10 +148,10 @@ public:
      * @param args the data to push. A total of 128 bytes can be used.
      */
     template <typename... Args>
-    void PushConstant(vk::CommandBuffer commandBuffer, Args&&... args)
+    void PushConstant(CommandEncoder& command, Args&&... args)
     {
       int offset = mComputeSize.DomainSize.y != 1 ? 8 : 4;
-      PushConstantOffset(commandBuffer, offset, std::forward<Args>(args)...);
+      PushConstantOffset(command, offset, std::forward<Args>(args)...);
     }
 
     /**
@@ -160,7 +159,7 @@ public:
      * two additional push constants: the 2D domain size.
      * @param commandBuffer the command buffer to record into.
      */
-    VORTEX2D_API void Record(vk::CommandBuffer commandBuffer);
+    VORTEX2D_API void Record(CommandEncoder& command);
 
     /**
      * @brief Record the compute work in this command buffer. Use the provided
@@ -168,7 +167,7 @@ public:
      * @param commandBuffer the command buffer to record into.
      * @param dispatchParams the indirect buffer containing the parameters.
      */
-    VORTEX2D_API void RecordIndirect(vk::CommandBuffer commandBuffer,
+    VORTEX2D_API void RecordIndirect(CommandEncoder& command,
                                      IndirectBuffer<DispatchParams>& dispatchParams);
 
     friend class Work;
@@ -176,39 +175,34 @@ public:
   private:
     Bound(const ComputeSize& computeSize,
           uint32_t pushConstantSize,
-          vk::PipelineLayout layout,
-          vk::Pipeline pipeline,
-          vk::UniqueDescriptorSet descriptor);
+          Handle::PipelineLayout layout,
+          Handle::Pipeline pipeline,
+          BindGroup bindGroup);
 
     template <typename Arg>
-    void PushConstantOffset(vk::CommandBuffer commandBuffer, uint32_t offset, Arg&& arg)
+    void PushConstantOffset(CommandEncoder& command, uint32_t offset, Arg&& arg)
     {
       if (offset + sizeof(Arg) <= mPushConstantSize)
       {
-        commandBuffer.pushConstants(
-            mLayout, vk::ShaderStageFlagBits::eCompute, offset, sizeof(Arg), &arg);
+        command.PushConstants(mLayout, ShaderStage::Compute, offset, sizeof(Arg), &arg);
       }
     }
 
     template <typename Arg, typename... Args>
-    void PushConstantOffset(vk::CommandBuffer commandBuffer,
-                            uint32_t offset,
-                            Arg&& arg,
-                            Args&&... args)
+    void PushConstantOffset(CommandEncoder& command, uint32_t offset, Arg&& arg, Args&&... args)
     {
       if (offset + sizeof(Arg) <= mPushConstantSize)
       {
-        commandBuffer.pushConstants(
-            mLayout, vk::ShaderStageFlagBits::eCompute, offset, sizeof(Arg), &arg);
-        PushConstantOffset(commandBuffer, offset + sizeof(Arg), std::forward<Args>(args)...);
+        command.PushConstants(mLayout, ShaderStage::Compute, offset, sizeof(Arg), &arg);
+        PushConstantOffset(command, offset + sizeof(Arg), std::forward<Args>(args)...);
       }
     }
 
     ComputeSize mComputeSize;
     uint32_t mPushConstantSize;
-    vk::PipelineLayout mLayout;
-    vk::Pipeline mPipeline;
-    vk::UniqueDescriptorSet mDescriptor;
+    Handle::PipelineLayout mLayout;
+    Handle::Pipeline mPipeline;
+    BindGroup mBindGroup;
   };
 
   /**
@@ -229,9 +223,9 @@ public:
 
 private:
   ComputeSize mComputeSize;
-  const Device& mDevice;
-  Renderer::PipelineLayout mPipelineLayout;
-  vk::Pipeline mPipeline;
+  Device& mDevice;
+  SPIRV::ShaderLayouts mLayout;
+  Handle::Pipeline mPipeline;
 };
 
 }  // namespace Renderer

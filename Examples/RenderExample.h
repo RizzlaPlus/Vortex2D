@@ -12,7 +12,7 @@ extern glm::vec4 green;
 class RenderExample : public Runner
 {
 public:
-  RenderExample(const Vortex2D::Renderer::Device& device, const glm::vec2& /*size*/)
+  RenderExample(Vortex2D::Renderer::Device& device, const glm::vec2& /*size*/)
       : rectangle(device, {25, 25}), circle(device, glm::vec2(10))
   {
     rectangle.Position = {50, 50};
@@ -23,17 +23,16 @@ public:
     circle.Colour = green;
   }
 
-  void Init(const Vortex2D::Renderer::Device& device,
+  void Init(Vortex2D::Renderer::Device& device,
             Vortex2D::Renderer::RenderTarget& renderTarget) override
   {
-    Vortex2D::Renderer::ColorBlendState blendState;
-    blendState.ColorBlend.setBlendEnable(true)
-        .setAlphaBlendOp(vk::BlendOp::eAdd)
-        .setColorBlendOp(vk::BlendOp::eAdd)
-        .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
-        .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-        .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
-        .setDstAlphaBlendFactor(vk::BlendFactor::eZero);
+    Vortex2D::Renderer::ColorBlendState blendState(
+        Vortex2D::Renderer::BlendFactor::SrcAlpha,
+        Vortex2D::Renderer::BlendFactor::OneMinusSrcAlpha,
+        Vortex2D::Renderer::BlendOp::Add,
+        Vortex2D::Renderer::BlendFactor::One,
+        Vortex2D::Renderer::BlendFactor::Zero,
+        Vortex2D::Renderer::BlendOp::Add);
 
     render = renderTarget.Record({rectangle, circle}, blendState);
   }

@@ -70,7 +70,7 @@ void Box2DSolver::Step(float delta)
   mWorld.Step(delta, velocityStep, positionStep);
 }
 
-Box2DRigidbody::Box2DRigidbody(const Vortex2D::Renderer::Device& device,
+Box2DRigidbody::Box2DRigidbody(Vortex2D::Renderer::Device& device,
                                const glm::ivec2& size,
                                Vortex2D::Renderer::Drawable& drawable,
                                Vortex2D::Fluid::RigidBody::Type type)
@@ -80,7 +80,8 @@ Box2DRigidbody::Box2DRigidbody(const Vortex2D::Renderer::Device& device,
 
 void Box2DRigidbody::ApplyForces()
 {
-  if (GetType() & Vortex2D::Fluid::RigidBody::Type::eWeak)
+  if (GetType() == Vortex2D::Fluid::RigidBody::Type::eWeak ||
+      GetType() == Vortex2D::Fluid::RigidBody::Type::eStrong)
   {
     auto force = GetForces();
     b2Vec2 b2Force = {force.velocity.x, force.velocity.y};
@@ -96,7 +97,8 @@ void Box2DRigidbody::ApplyVelocities()
   Position = {pos.x, pos.y};
   Rotation = glm::degrees(mBody->GetAngle());
 
-  if (GetType() & Vortex2D::Fluid::RigidBody::Type::eStatic)
+  if (GetType() == Vortex2D::Fluid::RigidBody::Type::eStatic ||
+      GetType() == Vortex2D::Fluid::RigidBody::Type::eStrong)
   {
     glm::vec2 vel = {mBody->GetLinearVelocity().x, mBody->GetLinearVelocity().y};
     float angularVelocity = mBody->GetAngularVelocity();
@@ -111,7 +113,7 @@ void Box2DRigidbody::SetTransform(const glm::vec2& pos, float angle)
   mBody->SetTransform({pos.x, pos.y}, glm::radians(angle));
 }
 
-PolygonRigidbody::PolygonRigidbody(const Vortex2D::Renderer::Device& device,
+PolygonRigidbody::PolygonRigidbody(Vortex2D::Renderer::Device& device,
                                    const glm::ivec2& size,
                                    b2World& rWorld,
                                    b2BodyType rType,
@@ -124,7 +126,7 @@ PolygonRigidbody::PolygonRigidbody(const Vortex2D::Renderer::Device& device,
   mRigidbody.SetMassData(mRigidbody.mBody->GetMass(), mRigidbody.mBody->GetInertia());
 }
 
-CircleRigidbody::CircleRigidbody(const Vortex2D::Renderer::Device& device,
+CircleRigidbody::CircleRigidbody(Vortex2D::Renderer::Device& device,
                                  const glm::ivec2& size,
                                  b2World& rWorld,
                                  b2BodyType rType,

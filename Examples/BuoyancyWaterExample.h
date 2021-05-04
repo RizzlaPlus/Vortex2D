@@ -20,9 +20,7 @@ class HydrostaticWaterExample : public Runner
   const float gravityForce = 100.0f;
 
 public:
-  HydrostaticWaterExample(const Vortex2D::Renderer::Device& device,
-                          const glm::ivec2& size,
-                          float dt)
+  HydrostaticWaterExample(Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
       : gravity(device, glm::vec2(256.0f, 256.0f))
       , world(device, size, dt, 2, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
@@ -83,7 +81,7 @@ public:
     liquidPhi.Colour = blue;
   }
 
-  void Init(const Vortex2D::Renderer::Device& device,
+  void Init(Vortex2D::Renderer::Device& device,
             Vortex2D::Renderer::RenderTarget& renderTarget) override
   {
     // Add particles
@@ -106,14 +104,13 @@ public:
     // Set gravity
     velocityRender = world.RecordVelocity({gravity}, Vortex2D::Fluid::VelocityOp::Add);
 
-    Vortex2D::Renderer::ColorBlendState blendState;
-    blendState.ColorBlend.setBlendEnable(true)
-        .setAlphaBlendOp(vk::BlendOp::eAdd)
-        .setColorBlendOp(vk::BlendOp::eAdd)
-        .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
-        .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-        .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
-        .setDstAlphaBlendFactor(vk::BlendFactor::eZero);
+    Vortex2D::Renderer::ColorBlendState blendState(
+        Vortex2D::Renderer::BlendFactor::SrcAlpha,
+        Vortex2D::Renderer::BlendFactor::OneMinusSrcAlpha,
+        Vortex2D::Renderer::BlendOp::Add,
+        Vortex2D::Renderer::BlendFactor::One,
+        Vortex2D::Renderer::BlendFactor::Zero,
+        Vortex2D::Renderer::BlendOp::Add);
 
     windowRender = renderTarget.Record({liquidPhi, solidPhi}, blendState);
   }

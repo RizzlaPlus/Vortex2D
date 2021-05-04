@@ -22,7 +22,7 @@ namespace Fluid
 class Extrapolation
 {
 public:
-  VORTEX2D_API Extrapolation(const Renderer::Device& device,
+  VORTEX2D_API Extrapolation(Renderer::Device& device,
                              const glm::ivec2& size,
                              Renderer::GenericBuffer& valid,
                              Velocity& velocity,
@@ -48,7 +48,7 @@ public:
   VORTEX2D_API void ConstrainVelocity();
 
 private:
-  const Renderer::Device& mDevice;
+  Renderer::Device& mDevice;
   Renderer::Buffer<glm::ivec2> mValid;
   Velocity& mVelocity;
 

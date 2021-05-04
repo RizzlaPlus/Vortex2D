@@ -22,8 +22,8 @@ extern glm::vec4 gray;
 class ObstacleSmokeExample : public Runner
 {
 public:
-  ObstacleSmokeExample(const Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
-      : density(device, size, vk::Format::eR8G8B8A8Unorm)
+  ObstacleSmokeExample(Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
+      : density(device, size, Vortex2D::Renderer::Format::R8G8B8A8Unorm)
       , world(device, size, dt, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
       , velocityClear({0.0f, 0.0f, 0.0f, 0.0f})
@@ -57,7 +57,7 @@ public:
     solidPhi.Colour = green;
   }
 
-  void Init(const Vortex2D::Renderer::Device& device,
+  void Init(Vortex2D::Renderer::Device& device,
             Vortex2D::Renderer::RenderTarget& renderTarget) override
   {
     // Draw density
@@ -91,14 +91,13 @@ public:
     // Bottom
     bottom.mRigidbody.SetTransform({128.0f, 256.5f}, 0.0f);
 
-    Vortex2D::Renderer::ColorBlendState blendState;
-    blendState.ColorBlend.setBlendEnable(true)
-        .setAlphaBlendOp(vk::BlendOp::eAdd)
-        .setColorBlendOp(vk::BlendOp::eAdd)
-        .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
-        .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-        .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
-        .setDstAlphaBlendFactor(vk::BlendFactor::eZero);
+    Vortex2D::Renderer::ColorBlendState blendState(
+        Vortex2D::Renderer::BlendFactor::SrcAlpha,
+        Vortex2D::Renderer::BlendFactor::OneMinusSrcAlpha,
+        Vortex2D::Renderer::BlendOp::Add,
+        Vortex2D::Renderer::BlendFactor::One,
+        Vortex2D::Renderer::BlendFactor::Zero,
+        Vortex2D::Renderer::BlendOp::Add);
 
     windowRender = renderTarget.Record({density, solidPhi}, blendState);
   }

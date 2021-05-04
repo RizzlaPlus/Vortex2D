@@ -23,7 +23,7 @@ namespace Fluid
 class Cfl
 {
 public:
-  VORTEX2D_API Cfl(const Renderer::Device& device, const glm::ivec2& size, Velocity& velocity);
+  VORTEX2D_API Cfl(Renderer::Device& device, const glm::ivec2& size, Velocity& velocity);
 
   /**
    * Compute the CFL number. Non-blocking.
@@ -37,7 +37,7 @@ public:
   VORTEX2D_API float Get();
 
 private:
-  const Renderer::Device& mDevice;
+  Renderer::Device& mDevice;
   glm::ivec2 mSize;
   Velocity& mVelocity;
   Renderer::Work mVelocityMaxWork;

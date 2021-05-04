@@ -7,7 +7,6 @@
 #define Sprite_h
 
 #include <Vortex2D/Renderer/Buffer.h>
-#include <Vortex2D/Renderer/DescriptorSet.h>
 #include <Vortex2D/Renderer/Device.h>
 #include <Vortex2D/Renderer/Drawable.h>
 #include <Vortex2D/Renderer/Pipeline.h>
@@ -27,24 +26,19 @@ struct RenderTarget;
 class AbstractSprite : public Drawable, public Transformable
 {
 public:
-  VORTEX2D_API AbstractSprite(const Device& device,
-                              const SpirvBinary& fragShaderName,
-                              Texture& texture);
+  VORTEX2D_API AbstractSprite(Device& device, const SpirvBinary& fragShaderName, Texture& texture);
   VORTEX2D_API AbstractSprite(AbstractSprite&& other);
   VORTEX2D_API virtual ~AbstractSprite() override;
 
   VORTEX2D_API void Initialize(const RenderState& renderState) override;
   VORTEX2D_API void Update(const glm::mat4& projection, const glm::mat4& view) override;
-  VORTEX2D_API void Draw(vk::CommandBuffer commandBuffer, const RenderState& renderState) override;
+  VORTEX2D_API void Draw(CommandEncoder& command, const RenderState& renderState) override;
 
   template <typename T>
-  void PushConstant(vk::CommandBuffer commandBuffer, uint32_t offset, const T& data)
+  void PushConstant(CommandEncoder& command, uint32_t offset, const T& data)
   {
-    commandBuffer.pushConstants(mDescriptorSet.pipelineLayout,
-                                vk::ShaderStageFlagBits::eFragment,
-                                offset,
-                                sizeof(T),
-                                &data);
+    command.PushConstants(
+        mPipelineLayout, ShaderStage::Fragment, offset, sizeof(T), &data);
   }
 
   glm::vec4 Colour = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -56,13 +50,14 @@ protected:
     glm::vec2 pos;
   };
 
-  const Device& mDevice;
+  Device& mDevice;
   UniformBuffer<glm::mat4> mMVPBuffer;
   VertexBuffer<Vertex> mVertexBuffer;
-  Renderer::UniformBuffer<glm::vec4> mColourBuffer;
-  vk::UniqueSampler mSampler;
-  DescriptorSet mDescriptorSet;
-  GraphicsPipeline mPipeline;
+  UniformBuffer<glm::vec4> mColourBuffer;
+  Sampler mSampler;
+  Handle::PipelineLayout mPipelineLayout;
+  BindGroup mBindGroup;
+  GraphicsPipelineDescriptor mPipeline;
 };
 
 /**
@@ -72,7 +67,7 @@ protected:
 class Sprite : public AbstractSprite
 {
 public:
-  VORTEX2D_API Sprite(const Device& device, Texture& texture);
+  VORTEX2D_API Sprite(Device& device, Texture& texture);
 };
 
 }  // namespace Renderer

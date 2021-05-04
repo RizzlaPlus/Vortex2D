@@ -57,7 +57,7 @@ TEST(LevelSetTests, SimpleCircle)
   glm::ivec2 size(50);
 
   LevelSet levelSet(*device, size, 2000);
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
 
   Ellipse circle(*device, glm::vec2{rad0} * glm::vec2(size));
   circle.Position = glm::vec2(c0[0], c0[1]) * glm::vec2(size) - glm::vec2(0.5f);
@@ -68,10 +68,9 @@ TEST(LevelSetTests, SimpleCircle)
   levelSet.Record({clear, circle}).Submit();
   levelSet.Reinitialise();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { outTexture.CopyFrom(commandBuffer, levelSet); });
+  device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
   // NOTE difference should be at most 1 / sqrt(2)
   CheckDifference(outTexture, boundary_phi, 1.0f);
@@ -82,7 +81,7 @@ TEST(LevelSetTests, ComplexCircles)
   glm::ivec2 size(50);
 
   LevelSet levelSet(*device, size, 2000);
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
 
   Ellipse circle0(*device, glm::vec2{rad0} * glm::vec2(size));
   Ellipse circle1(*device, glm::vec2{rad1} * glm::vec2(size));
@@ -104,10 +103,9 @@ TEST(LevelSetTests, ComplexCircles)
   levelSet.Record({clear, circle0, circle1, circle2, circle3}).Submit();
   levelSet.Reinitialise();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { outTexture.CopyFrom(commandBuffer, levelSet); });
+  device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
   // NOTE difference should be at most 1 / sqrt(2)
   CheckDifference(outTexture, complex_boundary_phi, 1.0f);
@@ -117,17 +115,16 @@ TEST(LevelSetTests, Extrapolate)
 {
   glm::ivec2 size(50);
 
-  Texture localSolidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture localSolidPhi(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
   Texture localLiquidPhi(
-      *device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
-  Texture solidPhi(*device, size.x, size.y, vk::Format::eR32Sfloat);
+      *device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
+  Texture solidPhi(*device, size.x, size.y, Format::R32Sfloat);
 
   std::vector<float> solidData(size.x * size.y, 1.0);
   DrawSquare(size.x, size.y, solidData, glm::vec2(10.0f), glm::vec2(20.0f), -1.0f);
   localSolidPhi.CopyFrom(solidData);
 
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { solidPhi.CopyFrom(commandBuffer, localSolidPhi); });
+  device->Execute([&](CommandEncoder& command) { solidPhi.CopyFrom(command, localSolidPhi); });
 
   LevelSet liquidPhi(*device, size);
 
@@ -135,10 +132,9 @@ TEST(LevelSetTests, Extrapolate)
 
   liquidPhi.Extrapolate();
 
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { localLiquidPhi.CopyFrom(commandBuffer, liquidPhi); });
+  device->Execute([&](CommandEncoder& command) { localLiquidPhi.CopyFrom(command, liquidPhi); });
 
   std::vector<float> liquidData(size.x * size.y);
   localLiquidPhi.CopyTo(liquidData);
@@ -157,21 +153,19 @@ TEST(LevelSetTests, ShrinkWrap)
   glm::ivec2 size(10);
   LevelSet levelSet(*device, size);
 
-  Texture inTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
+  Texture inTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
+  Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
 
   std::vector<float> inData(size.x * size.y, -0.5f);
   inData[6 + 5 * 5] = -0.4f;
 
   inTexture.CopyFrom(inData);
 
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { levelSet.CopyFrom(commandBuffer, inTexture); });
+  device->Execute([&](CommandEncoder& command) { levelSet.CopyFrom(command, inTexture); });
 
   levelSet.ShrinkWrap();
 
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { outTexture.CopyFrom(commandBuffer, levelSet); });
+  device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
   std::vector<float> outData(size.x * size.y, -0.5f);
   CheckTexture(outData, outTexture);

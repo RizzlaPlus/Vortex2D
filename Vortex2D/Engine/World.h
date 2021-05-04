@@ -57,7 +57,7 @@ public:
    * @param numSubSteps the number of sub-steps to perform per step call.
    * Reduces loss of fluid.
    */
-  World(const Renderer::Device& device,
+  World(Renderer::Device& device,
         const glm::ivec2& size,
         float dt,
         int numSubSteps = 1,
@@ -153,7 +153,7 @@ protected:
   void StepRigidBodies();
   virtual void Substep(LinearSolver::Parameters& params) = 0;
 
-  const Renderer::Device& mDevice;
+  Renderer::Device& mDevice;
   glm::ivec2 mSize;
   float mDelta;
   int mNumSubSteps;
@@ -196,7 +196,7 @@ protected:
 class SmokeWorld : public World
 {
 public:
-  VORTEX2D_API SmokeWorld(const Renderer::Device& device,
+  VORTEX2D_API SmokeWorld(Renderer::Device& device,
                           const glm::ivec2& size,
                           float dt,
                           Velocity::InterpolationMode interpolationMode);
@@ -218,7 +218,7 @@ private:
 class WaterWorld : public World
 {
 public:
-  VORTEX2D_API WaterWorld(const Renderer::Device& device,
+  VORTEX2D_API WaterWorld(Renderer::Device& device,
                           const glm::ivec2& size,
                           float dt,
                           int numSubSteps,

@@ -112,11 +112,10 @@ TEST(BoundariesTests, Square)
   Clear clear({100.0f, 0.0f, 0.0f, 0.0f});
 
   levelSet.Record({clear, square}).Submit();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { outTexture.CopyFrom(commandBuffer, levelSet); });
+  Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
+  device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
   CheckLevelSet(data, outTexture);
 }
@@ -141,11 +140,10 @@ TEST(BoundariesTests, InverseSquare)
   Clear clear({100.0f, 0.0f, 0.0f, 0.0f});
 
   levelSet.Record({clear, square}).Submit();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { outTexture.CopyFrom(commandBuffer, levelSet); });
+  Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
+  device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
   CheckLevelSet(data, outTexture);
 }
@@ -166,11 +164,10 @@ TEST(BoundariesTests, Circle)
   Clear clear({100.0f, 0.0f, 0.0f, 0.0f});
 
   levelSet.Record({clear, circle}).Submit();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { outTexture.CopyFrom(commandBuffer, levelSet); });
+  Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
+  device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
   CheckLevelSet(data, outTexture);
 }
@@ -203,11 +200,10 @@ TEST(BoundariesTests, Intersection)
   Clear clear({100.0f, 0.0f, 0.0f, 0.0f});
 
   levelSet.Record({clear, square1, square2}, UnionBlend).Submit();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
-  Texture outTexture(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { outTexture.CopyFrom(commandBuffer, levelSet); });
+  Texture outTexture(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
+  device->Execute([&](CommandEncoder& command) { outTexture.CopyFrom(command, levelSet); });
 
   CheckLevelSet(data, outTexture);
 }
@@ -234,24 +230,23 @@ TEST(BoundariesTest, DistanceField)
   LevelSet levelSet(*device, size);
 
   std::vector<float> data(size.x * size.y, 0.1f);
-  Texture localLevelSet(*device, size.x, size.y, vk::Format::eR32Sfloat, VMA_MEMORY_USAGE_CPU_ONLY);
-  device->Execute([&](vk::CommandBuffer commandBuffer) {
+  Texture localLevelSet(*device, size.x, size.y, Format::R32Sfloat, MemoryUsage::Cpu);
+  device->Execute([&](CommandEncoder& command) {
     localLevelSet.CopyFrom(data);
-    levelSet.CopyFrom(commandBuffer, localLevelSet);
+    levelSet.CopyFrom(command, localLevelSet);
   });
 
   DistanceField distance(*device, levelSet);
   distance.Colour = glm::vec4(0.2f, 1.0f, 0.8f, 1.0f);
 
-  RenderTexture output(*device, size.x, size.y, vk::Format::eR8G8B8A8Unorm);
+  RenderTexture output(*device, size.x, size.y, Format::R8G8B8A8Unorm);
   Texture localOutput(
-      *device, size.x, size.y, vk::Format::eR8G8B8A8Unorm, VMA_MEMORY_USAGE_CPU_ONLY);
+      *device, size.x, size.y, Format::R8G8B8A8Unorm, MemoryUsage::Cpu);
 
   output.Record({distance}).Submit();
-  device->Handle().waitIdle();
+  device->WaitIdle();
 
-  device->Execute(
-      [&](vk::CommandBuffer commandBuffer) { localOutput.CopyFrom(commandBuffer, output); });
+  device->Execute([&](CommandEncoder& command) { localOutput.CopyFrom(command, output); });
 
   auto r = static_cast<uint8_t>(255 * distance.Colour.r);
   auto g = static_cast<uint8_t>(255 * distance.Colour.g);

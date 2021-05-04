@@ -17,12 +17,12 @@ extern glm::vec4 gray;
 class SmokeExample : public Runner
 {
 public:
-  SmokeExample(const Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
+  SmokeExample(Vortex2D::Renderer::Device& device, const glm::ivec2& size, float dt)
       : source1(device, glm::vec2(20.0f))
       , source2(device, glm::vec2(20.0f))
       , force1(device, glm::vec2(20.0f))
       , force2(device, glm::vec2(20.0f))
-      , density(device, size, vk::Format::eR8G8B8A8Unorm)
+      , density(device, size, Vortex2D::Renderer::Format::R8G8B8A8Unorm)
       , world(device, size, dt, Vortex2D::Fluid::Velocity::InterpolationMode::Linear)
       , solidPhi(world.SolidDistanceField())
   {
@@ -42,7 +42,7 @@ public:
     solidPhi.Colour = green;
   }
 
-  void Init(const Vortex2D::Renderer::Device& device,
+  void Init(Vortex2D::Renderer::Device& device,
             Vortex2D::Renderer::RenderTarget& renderTarget) override
   {
     // Draw liquid boundaries
@@ -69,14 +69,13 @@ public:
     velocityRender = world.RecordVelocity({force1, force2}, Vortex2D::Fluid::VelocityOp::Set);
     densityRender = density.Record({source1, source2});
 
-    Vortex2D::Renderer::ColorBlendState blendState;
-    blendState.ColorBlend.setBlendEnable(true)
-        .setAlphaBlendOp(vk::BlendOp::eAdd)
-        .setColorBlendOp(vk::BlendOp::eAdd)
-        .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
-        .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-        .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
-        .setDstAlphaBlendFactor(vk::BlendFactor::eZero);
+    Vortex2D::Renderer::ColorBlendState blendState(
+        Vortex2D::Renderer::BlendFactor::SrcAlpha,
+        Vortex2D::Renderer::BlendFactor::OneMinusSrcAlpha,
+        Vortex2D::Renderer::BlendOp::Add,
+        Vortex2D::Renderer::BlendFactor::One,
+        Vortex2D::Renderer::BlendFactor::Zero,
+        Vortex2D::Renderer::BlendOp::Add);
 
     windowRender = renderTarget.Record({density, solidPhi}, blendState);
   }
