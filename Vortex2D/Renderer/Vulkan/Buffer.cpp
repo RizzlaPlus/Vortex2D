@@ -123,7 +123,7 @@ struct GenericBuffer::Impl
     Create();
   }
 
-  void CopyFrom(Renderer::CommandEncoder& command, GenericBuffer& srcBuffer)
+  void CopyFrom(CommandEncoder& command, GenericBuffer& srcBuffer)
   {
     if (mSize != srcBuffer.Size())
     {
@@ -155,7 +155,7 @@ struct GenericBuffer::Impl
                   vk::AccessFlagBits::eShaderRead);
   }
 
-  void CopyFrom(Renderer::CommandEncoder& command, Texture& srcTexture)
+  void CopyFrom(CommandEncoder& command, Texture& srcTexture)
   {
     auto textureSize =
         srcTexture.GetWidth() * srcTexture.GetHeight() * GetBytesPerPixel(srcTexture.GetFormat());
@@ -199,7 +199,7 @@ struct GenericBuffer::Impl
     BufferBarrier(Handle(), command.Handle(), ConvertAccess(oldAccess), ConvertAccess(newAccess));
   }
 
-  void Clear(Renderer::CommandEncoder& command)
+  void Clear(CommandEncoder& command)
   {
     BufferBarrier(Handle(),
                   command.Handle(),
@@ -276,12 +276,12 @@ GenericBuffer::GenericBuffer(GenericBuffer&& other) : mImpl(std::move(other.mImp
 
 GenericBuffer::~GenericBuffer() {}
 
-void GenericBuffer::CopyFrom(Renderer::CommandEncoder& command, GenericBuffer& srcBuffer)
+void GenericBuffer::CopyFrom(CommandEncoder& command, GenericBuffer& srcBuffer)
 {
   mImpl->CopyFrom(command, srcBuffer);
 }
 
-void GenericBuffer::CopyFrom(Renderer::CommandEncoder& command, Texture& srcTexture)
+void GenericBuffer::CopyFrom(CommandEncoder& command, Texture& srcTexture)
 {
   mImpl->CopyFrom(command, srcTexture);
 }
@@ -306,7 +306,7 @@ void GenericBuffer::Barrier(CommandEncoder& command, Access oldAccess, Access ne
   mImpl->Barrier(command, oldAccess, newAccess);
 }
 
-void GenericBuffer::Clear(Renderer::CommandEncoder& command)
+void GenericBuffer::Clear(CommandEncoder& command)
 {
   mImpl->Clear(command);
 }

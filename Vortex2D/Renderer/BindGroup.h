@@ -40,11 +40,11 @@ private:
  */
 struct Image
 {
-  Image(Renderer::Texture& texture, Sampler& sampler);
+  Image(Renderer::Texture& texture, Renderer::Sampler& sampler);
   Image(Renderer::Texture& texture);
 
   Renderer::Texture* Texture;
-  Sampler* Sampler;
+  Renderer::Sampler* Sampler;
 };
 
 /**
@@ -54,14 +54,14 @@ struct BindingInput
 {
   static constexpr uint32_t DefaultBind = static_cast<uint32_t>(-1);
 
-  VORTEX2D_API BindingInput(Renderer::GenericBuffer& buffer, uint32_t bind = DefaultBind);
-  VORTEX2D_API BindingInput(Renderer::Texture& texture, uint32_t bind = DefaultBind);
+  VORTEX2D_API BindingInput(GenericBuffer& buffer, uint32_t bind = DefaultBind);
+  VORTEX2D_API BindingInput(Texture& texture, uint32_t bind = DefaultBind);
   VORTEX2D_API BindingInput(Sampler& sampler,
-                            Renderer::Texture& texture,
+                            Texture& texture,
                             uint32_t bind = DefaultBind);
 
   uint32_t Bind;
-  mapbox::util::variant<Renderer::GenericBuffer*, Image> Input;
+  mapbox::util::variant<GenericBuffer*, Image> Input;
 };
 
 }  // namespace Renderer

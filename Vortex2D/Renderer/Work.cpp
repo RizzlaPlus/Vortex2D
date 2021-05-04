@@ -80,7 +80,7 @@ ComputeSize MakeCheckerboardComputeSize(const glm::ivec2& size)
 
 DispatchParams::DispatchParams(int count)
     : workSize(static_cast<uint32_t>(
-                   std::ceil(static_cast<float>(count) / Renderer::ComputeSize::GetLocalSize1D())),
+                   std::ceil(static_cast<float>(count) / ComputeSize::GetLocalSize1D())),
                1,
                1)
     , count(count)
@@ -95,7 +95,7 @@ Work::Work(Device& device,
 {
   Handle::ShaderModule shaderModule = mDevice.CreateShaderModule(spirv);
   SPIRV::Reflection reflection(spirv);
-  if (reflection.GetShaderStage() != Renderer::ShaderStage::Compute)
+  if (reflection.GetShaderStage() != ShaderStage::Compute)
     throw std::runtime_error("only compute supported");
 
   mLayout = {reflection};
@@ -121,7 +121,7 @@ Work::Work(Device& device,
   }
 }
 
-Work::Bound Work::Bind(ComputeSize computeSize, const std::vector<Renderer::BindingInput>& inputs)
+Work::Bound Work::Bind(ComputeSize computeSize, const std::vector<BindingInput>& inputs)
 {
   if (inputs.size() != mLayout.front().bindings.size())
   {

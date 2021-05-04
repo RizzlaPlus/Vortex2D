@@ -36,14 +36,14 @@ public:
    * @param commandBuffer command buffer to run the copy on.
    * @param srcBuffer the source buffer.
    */
-  VORTEX2D_API void CopyFrom(Renderer::CommandEncoder& command, GenericBuffer& srcBuffer);
+  VORTEX2D_API void CopyFrom(CommandEncoder& command, GenericBuffer& srcBuffer);
 
   /**
    * @brief Copy a texture to this buffer
    * @param commandBuffer command buffer to run the copy on.
    * @param srcTexture the source texture
    */
-  VORTEX2D_API void CopyFrom(Renderer::CommandEncoder& command, Texture& srcTexture);
+  VORTEX2D_API void CopyFrom(CommandEncoder& command, Texture& srcTexture);
 
   /**
    * @brief The vulkan handle
@@ -73,7 +73,7 @@ public:
    * @brief Clear the buffer with 0
    * @param commandBuffer the command buffer to clear on
    */
-  VORTEX2D_API void Clear(Renderer::CommandEncoder& command);
+  VORTEX2D_API void Clear(CommandEncoder& command);
 
   /**
    * @brief copy from data to buffer

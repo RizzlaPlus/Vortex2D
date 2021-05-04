@@ -71,7 +71,7 @@ void Bind(vk::Device device,
   for (std::size_t i = 0; i < bindingInputs.size(); i++)
   {
     bindingInputs[i].Input.match(
-        [&](Renderer::GenericBuffer* buffer) {
+        [&](GenericBuffer* buffer) {
           uint32_t bind = bindingInputs[i].Bind == BindingInput::DefaultBind
                               ? static_cast<uint32_t>(i)
                               : bindingInputs[i].Bind;

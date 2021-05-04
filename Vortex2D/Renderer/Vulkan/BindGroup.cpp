@@ -53,18 +53,11 @@ Handle::BindGroup BindGroup::Handle()
   return mImpl->Handle();
 }
 
-BindingInput::BindingInput(Renderer::GenericBuffer& buffer, uint32_t bind)
-    : Bind(bind), Input(&buffer)
+BindingInput::BindingInput(GenericBuffer& buffer, uint32_t bind) : Bind(bind), Input(&buffer) {}
 
-{
-}
+BindingInput::BindingInput(Texture& texture, uint32_t bind) : Bind(bind), Input(Image(texture)) {}
 
-BindingInput::BindingInput(Renderer::Texture& texture, uint32_t bind)
-    : Bind(bind), Input(Image(texture))
-{
-}
-
-BindingInput::BindingInput(Sampler& sampler, Renderer::Texture& texture, uint32_t bind)
+BindingInput::BindingInput(Sampler& sampler, Texture& texture, uint32_t bind)
     : Bind(bind), Input(Image(texture, sampler))
 {
 }

@@ -35,10 +35,10 @@ public:
   VORTEX2D_API void Draw(CommandEncoder& command, const RenderState& renderState) override;
 
   template <typename T>
-  void PushConstant(Renderer::CommandEncoder& command, uint32_t offset, const T& data)
+  void PushConstant(CommandEncoder& command, uint32_t offset, const T& data)
   {
     command.PushConstants(
-        mPipelineLayout, Renderer::ShaderStage::Fragment, offset, sizeof(T), &data);
+        mPipelineLayout, ShaderStage::Fragment, offset, sizeof(T), &data);
   }
 
   glm::vec4 Colour = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -53,8 +53,8 @@ protected:
   Device& mDevice;
   UniformBuffer<glm::mat4> mMVPBuffer;
   VertexBuffer<Vertex> mVertexBuffer;
-  Renderer::UniformBuffer<glm::vec4> mColourBuffer;
-  Renderer::Sampler mSampler;
+  UniformBuffer<glm::vec4> mColourBuffer;
+  Sampler mSampler;
   Handle::PipelineLayout mPipelineLayout;
   BindGroup mBindGroup;
   GraphicsPipelineDescriptor mPipeline;
